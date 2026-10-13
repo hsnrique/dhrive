@@ -1,6 +1,6 @@
 [package]
 name = "dhrive"
-version = "0.3.3"
+version = "0.3.4"
 description = "dhrive: plan with one AI CLI and model, code with another"
 authors = ["cyostech"]
 edition = "2021"

@@ -29,6 +29,11 @@ Tests: `cargo test --manifest-path src-tauri/Cargo.toml` and `npm test --prefix 
 A build from source signs in to a dhrive.app account like the release does. Accounts, the site host
 and updates are services of dhrive.app.
 
+## Release
+
+Push a `v*` tag. [`release.yml`](.github/workflows/release.yml) tests, builds, signs, notarizes and
+publishes; the tag's note in [`changelog/`](changelog) becomes the release notes.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
