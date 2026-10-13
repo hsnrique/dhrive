@@ -1,0 +1,91 @@
+name: Release
+
+# Push a version tag (e.g. v0.3.5) to build, sign, notarize and publish a release.
+# tauri-action also generates and uploads latest.json, which dhrive.app's update feed serves.
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    # macos-26 (Xcode 26) so the binary's hardened-runtime version matches local builds.
+    # On macos-15 the runtime version is 15.x, which makes the OS enforce library validation
+    # on the agent CLIs we spawn (claude/codex/git) and kills them — only in the signed build.
+    runs-on: macos-26
+    permissions:
+      contents: write
+    env:
+      DHRIVE_ACCOUNT_URL: https://dhrive.app
+      DHRIVE_SITES_URL: https://dhrive.site
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          targets: aarch64-apple-darwin
+
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      # The version in tauri.conf.json must match the tag, or installed copies never see the update
+      # (latest.json carries that version). The tag's dated changelog note becomes the release notes,
+      # the same text dhrive.app's changelog shows. Both are checked here, before a long build.
+      - name: Check the version and read the release notes
+        id: notes
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          configured=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          if [ "$configured" != "$version" ]; then
+            echo "::error::tauri.conf.json says $configured but the tag says $version"
+            exit 1
+          fi
+          note="changelog/${GITHUB_REF_NAME}.md"
+          if ! grep -Eq '^date: [0-9]{4}-[0-9]{2}-[0-9]{2}$' "$note" 2>/dev/null; then
+            echo "::error::$note is missing or has no date yet"
+            exit 1
+          fi
+          {
+            echo "body<<DHRIVE_NOTES"
+            awk 'n >= 2 { print } /^---$/ { n++ }' "$note"
+            echo
+            echo "Updates are automatic: installed copies upgrade themselves on next launch."
+            echo "DHRIVE_NOTES"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Test the backend
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Test the frontend
+        working-directory: frontend
+        run: npm test
+
+      - name: Build, sign, notarize & publish
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          # arm64-only: the universal build fails on macos-26 (x86_64 cross-compile). Apple Silicon only.
+          args: --target aarch64-apple-darwin
+          tagName: ${{ github.ref_name }}
+          releaseName: "dhrive ${{ github.ref_name }}"
+          releaseBody: ${{ steps.notes.outputs.body }}
+          releaseDraft: false
+          prerelease: false
