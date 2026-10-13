@@ -1,0 +1,113 @@
+import { Check, Code2, LifeBuoy, Megaphone, RotateCcw, Search, Square, X, type LucideIcon } from "lucide-react";
+
+import type { Engine } from "@/lib/api";
+import { taskSummary, type Area, type Task, type TaskStatus } from "@/lib/day";
+import { cn } from "@/lib/utils";
+import { useApp } from "@/store/app";
+import { useDay } from "@/store/day";
+import { useFold } from "@/store/fold";
+import { Approvals } from "../Approvals";
+import { Markdown } from "../Markdown";
+import { ChoicePicker } from "../ModelPicker";
+
+// One of the company's tasks: what it's for, who does it, and how it went. A suggestion can be added
+// to the queue; until it starts, a task can be handed to another CLI or dropped (those show on hover,
+// or unfolded); while it runs it shows what the CLI is doing and anything it needs the owner's OK
+// for; after, what it said it did, and one that failed or was stopped can be tried again.
+
+export const AREA_LOOK: Record<Area, { label: string; Icon: LucideIcon }> = {
+  code: { label: "Code", Icon: Code2 },
+  marketing: { label: "Marketing", Icon: Megaphone },
+  support: { label: "Support", Icon: LifeBuoy },
+  research: { label: "Research", Icon: Search },
+};
+
+const action = "flex h-6 items-center gap-1 rounded-full px-2 text-[11.5px] text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
+
+const STATUS: Record<TaskStatus, string> = { suggested: "Suggested", planned: "Up next", running: "Working", done: "Done", failed: "Failed", stopped: "Stopped" };
+
+function Mark({ status }: { status: TaskStatus }) {
+  const box = "flex h-[18px] w-[18px] flex-none items-center justify-center rounded-full";
+  if (status === "running") return <span className={box} title={STATUS[status]}><span className="node-live h-2 w-2 rounded-full bg-foreground" /></span>;
+  if (status === "done") return <span className={cn(box, "bg-foreground text-background")} title={STATUS[status]}><Check className="h-3 w-3" strokeWidth={3} /></span>;
+  if (status === "failed") return <span className={cn(box, "border border-[#ff8a8f]/60 text-[#ff8a8f]")} title={STATUS[status]}><X className="h-3 w-3" strokeWidth={2.5} /></span>;
+  if (status === "stopped") return <span className={cn(box, "border border-border text-muted-foreground")} title={STATUS[status]}><Square className="h-2 w-2 fill-current" /></span>;
+  return <span className={cn(box, "border border-border", status === "suggested" && "border-dashed")} title={STATUS[status]} />;
+}
+
+function Progress({ runId }: { runId: string }) {
+  const phase = useApp((s) => s.live[runId]?.phase) || "Starting";
+  const doing = useApp((s) => s.live[runId]?.log[s.live[runId].log.length - 1]);
+  const said = doing ? `${phase} · ${doing}` : phase;
+  return <p className="truncate text-[12.5px] text-muted-foreground" title={said}>{said}</p>;
+}
+
+// Folded, a task is one card: its mark, title and area, and one line of what it asks or what it did.
+// A click unfolds the whole of it with what can be done to it. Its live progress and anything it waits
+// on the owner for always show, folded or not.
+export function TaskRow({ projectId, task, engines }: { projectId: string; task: Task; engines: Engine[] }) {
+  const [open, setOpen] = useFold(`task:${task.id}`);
+  const { label, Icon } = AREA_LOOK[task.area];
+  const { edit, drop, accept, retry } = useDay.getState();
+  const editable = task.status === "planned" || task.status === "suggested";
+  const again = task.status === "failed" || task.status === "stopped";
+  const summary = taskSummary(task);
+  const more = editable ? task.prompt !== task.title : Boolean(task.result);
+  const toggle = () => more && setOpen((v) => !v);
+  // The card's own buttons act without folding or unfolding it.
+  const own = (e: React.MouseEvent) => e.stopPropagation();
+  return (
+    <li className={cn("group grid gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 transition-colors", more && "cursor-pointer hover:border-white/20", task.status === "running" && "border-white/20")} onClick={toggle}>
+      <div
+        className="flex min-w-0 items-center gap-2.5 rounded-md outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        role={more ? "button" : undefined}
+        tabIndex={more ? 0 : undefined}
+        aria-expanded={more ? open : undefined}
+        onKeyDown={(e) => more && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggle())}
+      >
+        <Mark status={task.status} />
+        <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{task.title}</span>
+        <Icon className="h-3 w-3 flex-none text-muted-foreground" strokeWidth={1.75} aria-label={label} />
+        {task.status === "suggested" ? (
+          <button type="button" className="h-6 flex-none rounded-full bg-white/[0.08] px-2.5 text-[11.5px] font-medium transition-colors hover:bg-white/[0.14]" onClick={(e) => (own(e), accept(projectId, task.id))}>
+            Add
+          </button>
+        ) : !editable && <span className="flex-none text-[11px] text-muted-foreground">{STATUS[task.status]}</span>}
+      </div>
+      <div className="grid min-w-0 gap-2 pl-[28px]">
+        {task.status === "running" && task.runId ? (
+          <div className="grid gap-2" onClick={own}>
+            <Progress runId={task.runId} />
+            <Approvals projectId={projectId} runId={task.runId} />
+          </div>
+        ) : !open && summary && (
+          <p className={cn("truncate text-[12px]", task.status === "failed" ? "text-[#ff8a8f]" : "text-muted-foreground")}>{summary}</p>
+        )}
+        {open && (editable ? (
+          <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-muted-foreground">{task.prompt}</p>
+        ) : task.status === "failed" ? (
+          <p className="whitespace-pre-wrap text-[12.5px] text-[#ff8a8f]">{task.result}</p>
+        ) : (
+          <div className="min-w-0 [&_p]:text-[12.5px]"><Markdown source={task.result} /></div>
+        ))}
+        {(editable || again) && (
+          <div className={cn("flex flex-wrap items-center gap-1.5", !open && "hidden group-hover:flex group-focus-within:flex")} onClick={own}>
+            {editable && <ChoicePicker choice={{ engine: task.engine, model: task.model, effort: task.effort }} onChoose={(choice) => edit(projectId, task.id, choice)} label={`CLI for ${task.title}`} engines={engines} align="right" down tunable />}
+            {editable && (
+              <button type="button" className={action} onClick={() => drop(projectId, task.id)}>
+                <X className="h-3 w-3" />
+                {task.status === "suggested" ? "Dismiss" : "Drop"}
+              </button>
+            )}
+            {again && (
+              <button type="button" className={action} onClick={() => retry(projectId, task.id)}>
+                <RotateCcw className="h-3 w-3" />
+                Try again
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </li>
+  );
+}

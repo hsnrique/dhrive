@@ -1,0 +1,71 @@
+import { useEffect, useState } from "react";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { ArrowUpRight, Check, CircleAlert, Globe, Hammer } from "lucide-react";
+
+import { hostOf } from "@/lib/domains";
+import { useAddress } from "@/store/favorite";
+import { usePublish, usePublishedOf } from "@/store/publish";
+
+// The website's way to the web, in the toolbar: Build checks it on this Mac first, so whatever would
+// break the publish shows up (and goes to the chat, ready to fix) before going live; Publish builds
+// again and puts it up; the live address (the owner's favorite, store/favorite.ts) opens in the browser.
+
+const pill = "flex h-7 flex-none items-center gap-1.5 rounded-full border border-border px-2.5 text-[12px] @[60rem]:px-3 transition-colors hover:bg-white/[0.07] disabled:opacity-50";
+const SHOW_BUILT_MS = 4_000;
+// The toolbar is a container (CompanyView): below this its labels give way to their icons.
+const label = "hidden @[60rem]:inline";
+
+function Working({ label }: { label: string }) {
+  return (
+    <span className="flex h-7 items-center gap-1.5 px-1 text-[12px] text-muted-foreground">
+      <span className="node-live h-1.5 w-1.5 rounded-full bg-foreground" />
+      {label}
+    </span>
+  );
+}
+
+// "Built" for a moment after a build passes, then back to Build.
+function useJustBuilt(builtAt: number | null): boolean {
+  const [fresh, setFresh] = useState(false);
+  useEffect(() => {
+    if (!builtAt) return;
+    setFresh(true);
+    const timer = setTimeout(() => setFresh(false), SHOW_BUILT_MS);
+    return () => clearTimeout(timer);
+  }, [builtAt]);
+  return fresh;
+}
+
+export function SiteActions({ projectId }: { projectId: string }) {
+  const { url: published, busy, building, builtAt, error } = usePublishedOf(projectId);
+  const url = useAddress(projectId);
+  const built = useJustBuilt(builtAt);
+  const { build, publish } = usePublish.getState();
+  if (busy) return <Working label="Publishing…" />;
+  if (building) return <Working label="Building…" />;
+  return (
+    <div className="flex items-center gap-1.5">
+      {error && (
+        <span className="flex min-w-0 items-center text-[11.5px] text-[#ff8a8f]" title={error} role="alert">
+          <CircleAlert className="h-3.5 w-3.5 flex-none @[52rem]:hidden" aria-label={error} />
+          <span className="hidden max-w-[220px] truncate @[52rem]:inline">{error}</span>
+        </span>
+      )}
+      {url && (
+        <button type="button" className={pill} title={`Open ${hostOf(url)}`} aria-label={`Open ${hostOf(url)}`} onClick={() => void openUrl(url).catch(() => undefined)}>
+          <span className="h-1.5 w-1.5 rounded-full bg-[#3ddc84]" />
+          <span className={`${label} max-w-[180px] truncate`}>{hostOf(url)}</span>
+          <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
+        </button>
+      )}
+      <button type="button" className={pill} aria-label={built ? "Built" : "Build"} title="Build the website on this Mac, to catch errors before publishing" onClick={() => void build(projectId)}>
+        {built ? <Check className="h-3.5 w-3.5 text-[#3ddc84]" /> : <Hammer className="h-3.5 w-3.5" />}
+        <span className={label}>{built ? "Built" : "Build"}</span>
+      </button>
+      <button type="button" className={pill} aria-label={published ? "Publish again" : "Publish"} title={published ? "Publish what's on this Mac now" : "Put the website on the web"} onClick={() => void publish(projectId)}>
+        <Globe className="h-3.5 w-3.5" />
+        <span className={label}>{published ? "Publish again" : "Publish"}</span>
+      </button>
+    </div>
+  );
+}

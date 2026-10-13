@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "dhrive",
+  "version": "0.3.3",
+  "identifier": "com.cyostech.dhrive",
+  "build": {
+    "beforeDevCommand": {
+      "cwd": "../frontend",
+      "script": "npm run dev"
+    },
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": {
+      "cwd": "../frontend",
+      "script": "npm run build"
+    },
+    "frontendDist": "../frontend/dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "title": "dhrive",
+        "width": 1440,
+        "height": 900,
+        "center": true,
+        "minWidth": 820,
+        "minHeight": 640,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "dragDropEnabled": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ipc: http://ipc.localhost; frame-src https://*.dhrive.site; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+      "devCsp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "createUpdaterArtifacts": true,
+    "macOS": {
+      "entitlements": "entitlements.plist"
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDE0QkFDNEVBMTRCNTI3MkQKUldRdEo3VVU2c1M2Rk5weFBwRFVpOWdwMWpRTVFRWFUrRjhkT1pnOXpBbldPMjJNVFF4aTR6a20K",
+      "endpoints": [
+        "https://www.dhrive.app/api/update"
+      ]
+    }
+  }
+}

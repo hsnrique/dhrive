@@ -1,0 +1,302 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Self-hosted brand fonts (copied to frontend/public/fonts). */
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  src: url("/fonts/InstrumentSerif-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+/* dhrive is always-dark — the identity palette lives here as the default theme, re-expressed
+   from the old styles.css as tokens (no 3000-line stylesheet). shadcn/Radix components read
+   these via @theme inline below. */
+:root {
+  --background: #0c0c0c;
+  --foreground: #f2f2f2;
+  /* Liquid glass: translucent surfaces that frost the ambient field behind them. */
+  --card: rgba(24, 24, 28, 0.45);
+  --card-foreground: #f2f2f2;
+  --popover: rgba(20, 20, 24, 0.94);
+  --popover-foreground: #f2f2f2;
+  --primary: #f2f2f2;
+  --primary-foreground: #0c0c0c;
+  --secondary: rgba(255, 255, 255, 0.07);
+  --secondary-foreground: #f2f2f2;
+  --muted: #161616;
+  --muted-foreground: rgba(242, 242, 242, 0.55);
+  --accent: #1f1f1f;
+  --accent-foreground: #f2f2f2;
+  --destructive: #e5484d;
+  --destructive-foreground: #ffffff;
+  /* Lines a code step added and removed, soft enough to read a long diff on black. */
+  --diff-add: #7ee2a8;
+  --diff-remove: #ff8a8f;
+  /* A run waiting on the owner (a tool call to allow). */
+  --attention: #f5c451;
+  /* Code in the side panel: quiet colors that keep the page black and white at a distance. */
+  --code-keyword: #8fb8ff;
+  --code-string: #a8d8a0;
+  --code-number: #e6b673;
+  --code-comment: rgba(242, 242, 242, 0.42);
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.14);
+  --ring: rgba(255, 255, 255, 0.32);
+  --radius: 0.85rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-diff-add: var(--diff-add);
+  --color-diff-remove: var(--diff-remove);
+  --color-attention: var(--attention);
+  --color-code-keyword: var(--code-keyword);
+  --color-code-string: var(--code-string);
+  --color-code-number: var(--code-number);
+  --color-code-comment: var(--code-comment);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 5px);
+  --radius-2xl: calc(var(--radius) + 9px);
+  --radius-3xl: calc(var(--radius) + 17px);
+  --font-sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    /* Flat black, same as the landing — the liquid glass is the star, not the background. */
+    background: #000;
+  }
+  /* Quiet dot grid, densest at the top-right and fading out — subtle texture over the black,
+     matching the landing. Sits behind the content + gets frosted by the glass. */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+    background-size: 34px 34px;
+    -webkit-mask-image: radial-gradient(ellipse 110% 90% at 100% 0%, #000, transparent 75%);
+    mask-image: radial-gradient(ellipse 110% 90% at 100% 0%, #000, transparent 75%);
+  }
+  /* Liquid glass: every card/popover surface frosts the ambient field with a heavy backdrop
+     blur, a top sheen, a bright specular rim + hairline edge, and a soft depth shadow. */
+  [class~="bg-card"],
+  [class~="bg-popover"] {
+    backdrop-filter: saturate(190%) blur(30px);
+    -webkit-backdrop-filter: saturate(190%) blur(30px);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+      0 24px 55px -30px rgba(0, 0, 0, 0.75);
+    transition:
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
+  }
+}
+
+/* Smooth entrance for overlays/modals — the "liquid" of liquid glass. */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.pop-in {
+  animation: pop-in 0.18s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+/* The sidebar opening over the work on a narrow window, and the dim behind it. */
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.slide-in-left {
+  animation: slide-in-left 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.slide-in-right {
+  animation: slide-in-right 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* Inside the company's columns every grid track may shrink to its column, so no long word or row
+   widens one column past the others. Zero specificity and the base layer: a utility that sets its
+   own columns (grid-cols-2) still wins. */
+@layer base {
+  :where(.deck) :where(.grid) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The parts no component draws still belong to dhrive: caret, scrollbars, focus. */
+@layer base {
+  textarea,
+  input {
+    caret-color: var(--foreground);
+  }
+  ::selection {
+    background: rgba(242, 242, 242, 0.22);
+    color: #fff;
+  }
+  :focus-visible {
+    outline: 2px solid rgba(242, 242, 242, 0.55);
+    outline-offset: 2px;
+  }
+  textarea:focus-visible,
+  input:focus-visible {
+    outline: none;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12) padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.22);
+  }
+  /* The project's glass header sits inside its scroller; the scrollbar starts below it. */
+  .project-scroll::-webkit-scrollbar-track {
+    margin-top: 52px;
+  }
+}
+
+/* A stage node that is running breathes; everything else holds still. */
+@keyframes node-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(242, 242, 242, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(242, 242, 242, 0);
+  }
+}
+.node-live {
+  animation: node-breathe 1.6s cubic-bezier(0.33, 1, 0.68, 1) infinite;
+}
+
+/* The relay: the line from the plan to the code fills downward the moment the plan hands off. */
+@keyframes relay-fill {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.relay-fill {
+  transform-origin: top;
+  animation: relay-fill 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* A live log fades out at the top, so new lines read as arriving rather than a wall of text. */
+.log-fade {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28px);
+  mask-image: linear-gradient(to bottom, transparent, #000 28px);
+}
+
+/* A card still being written: a soft light passes over it while the maestro reads the project. */
+@keyframes ghost-sweep {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -20% 0;
+  }
+}
+.ghost-sweep {
+  background-image: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.06) 50%, transparent 70%);
+  background-size: 250% 100%;
+  animation: ghost-sweep 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .node-live,
+  .ghost-sweep,
+  .relay-fill,
+  .pop-in,
+  .slide-in-left,
+  .slide-in-right,
+  .fade-in {
+    animation: none;
+  }
+}
+
+/* Geist Mono joins runs like "..." and "->" into ligatures. xterm measures each character as a run
+   of 32, so a joined run reads as a narrow glyph and gets padded out of its cell. */
+.xterm,
+.xterm * {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}

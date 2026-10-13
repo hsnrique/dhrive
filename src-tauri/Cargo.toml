@@ -1,0 +1,39 @@
+[package]
+name = "dhrive"
+version = "0.3.3"
+description = "dhrive: plan with one AI CLI and model, code with another"
+authors = ["cyostech"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "dhrive_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "=2.6.3", features = [] }
+
+[dependencies]
+tauri = { version = "=2.11.6", features = ["unstable"] }
+tauri-plugin-opener = "=2.5.5"
+tauri-plugin-updater = "=2.12.0"
+tauri-plugin-dialog = "=2.7.3"
+tauri-plugin-notification = "=2.4.0"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+# Already built for the updater; used here only to talk to the local Ollama server over plain HTTP.
+reqwest = { version = "=0.13.5", default-features = false, features = ["json"] }
+# The updater builds reqwest with TLS but no crypto provider of its own; this is the one it installs.
+rustls = { version = "=0.23.45", default-features = false, features = ["ring"] }
+# Already in the tree through rustls-platform-verifier; used directly to keep the account token in the Keychain.
+security-framework = "=3.7.0"
+# Both already in the tree (rustls, the updater); used directly for the sign-in's PKCE: a random
+# verifier, its SHA-256, and base64url.
+ring = "=0.17.14"
+base64 = "=0.22.1"
+# The pseudo-terminals Terminals mode runs each CLI in (wezterm's).
+portable-pty = "=0.9.0"
