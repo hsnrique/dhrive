@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 import { readDocuments, runChecks, runStep, stopRun } from "@/lib/api";
+import { agentById, rosterNote, type Agent } from "@/lib/army";
 import { FIX_ATTEMPTS, failure, fixPrompt, passed, verdict } from "@/lib/checks";
 import { isBlank, toMarkdown } from "@/lib/company";
 import { alreadyNote, clipped, ownTask, parseDay, savedTasks, taskPrompt, trimmed, type Area, type Task } from "@/lib/day";
@@ -9,6 +10,7 @@ import type { Choice } from "@/lib/flow";
 import { entry } from "@/lib/log";
 import { readSaved } from "@/lib/storage";
 import { useApp } from "./app";
+import { useArmy } from "./army";
 import { companyAgent, useCompany } from "./company";
 import { useLog } from "./log";
 import { useGitHub } from "./github";
@@ -79,6 +81,9 @@ interface DayState {
   // A new agent for the company: the tasks waiting on the old one move to it; one the owner gave its
   // own CLI or model keeps it, and the one running finishes where it started.
   setAgent: (projectId: string, agent: Choice) => void;
+  // An army agent changed CLI or model, or was dismissed (null): the tasks waiting on it follow, a
+  // dismissed agent's going back to the company's own agent.
+  follow: (projectId: string, agentId: string, agent: Agent | null) => void;
   add: (projectId: string, said: string, area: Area) => boolean;
   // A task already written, as the company's chat suggests one; queued as the owner's and started.
   queue: (projectId: string, task: Task) => void;
@@ -88,6 +93,8 @@ interface DayState {
 }
 
 const projectOf = (projectId: string) => useApp.getState().projects.find((p) => p.id === projectId);
+const armyOf = (projectId: string) => useArmy.getState().byProject[projectId] ?? [];
+const waiting = (t: Task) => t.status === "planned" || t.status === "suggested";
 
 export const useDay = create<DayState>((set, get) => {
   const day = (projectId: string) => get().byProject[projectId] ?? EMPTY_DAY;
@@ -135,7 +142,7 @@ export const useDay = create<DayState>((set, get) => {
     };
     patchTask(projectId, task.id, { result: "" });
     try {
-      let result = await code(taskPrompt(task, project.name), null);
+      let result = await code(taskPrompt(task, project.name, agentById(armyOf(projectId), task.agentId)), null);
       for (let fixes = 0; ; fixes++) {
         const report = await runChecks(projectId, fresh());
         if (!ours()) return;
@@ -181,11 +188,12 @@ export const useDay = create<DayState>((set, get) => {
       // Fresh suggestions replace the ones still waiting.
       patch(projectId, (d) => ({ planRunId, tasks: d.tasks.filter((t) => t.status !== "suggested"), first: also !== undefined, error: null }));
       try {
-        const task = [toMarkdown(brief, project.name), alreadyNote(day(projectId).tasks), also].filter(Boolean).join("\n\n");
+        const army = armyOf(projectId);
+        const task = [toMarkdown(brief, project.name), rosterNote(army), alreadyNote(day(projectId).tasks), also].filter(Boolean).join("\n\n");
         const result = await runStep({ runId: planRunId, folder: project.folder, step: "day", engine: choice.engine, model: choice.model, effort: choice.effort, task });
         if (day(projectId).planRunId !== planRunId) return;
         const status = day(projectId).ask ? "suggested" : "planned";
-        const fresh = parseDay(result.output, choice).map((t) => ({ ...t, status }) as Task);
+        const fresh = parseDay(result.output, choice, army).map((t) => ({ ...t, status }) as Task);
         patch(projectId, (d) => ({ planRunId: null, tasks: [...d.tasks, ...fresh], plannedAt: Date.now(), error: fresh.length ? null : NOTHING }));
         if (status === "planned" && fresh.length) void get().run(projectId);
       } catch (error) {
@@ -219,8 +227,20 @@ export const useDay = create<DayState>((set, get) => {
       const before = companyAgent(projectId);
       useCompany.getState().choose(agent, projectId);
       if (!before) return;
-      const was = (t: Task) => (t.status === "planned" || t.status === "suggested") && t.engine === before.engine && t.model === before.model;
+      const was = (t: Task) => waiting(t) && !t.agentId && t.engine === before.engine && t.model === before.model;
       patch(projectId, (d) => ({ tasks: d.tasks.map((t) => (was(t) ? { ...t, engine: agent.engine, model: agent.model, effort: agent.effort } : t)) }));
+    },
+    follow: (projectId, agentId, agent) => {
+      const company = companyAgent(projectId);
+      const to = agent ?? company;
+      if (!to) return;
+      const moved = (t: Task): Task => {
+        const next = { ...t, engine: to.engine, model: to.model, effort: to.effort };
+        if (agent) return next;
+        const { agentId: _, ...own } = next;
+        return own;
+      };
+      patch(projectId, (d) => ({ tasks: d.tasks.map((t) => (waiting(t) && t.agentId === agentId ? moved(t) : t)) }));
     },
     add: (projectId, said, area) => {
       const choice = companyAgent(projectId);

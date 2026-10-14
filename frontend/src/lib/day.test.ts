@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { newAgent } from "./army";
 import { MAX_KEPT, MAX_TASKS, alreadyNote, ownTask, parseDay, savedTasks, standing, taskPrompt, taskSummary, trimmed, type Task } from "./day";
 
 const AGENT = { engine: "claude-code" as const, model: "sonnet" };
@@ -13,6 +14,19 @@ describe("a company's day", () => {
       ["Fix", "code", "claude-code", "sonnet", "planned"],
     ]);
     expect(parseDay("no plan", AGENT)).toEqual([]);
+  });
+
+  it("gives each task to the army's agent the planner named, on that agent's CLI, else to the company's", () => {
+    const back = newAgent("Back", "APIs", { engine: "codex", model: "gpt-6" })!;
+    const reply = JSON.stringify([
+      { title: "API", area: "code", agent: "back", prompt: "Add the billing API" },
+      { title: "Post", area: "marketing", agent: "Nobody", prompt: "Draft a post" },
+    ]);
+    const [api, post] = parseDay(reply, AGENT, [back]);
+    expect([api.agentId, api.engine, api.model]).toEqual([back.id, "codex", "gpt-6"]);
+    expect([post.agentId, post.engine, post.model]).toEqual([undefined, "claude-code", "sonnet"]);
+    expect(taskPrompt(api, "planilha.", back)).toMatch(/^You are Back, one of planilha\.'s agents\. Your role: APIs\n\nAdd the billing API/);
+    expect(savedTasks([{ ...api, agentId: 3 }, api]).map((t) => t.agentId)).toEqual([undefined, back.id]);
   });
 
   it("keeps at most a day's worth of tasks", () => {

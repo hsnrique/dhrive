@@ -1,5 +1,6 @@
 import type { Engine } from "@/lib/api";
 import { savedEffort, type Choice } from "@/lib/flow";
+import { agentByName, agentIntro, type Agent } from "./army";
 import { STANDARDS } from "./standards";
 
 // A company's tasks: those its agent suggests from the brief and those the owner adds, each run in
@@ -24,6 +25,8 @@ export interface Task {
   runId: string | null;
   // What the CLI said when it finished, or why it failed.
   result: string;
+  // The army's agent doing it (army.ts); none for the company's own agent.
+  agentId?: string;
 }
 
 export const AREAS: Area[] = ["code", "marketing", "support", "research"];
@@ -49,14 +52,17 @@ function arrayIn(output: string): unknown[] {
   }
 }
 
-// Every task goes to the agent the owner picked for the company; dhrive never picks one for them.
-function taskOf(item: unknown, agent: Choice): Task | null {
+// A task goes to the army's agent the planner named, on that agent's CLI and model, or else to the
+// agent the owner picked for the company; dhrive never picks a model for them.
+function taskOf(item: unknown, agent: Choice, army: Agent[]): Task | null {
   if (typeof item !== "object" || item === null) return null;
-  const { title, area, prompt } = item as Record<string, unknown>;
+  const { title, area, prompt, agent: who } = item as Record<string, unknown>;
   const ask = text(prompt);
   if (!ask || ask.length > MAX_PROMPT) return null;
   const said = text(area).toLowerCase() as Area;
-  return newTask(ask, text(title).slice(0, MAX_TITLE) || ask.slice(0, 40), AREAS.includes(said) ? said : "code", agent);
+  const named = agentByName(army, who);
+  const task = newTask(ask, text(title).slice(0, MAX_TITLE) || ask.slice(0, 40), AREAS.includes(said) ? said : "code", named ?? agent);
+  return named ? { ...task, agentId: named.id } : task;
 }
 
 function newTask(prompt: string, title: string, area: Area, agent: Choice): Task {
@@ -90,9 +96,9 @@ export function alreadyNote(tasks: Task[]): string {
   return [done && `Already done:\n${done}`, queued && `Already queued:\n${queued}`].filter(Boolean).join("\n\n");
 }
 
-export function parseDay(output: string, agent: Choice): Task[] {
+export function parseDay(output: string, agent: Choice, army: Agent[] = []): Task[] {
   return arrayIn(output)
-    .map((item) => taskOf(item, agent))
+    .map((item) => taskOf(item, agent, army))
     .filter((task): task is Task => task !== null)
     .slice(0, MAX_TASKS);
 }
@@ -100,8 +106,9 @@ export function parseDay(output: string, agent: Choice): Task[] {
 
 // What each task's agent hears around its own prompt: whose company it works for, the standards,
 // and the rule the planner was given, since this agent never saw it.
-export function taskPrompt(task: Task, company: string): string {
-  return `${task.prompt}\n\nThis is one of the tasks of ${company}; its brief is in COMPANY.md and its documents, if it has them yet, in docs/ (follow docs/design-guide.md in any interface).\n\n${STANDARDS}\n\nDon't publish, post, send, buy or spend anything: write what's meant for the outside world as a draft file in the project.`;
+export function taskPrompt(task: Task, company: string, agent?: Agent): string {
+  const intro = agent ? `${agentIntro(agent, company)}\n\n` : "";
+  return `${intro}${task.prompt}\n\nThis is one of the tasks of ${company}; its brief is in COMPANY.md and its documents, if it has them yet, in docs/ (follow docs/design-guide.md in any interface).\n\n${STANDARDS}\n\nDon't publish, post, send, buy or spend anything: write what's meant for the outside world as a draft file in the project.`;
 }
 
 const count = (n: number, what: string) => `${n} ${what}${n === 1 ? "" : "s"}`;
@@ -130,7 +137,10 @@ export function savedTasks(value: unknown): Task[] {
   if (!Array.isArray(value)) return [];
   return value
     .filter((t): t is Task => ["id", "title", "area", "engine", "model", "prompt", "status", "result"].every((key) => typeof (t as Record<string, unknown>)?.[key] === "string"))
-    .map((t) => ({ ...t, status: t.status === "running" ? "stopped" : t.status, runId: null }));
+    .map((t) => {
+      const { agentId, ...rest } = t;
+      return { ...rest, ...(typeof agentId === "string" ? { agentId } : {}), status: t.status === "running" ? "stopped" : t.status, runId: null };
+    });
 }
 
 // One plain line for a task's folded card: what it asks beyond its title while it waits, what the CLI

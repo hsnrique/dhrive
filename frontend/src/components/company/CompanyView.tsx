@@ -11,6 +11,7 @@ import { useDayOf } from "@/store/day";
 import { useDomains } from "@/store/domains";
 import { useFavorite } from "@/store/favorite";
 import { usePublish, usePublishedOf } from "@/store/publish";
+import { Army } from "./Army";
 import { BriefCard } from "./BriefCard";
 import { Documents } from "./Documents";
 import { Environment } from "./Environment";
@@ -55,6 +56,7 @@ function Sections({ project, brief }: { project: Project; brief: Brief }) {
   const section: Record<SectionId, ReactNode> = {
     overview: <Overview project={project} brief={brief} />,
     tasks: <Tasks project={project} brief={brief} />,
+    army: <Army project={project} />,
     website: <Website project={project} />,
     environment: <Environment project={project} />,
     documents: <Documents project={project} />,

@@ -13,7 +13,7 @@ use crate::projects::write_atomic;
 // and these must be committed with the rest.
 
 pub(crate) const FOLDER: &str = ".company";
-const NAMES: &[&str] = &["tasks", "log", "site", "connectors", "agent"];
+const NAMES: &[&str] = &["tasks", "log", "site", "connectors", "agent", "army"];
 // A record holds the recent part only; past this it's a bug, not a busy company.
 const MAX_BYTES: usize = 20 * 1024 * 1024;
 

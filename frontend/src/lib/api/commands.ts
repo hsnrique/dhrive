@@ -23,7 +23,7 @@ export const readInstructions = () => invoke<string>("read_instructions");
 export const readCompany = (project: string) => invoke<string>("read_company", { project });
 export const saveCompany = (project: string, text: string) => invoke<void>("save_company", { project, text });
 // A company's documents under docs/, each null until its agent writes it.
-export type RecordName = "tasks" | "log" | "site" | "connectors" | "agent";
+export type RecordName = "tasks" | "log" | "site" | "connectors" | "agent" | "army";
 export const readCompanyRecord = (project: string, name: RecordName) => invoke<unknown>("read_company_record", { project, name });
 export const saveCompanyRecord = (project: string, name: RecordName, value: unknown) => invoke<void>("save_company_record", { project, name, value });
 export const archiveCompanyRecord = (project: string, name: RecordName, items: unknown[]) => invoke<void>("archive_company_record", { project, name, items });
