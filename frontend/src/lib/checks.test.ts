@@ -14,13 +14,14 @@ describe("dhrive's checks of a delivery", () => {
     expect(passed(ran([["lint", true]], ["typecheck"])), "a script the standard keeps is missing").toBe(false);
   });
 
-  it("tells the agent what failed, in its own words, and not to weaken the checks", () => {
+  it("tells the agent what failed, in its own words, not to weaken the checks, and to rerun only those", () => {
     const prompt = fixPrompt(ran([["lint", true], ["test", false, "expected 2, got 3"]], ["build"]), "Signup");
     expect(prompt).toContain('your task "Signup"');
     expect(prompt).toContain("## test\n\nexpected 2, got 3");
     expect(prompt).not.toContain("## lint");
     expect(prompt).toContain("package.json has no build");
     expect(prompt).toContain("Never weaken, skip or delete a check");
+    expect(prompt, "only what failed is rerun; dhrive reruns the rest").toContain("Then run test again until it passes, and say what you fixed; dhrive runs all four after you.");
   });
 
   it("says what it checked on a done task, and what failed on a failed one", () => {

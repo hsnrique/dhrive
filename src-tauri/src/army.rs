@@ -109,13 +109,32 @@ pub fn changes(folder: &Path, task: &str, title: &str) -> Result<Changes, String
     let onto = git(folder, &["symbolic-ref", "--short", "HEAD"])?;
     let range = format!("{onto}...HEAD");
     let files = git(&copy, &["diff", "--name-only", &range])?.lines().map(str::to_string).collect();
-    let mut diff = git(&copy, &["diff", &range])?;
+    Ok(Changes { files, diff: review_diff(&copy, &range)? })
+}
+
+// Files a reviewer can't judge by reading them: lockfiles, build output, minified code, maps and
+// snapshots. They stay out of the diff and are only named at its end, so its length goes to code a
+// person wrote; an npm install alone could fill it with a lockfile and push the code past the cut.
+const GENERATED: &[&str] = &["package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb", "Cargo.lock", "*.min.js", "*.min.css", "*.map", "*.snap", "dist/**", "build/**", ".next/**", "out/**"];
+
+fn review_diff(copy: &Path, range: &str) -> Result<String, String> {
+    let spec = |exclude: bool| GENERATED.iter().map(move |p| format!(":({}glob)**/{p}", if exclude { "exclude," } else { "" }));
+    let run = |head: &[&str], exclude: bool| {
+        let args: Vec<String> = head.iter().map(|a| a.to_string()).chain(spec(exclude)).collect();
+        git(copy, &args.iter().map(String::as_str).collect::<Vec<_>>())
+    };
+    let mut diff = run(&["diff", range, "--", "."], true)?;
     if diff.len() > MAX_DIFF {
         let cut = (0..=MAX_DIFF).rev().find(|&i| diff.is_char_boundary(i)).unwrap_or(0);
         diff.truncate(cut);
         diff.push_str("\n… the rest of the diff was cut for length");
     }
-    Ok(Changes { files, diff })
+    let skipped = run(&["diff", "--name-only", range, "--"], false)?;
+    let skipped: Vec<&str> = skipped.lines().filter(|l| !l.is_empty()).collect();
+    if !skipped.is_empty() {
+        diff.push_str(&format!("\n\nAlso changed, generated and not shown: {}", skipped.join(", ")));
+    }
+    Ok(diff)
 }
 
 // A task that won't land: its work stays committed on its branch for the owner, the copy goes.
@@ -235,9 +254,11 @@ mod tests {
         std::fs::create_dir_all(a.join("server")).unwrap();
         std::fs::write(a.join("server/api.js"), "api\n").unwrap();
         std::fs::write(a.join("app.js"), "one\nTWO\nthree\n").unwrap();
+        std::fs::write(a.join("package-lock.json"), "{\"lockfileVersion\": 3}\n").unwrap();
         let seen = changes(&folder, A, "API").unwrap();
-        assert_eq!(seen.files, vec!["app.js".to_string(), "server/api.js".to_string()]);
+        assert_eq!(seen.files, vec!["app.js".to_string(), "package-lock.json".to_string(), "server/api.js".to_string()]);
         assert!(seen.diff.contains("+TWO") && seen.diff.contains("+api"), "{}", seen.diff);
+        assert!(!seen.diff.contains("lockfileVersion") && seen.diff.ends_with("generated and not shown: package-lock.json"), "{}", seen.diff);
         std::fs::remove_dir_all(folder).unwrap();
     }
 
