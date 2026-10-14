@@ -3,7 +3,9 @@ import { Check, Code2, LifeBuoy, Megaphone, RotateCcw, Search, Square, X, type L
 import type { Engine } from "@/lib/api";
 import { taskSummary, type Area, type Task, type TaskStatus } from "@/lib/day";
 import { cn } from "@/lib/utils";
+import { agentById } from "@/lib/army";
 import { useApp } from "@/store/app";
+import { useArmyOf } from "@/store/army";
 import { useDay } from "@/store/day";
 import { useFold } from "@/store/fold";
 import { Approvals } from "../Approvals";
@@ -48,6 +50,7 @@ function Progress({ runId }: { runId: string }) {
 export function TaskRow({ projectId, task, engines }: { projectId: string; task: Task; engines: Engine[] }) {
   const [open, setOpen] = useFold(`task:${task.id}`);
   const { label, Icon } = AREA_LOOK[task.area];
+  const agent = agentById(useArmyOf(projectId), task.agentId);
   const { edit, drop, accept, retry } = useDay.getState();
   const editable = task.status === "planned" || task.status === "suggested";
   const again = task.status === "failed" || task.status === "stopped";
@@ -67,6 +70,7 @@ export function TaskRow({ projectId, task, engines }: { projectId: string; task:
       >
         <Mark status={task.status} />
         <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{task.title}</span>
+        {agent && <span className="max-w-24 flex-none truncate font-mono text-[11px] text-muted-foreground" title={`${agent.name} does it`}>{agent.name}</span>}
         <Icon className="h-3 w-3 flex-none text-muted-foreground" strokeWidth={1.75} aria-label={label} />
         {task.status === "suggested" ? (
           <button type="button" className="h-6 flex-none rounded-md bg-white/[0.08] px-2.5 text-[11.5px] font-medium transition-colors hover:bg-white/[0.14]" onClick={(e) => (own(e), accept(projectId, task.id))}>

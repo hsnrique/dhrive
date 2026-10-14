@@ -4,7 +4,7 @@ import { useLayoutEffect, useState, type RefObject } from "react";
 // the chat docking changes the room without the window changing. Sections fill as many columns as
 // fit (at most three), and the chat docks beside them only while they keep two columns.
 
-export type SectionId = "overview" | "tasks" | "website" | "environment" | "documents" | "brief";
+export type SectionId = "overview" | "tasks" | "army" | "website" | "environment" | "documents" | "brief";
 
 export const COLUMN_MIN = 290;
 export const GAP = 24;
@@ -17,12 +17,12 @@ export function columnCount(width: number): number {
   return Math.max(1, Math.min(MAX_COLUMNS, fit));
 }
 
-// What's happening and what's next lead; the reference material (documents, brief) closes. The
-// environment sits under the website, which is what most often needs it.
+// What's happening and what's next lead, with the army that does it; the reference material
+// (documents, brief) closes. The environment sits under the website, which is what most often needs it.
 export function columnsFor(count: number): SectionId[][] {
-  if (count >= 3) return [["overview", "website", "environment"], ["tasks"], ["documents", "brief"]];
-  if (count === 2) return [["overview", "tasks"], ["website", "environment", "documents", "brief"]];
-  return [["overview", "tasks", "website", "environment", "documents", "brief"]];
+  if (count >= 3) return [["overview", "website", "environment"], ["tasks"], ["army", "documents", "brief"]];
+  if (count === 2) return [["overview", "tasks"], ["army", "website", "environment", "documents", "brief"]];
+  return [["overview", "tasks", "army", "website", "environment", "documents", "brief"]];
 }
 
 // Measured before the first paint, so nothing lays out twice (the chat popping in a frame late).

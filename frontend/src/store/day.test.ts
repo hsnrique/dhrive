@@ -32,6 +32,8 @@ vi.mock("@/lib/api", () => ({
 }));
 
 const { useApp } = await import("./app");
+const { useArmy } = await import("./army");
+const { newAgent } = await import("@/lib/army");
 const { useCompany } = await import("./company");
 const { EMPTY_DAY, useDay } = await import("./day");
 const { useLog } = await import("./log");
@@ -60,6 +62,7 @@ describe("a company's day", () => {
       choices: { plan: { engine: "claude-code", model: "opus" }, code: null },
     });
     useCompany.setState({ byProject: { [P]: { brief: { ...EMPTY_BRIEF, goals: "More trials" }, saving: "saved", runId: null, error: null } }, choice: null, agents: {} });
+    useArmy.setState({ byProject: {} });
     // Looked over first unless a test says otherwise, so each step can be seen.
     useDay.setState({ byProject: { [P]: { ...EMPTY_DAY, ask: true } } });
   });
@@ -72,6 +75,27 @@ describe("a company's day", () => {
     await settle();
     expect(day().tasks.map((t) => [t.title, t.engine, t.model, t.status])).toEqual([["Ads", "claude-code", "opus", "suggested"], ["Form", "claude-code", "opus", "suggested"]]);
     expect(pending.size).toBe(0);
+  });
+
+  it("tells the planner the army, runs each task as the agent it names, and moves waiting tasks with their agent", async () => {
+    const qa = newAgent("QA", "Writes the missing tests", { engine: "codex", model: "gpt-6" })!;
+    useArmy.setState({ byProject: { [P]: [qa] } });
+    void useDay.getState().plan(P);
+    expect(last().request.task).toContain("- QA: Writes the missing tests");
+    reply(JSON.stringify([{ title: "Tests", area: "code", agent: "QA", prompt: "Cover the signup form" }, { title: "Ads", area: "marketing", prompt: "Write ads" }]));
+    await settle();
+    expect(day().tasks.map((t) => [t.title, t.agentId, t.engine])).toEqual([["Tests", qa.id, "codex"], ["Ads", undefined, "claude-code"]]);
+    useDay.getState().follow(P, qa.id, { ...qa, engine: "claude-code", model: "sonnet" });
+    expect(day().tasks[0]).toMatchObject({ agentId: qa.id, engine: "claude-code", model: "sonnet" });
+    useDay.getState().follow(P, qa.id, null);
+    expect(day().tasks[0].agentId, "a dismissed agent's task goes back to the company's agent").toBeUndefined();
+    expect(day().tasks[0]).toMatchObject({ engine: "claude-code", model: "opus" });
+    useDay.setState({ byProject: { [P]: { ...day(), tasks: day().tasks.map((t, i) => (i === 0 ? { ...t, agentId: qa.id } : t)) } } });
+    useDay.getState().accept(P, day().tasks[0].id);
+    expect(last().request).toMatchObject({ step: "code" });
+    expect(last().request.task).toMatch(/^You are QA, one of planilha\.'s agents/);
+    useDay.getState().stop(P);
+    await settle();
   });
 
   it("runs accepted tasks one after another, each as a code step that hears the rules", async () => {
