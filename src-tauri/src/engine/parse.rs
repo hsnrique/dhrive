@@ -131,6 +131,7 @@ pub fn claude_failure(stdout: &str, stderr: &str) -> String {
 fn build_run(parsed: ClaudeResult, model: Option<String>) -> AgentRun {
     let usage = parsed.usage.map(|u| Usage {
         input_tokens: u.input_tokens + u.cache_read_input_tokens + u.cache_creation_input_tokens,
+        cached_tokens: u.cache_read_input_tokens,
         output_tokens: u.output_tokens,
         total_cost_usd: parsed.total_cost_usd,
         num_turns: parsed.num_turns.unwrap_or(0),
@@ -198,7 +199,7 @@ mod tests {
         assert_eq!(run.session_id.as_deref(), Some("abc"));
         assert_eq!(run.summary, "done editing");
         let usage = run.usage.unwrap();
-        assert_eq!(usage.input_tokens, 110);
+        assert_eq!((usage.input_tokens, usage.cached_tokens), (110, 100));
         assert_eq!(usage.output_tokens, 20);
         assert_eq!(usage.num_turns, 3);
     }
@@ -221,7 +222,7 @@ mod tests {
         let run = extract_run(Engine::ClaudeCode, stream);
         assert_eq!(run.summary, "done editing");
         let usage = run.usage.unwrap();
-        assert_eq!(usage.input_tokens, 110);
+        assert_eq!((usage.input_tokens, usage.cached_tokens), (110, 100));
         assert_eq!(usage.num_turns, 4);
         assert_eq!(usage.total_cost_usd, Some(0.02));
         assert_eq!(usage.model.as_deref(), Some("claude-sonnet-4-6"));

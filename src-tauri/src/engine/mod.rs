@@ -30,6 +30,9 @@ pub enum Engine {
 #[serde(rename_all = "camelCase")]
 pub struct Usage {
     pub input_tokens: u64,
+    // The part of input_tokens the provider served from its prompt cache: far cheaper, and what tells a
+    // run that re-reads the same context from one that keeps sending new text.
+    pub cached_tokens: u64,
     pub output_tokens: u64,
     // None when the CLI doesn't report a price (Codex), so it's never mistaken for free.
     pub total_cost_usd: Option<f64>,
@@ -46,6 +49,7 @@ impl Usage {
         };
         Usage {
             input_tokens: self.input_tokens + other.input_tokens,
+            cached_tokens: self.cached_tokens + other.cached_tokens,
             output_tokens: self.output_tokens + other.output_tokens,
             total_cost_usd,
             num_turns: self.num_turns + other.num_turns,

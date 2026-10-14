@@ -1,6 +1,7 @@
 import type { Engine } from "@/lib/api";
 import { savedEffort, type Choice } from "@/lib/flow";
 import { agentByName, agentIntro, type Agent } from "./army";
+import { savedSpent, type Spent } from "./spend";
 import { STANDARDS } from "./standards";
 
 // A company's tasks: those its agent suggests from the brief and those the owner adds, each run in
@@ -31,6 +32,8 @@ export interface Task {
   after?: string[];
   // Why it runs where it does when that changed on its own: its plan was full, it went to its backup.
   note?: string;
+  // The tokens its runs spent, as its CLIs reported them (spend.ts).
+  spent?: Spent;
 }
 
 export const AREAS: Area[] = ["code", "marketing", "support", "research"];
@@ -177,10 +180,11 @@ export function savedTasks(value: unknown): Task[] {
   return value
     .filter((t): t is Task => ["id", "title", "area", "engine", "model", "prompt", "status", "result"].every((key) => typeof (t as Record<string, unknown>)?.[key] === "string"))
     .map((t) => {
-      const { agentId, after, note, ...rest } = t;
+      const { agentId, after, note, spent, ...rest } = t;
       const waits = Array.isArray(after) ? after.filter((id): id is string => typeof id === "string") : [];
       const said = typeof note === "string" ? { note: note.slice(0, 200) } : {};
-      return { ...rest, ...(typeof agentId === "string" ? { agentId } : {}), ...(waits.length ? { after: waits } : {}), ...said, status: t.status === "running" ? "stopped" : t.status, runId: null };
+      const counted = savedSpent(spent);
+      return { ...rest, ...(typeof agentId === "string" ? { agentId } : {}), ...(waits.length ? { after: waits } : {}), ...said, ...(counted ? { spent: counted } : {}), status: t.status === "running" ? "stopped" : t.status, runId: null };
     });
 }
 

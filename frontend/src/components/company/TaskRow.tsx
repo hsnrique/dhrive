@@ -2,6 +2,7 @@ import { Check, Code2, LifeBuoy, Megaphone, RotateCcw, Search, Square, X, type L
 
 import type { Engine } from "@/lib/api";
 import { taskSummary, waitingOn, type Area, type Task, type TaskStatus } from "@/lib/day";
+import { spendDetail, spendLine } from "@/lib/spend";
 import { cn } from "@/lib/utils";
 import { agentById } from "@/lib/army";
 import { useApp } from "@/store/app";
@@ -90,7 +91,10 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
         ) : waits.length > 0 ? (
           <p className="truncate font-mono text-[11.5px] text-muted-foreground" title={`Starts once ${waits.join(", ")} ${waits.length === 1 ? "is" : "are"} done`}>waits for {waits.join(", ")}</p>
         ) : !open && summary && (
-          <p className={cn("truncate text-[12px]", task.status === "failed" ? "text-[#ff8a8f]" : "text-muted-foreground")}>{summary}</p>
+          <div className="flex min-w-0 items-baseline gap-2">
+            <p className={cn("min-w-0 flex-1 truncate text-[12px]", task.status === "failed" ? "text-[#ff8a8f]" : "text-muted-foreground")}>{summary}</p>
+            {task.spent && <span className="flex-none font-mono text-[11px] text-muted-foreground/70" title={spendDetail(task.spent)}>{spendLine(task.spent)}</span>}
+          </div>
         )}
         {open && (editable ? (
           <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-muted-foreground">{task.prompt}</p>

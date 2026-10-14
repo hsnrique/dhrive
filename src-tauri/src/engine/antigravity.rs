@@ -57,6 +57,7 @@ pub fn parse(stdout: &str) -> AgentRun {
     };
     let usage = result.get("usage").filter(|u| u.is_object()).map(|u| Usage {
         input_tokens: u["input_tokens"].as_u64().unwrap_or(0) + u["cache_read_tokens"].as_u64().unwrap_or(0),
+        cached_tokens: u["cache_read_tokens"].as_u64().unwrap_or(0),
         output_tokens: u["output_tokens"].as_u64().unwrap_or(0),
         total_cost_usd: None,
         num_turns: result["num_turns"].as_u64().unwrap_or(1) as u32,
@@ -169,7 +170,7 @@ mod tests {
         assert_eq!(run.summary, "Fix `add` in math.js.");
         assert_eq!(run.session_id.as_deref(), Some("97573a22-482b-4023-b057-b949b4557c35"));
         let usage = run.usage.unwrap();
-        assert_eq!((usage.input_tokens, usage.output_tokens, usage.total_cost_usd), (14345, 493, None));
+        assert_eq!((usage.input_tokens, usage.cached_tokens, usage.output_tokens, usage.total_cost_usd), (14345, 100, 493, None));
         assert_eq!(usage.model.as_deref(), Some("gemini-3.8-flash-low"));
         assert_eq!(run.blocked, ["RunCommand"]);
         let silent = RUN.replace(r#""response":"Fix `add` in math.js.\n""#, r#""response":"""#);

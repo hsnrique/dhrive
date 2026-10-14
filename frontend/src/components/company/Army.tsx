@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import type { Project } from "@/lib/api";
 import { MAX_AGENTS, PARALLEL, SQUAD, agentByName } from "@/lib/army";
+import { totalOf } from "@/lib/spend";
 import { useApp } from "@/store/app";
 import { useArmy, useArmyOf } from "@/store/army";
 import { useDay, useDayOf } from "@/store/day";
@@ -37,7 +38,7 @@ export function Army({ project }: { project: Project }) {
       )}
       <ul className="grid">
         {hiring && <li><AgentForm onSave={(name, role, owns) => hire(project.id, name, role, owns)} onDone={() => setHiring(false)} /></li>}
-        {army.map((agent) => <AgentRow key={agent.id} projectId={project.id} agent={agent} engines={engines} />)}
+        {army.map((agent) => <AgentRow key={agent.id} projectId={project.id} agent={agent} engines={engines} spent={totalOf(day.tasks.filter((t) => t.agentId === agent.id).map((t) => t.spent))} />)}
         {!army.length && !hiring && <li className="px-1 py-2 text-[12px] text-muted-foreground">No agents yet: the company's own agent does every task.</li>}
       </ul>
       {lately.length > 0 && (

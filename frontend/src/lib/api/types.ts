@@ -26,6 +26,8 @@ export interface ModelOption {
 
 export interface Usage {
   inputTokens: number;
+  // The part of inputTokens served from the provider's prompt cache.
+  cachedTokens: number;
   outputTokens: number;
   totalCostUsd: number | null;
   numTurns: number;

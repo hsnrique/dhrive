@@ -35,6 +35,7 @@ pub fn parse(stdout: &str) -> AgentRun {
             "turn.completed" => {
                 let turn = Usage {
                     input_tokens: event["usage"]["input_tokens"].as_u64().unwrap_or(0),
+                    cached_tokens: event["usage"]["cached_input_tokens"].as_u64().unwrap_or(0),
                     output_tokens: event["usage"]["output_tokens"].as_u64().unwrap_or(0),
                     total_cost_usd: None,
                     num_turns: 1,
@@ -122,7 +123,7 @@ mod tests {
         assert_eq!(run.summary, "Fixed the redirect loop.");
         assert_eq!(run.session_id.as_deref(), Some("t-1"));
         let usage = run.usage.unwrap();
-        assert_eq!((usage.input_tokens, usage.output_tokens, usage.num_turns), (24763, 122, 1));
+        assert_eq!((usage.input_tokens, usage.cached_tokens, usage.output_tokens, usage.num_turns), (24763, 24448, 122, 1));
         assert_eq!(usage.total_cost_usd, None);
     }
 
