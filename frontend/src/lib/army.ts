@@ -68,7 +68,7 @@ export function savedArmy(value: unknown): Agent[] {
 export function rosterNote(army: Agent[]): string {
   if (!army.length) return "";
   const lines = army.map((a) => `- ${a.name}: ${a.role || "no role written yet"}`).join("\n");
-  return `The company's agents:\n${lines}\n\nFor each task also give "agent": the name of the one agent above whose role fits it best.`;
+  return `The company's agents:\n${lines}\n\nFor each task also give "agent": the name of the one agent above whose role fits it best. They work side by side, so when a task needs another one's work first (a page that calls an API waits for the API), give "after": the titles of the tasks in your list it waits for.`;
 }
 
 // What an agent hears when the company's latest, merged into its copy, clashed with its work.

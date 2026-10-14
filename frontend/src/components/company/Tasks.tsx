@@ -131,7 +131,7 @@ export function Tasks({ project, brief }: { project: Project; brief: Brief }) {
   const open = day.tasks.filter((t) => t.status === "running" || t.status === "planned");
   const suggested = day.tasks.filter((t) => t.status === "suggested");
   const finished = day.tasks.filter((t) => t.status === "done" || t.status === "failed" || t.status === "stopped");
-  const row = (task: Task) => <TaskRow key={task.id} projectId={project.id} task={task} engines={engines} />;
+  const row = (task: Task) => <TaskRow key={task.id} projectId={project.id} task={task} engines={engines} tasks={day.tasks} />;
   return (
     <section className="grid gap-4">
       <SectionHead title={day.first ? "First delivery" : "Tasks"}>

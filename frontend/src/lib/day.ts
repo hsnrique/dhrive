@@ -27,6 +27,8 @@ export interface Task {
   result: string;
   // The army's agent doing it (army.ts); none for the company's own agent.
   agentId?: string;
+  // The tasks it waits for, by id: it starts once each of them is done.
+  after?: string[];
 }
 
 export const AREAS: Area[] = ["code", "marketing", "support", "research"];
@@ -96,19 +98,52 @@ export function alreadyNote(tasks: Task[]): string {
   return [done && `Already done:\n${done}`, queued && `Already queued:\n${queued}`].filter(Boolean).join("\n\n");
 }
 
+// The planner names what a task waits for by the other tasks' titles in the same reply; they become
+// ids here, and a name that isn't one of them, or the task itself, is dropped.
 export function parseDay(output: string, agent: Choice, army: Agent[] = []): Task[] {
-  return arrayIn(output)
-    .map((item) => taskOf(item, agent, army))
-    .filter((task): task is Task => task !== null)
-    .slice(0, MAX_TASKS);
+  const items = arrayIn(output);
+  const pairs = items.map((item) => [item, taskOf(item, agent, army)] as const).filter((p): p is readonly [unknown, Task] => p[1] !== null).slice(0, MAX_TASKS);
+  const byTitle = new Map(pairs.map(([, t]) => [t.title.trim().toLowerCase(), t.id]));
+  return pairs.map(([item, task]) => {
+    const said = (item as { after?: unknown }).after;
+    const after = (Array.isArray(said) ? said : [])
+      .map((title) => (typeof title === "string" ? byTitle.get(title.trim().toLowerCase()) : undefined))
+      .filter((id): id is string => id !== undefined && id !== task.id);
+    return after.length ? { ...task, after: [...new Set(after)] } : task;
+  });
+}
+
+// A task may start once every task it waits for is done; one the owner dropped no longer holds it.
+export const ready = (task: Task, tasks: Task[]) =>
+  (task.after ?? []).every((id) => {
+    const before = tasks.find((t) => t.id === id);
+    return !before || before.status === "done";
+  });
+
+// The titles of what it still waits for, for its card.
+export const waitingOn = (task: Task, tasks: Task[]) =>
+  (task.after ?? []).map((id) => tasks.find((t) => t.id === id)).filter((t): t is Task => t !== undefined && t.status !== "done").map((t) => t.title);
+
+// The war room: what the army delivered lately, so each agent knows what the others just did.
+export function handoffs(tasks: Task[], army: Agent[]): string {
+  const lines = tasks
+    .filter((t) => t.status === "done")
+    .slice(-6)
+    .map((t) => {
+      const who = army.find((a) => a.id === t.agentId)?.name ?? "The company's agent";
+      const said = taskSummary(t);
+      return `- ${who}: ${t.title}${said ? ` (${said.slice(0, 160)})` : ""}`;
+    });
+  return lines.length ? `What the company's other agents delivered lately:\n${lines.join("\n")}` : "";
 }
 
 
 // What each task's agent hears around its own prompt: whose company it works for, the standards,
 // and the rule the planner was given, since this agent never saw it.
-export function taskPrompt(task: Task, company: string, agent?: Agent): string {
+export function taskPrompt(task: Task, company: string, agent?: Agent, lately = ""): string {
   const intro = agent ? `${agentIntro(agent, company)}\n\n` : "";
-  return `${intro}${task.prompt}\n\nThis is one of the tasks of ${company}; its brief is in COMPANY.md and its documents, if it has them yet, in docs/ (follow docs/design-guide.md in any interface).\n\n${STANDARDS}\n\nDon't publish, post, send, buy or spend anything: write what's meant for the outside world as a draft file in the project.`;
+  const room = lately ? `\n\n${lately}` : "";
+  return `${intro}${task.prompt}${room}\n\nThis is one of the tasks of ${company}; its brief is in COMPANY.md and its documents, if it has them yet, in docs/ (follow docs/design-guide.md in any interface).\n\n${STANDARDS}\n\nDon't publish, post, send, buy or spend anything: write what's meant for the outside world as a draft file in the project.`;
 }
 
 const count = (n: number, what: string) => `${n} ${what}${n === 1 ? "" : "s"}`;
@@ -140,8 +175,9 @@ export function savedTasks(value: unknown): Task[] {
   return value
     .filter((t): t is Task => ["id", "title", "area", "engine", "model", "prompt", "status", "result"].every((key) => typeof (t as Record<string, unknown>)?.[key] === "string"))
     .map((t) => {
-      const { agentId, ...rest } = t;
-      return { ...rest, ...(typeof agentId === "string" ? { agentId } : {}), status: t.status === "running" ? "stopped" : t.status, runId: null };
+      const { agentId, after, ...rest } = t;
+      const waits = Array.isArray(after) ? after.filter((id): id is string => typeof id === "string") : [];
+      return { ...rest, ...(typeof agentId === "string" ? { agentId } : {}), ...(waits.length ? { after: waits } : {}), status: t.status === "running" ? "stopped" : t.status, runId: null };
     });
 }
 

@@ -34,7 +34,7 @@ export function SuggestTool() {
   if (state === "closed" || state === "sent") {
     return (
       <button type="button" className="flex h-9 w-full items-center gap-2 rounded-lg px-2 text-[12.5px] text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground" onClick={() => setState("open")}>
-        <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-[9px] border border-dashed border-white/15"><Plus className="h-3.5 w-3.5" /></span>
+        <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-md border border-dashed border-white/15"><Plus className="h-3.5 w-3.5" /></span>
         {state === "sent" ? "Thanks. The dhrive team reads every one." : "Suggest a tool"}
       </button>
     );
