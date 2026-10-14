@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import type { Project } from "@/lib/api";
-import { MAX_AGENTS, SQUAD, agentByName } from "@/lib/army";
+import { MAX_AGENTS, PARALLEL, SQUAD, agentByName } from "@/lib/army";
 import { useApp } from "@/store/app";
 import { useArmy, useArmyOf } from "@/store/army";
 import { AgentForm, AgentRow } from "./AgentRow";
@@ -24,7 +24,7 @@ export function Army({ project }: { project: Project }) {
         {squad && <button type="button" className={pill} onClick={() => hireSquad(project.id)}>{army.length ? "Fill the squad" : "Recruit the squad"}</button>}
         {!hiring && !full && <button type="button" className={pill} onClick={() => setHiring(true)}>Recruit</button>}
       </SectionHead>
-      <p className="-mt-1 text-[11.5px] text-muted-foreground">Each task goes to the agent whose role fits it.</p>
+      <p className="-mt-1 text-[11.5px] text-muted-foreground">Each task goes to the agent whose role fits it. Up to {PARALLEL} work at once, each in its own copy.</p>
       <ul className="grid">
         {hiring && <li><AgentForm onSave={(name, role) => hire(project.id, name, role)} onDone={() => setHiring(false)} /></li>}
         {army.map((agent) => <AgentRow key={agent.id} projectId={project.id} agent={agent} engines={engines} />)}

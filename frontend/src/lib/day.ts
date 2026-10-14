@@ -123,7 +123,9 @@ export function standing(tasks: Task[], first: boolean): { live: boolean; text: 
     if (live) return { live, text: `Working on its first delivery · ${done} of ${tasks.length} done` };
     if (tasks.length > 0 && done === tasks.length) return { live, text: "First delivery done" };
   }
-  if (live) return { live, text: queued ? `Working · ${queued} up next` : "Working" };
+  const working = tasks.filter((t) => t.status === "running").length;
+  const doing = working > 1 ? `${working} working` : "Working";
+  if (live) return { live, text: queued ? `${doing} · ${queued} up next` : doing };
   if (queued) return { live, text: `${count(queued, "task")} up next` };
   if (suggested) return { live, text: `${count(suggested, "suggested task")} to look over` };
   return { live, text: "Resting" };

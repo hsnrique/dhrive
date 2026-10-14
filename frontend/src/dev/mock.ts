@@ -304,6 +304,14 @@ mockIPC(
           ["resend", "Resend", "Email to the people who use it", "Users", "https://resend.com"],
           ["sentry", "Sentry", "Errors people run into", "Users", "https://sentry.io"],
         ].map(([id, name, what, group, site]) => ({ id, name, what, group, site }));
+      case "army_prepare":
+        return `/mock/.dhrive/${String(payload.task)}`;
+      case "army_sync":
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        return { kind: "clean" };
+      case "army_land":
+      case "army_discard":
+        return null;
       case "run_checks":
         await new Promise((resolve) => setTimeout(resolve, 1500));
         return { kind: "ran", checks: ["lint", "typecheck", "test", "build"].map((name) => ({ name, ok: true, tail: "" })), missing: [] };

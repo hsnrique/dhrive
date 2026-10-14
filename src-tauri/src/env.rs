@@ -195,10 +195,15 @@ pub(crate) fn of_project(project_id: &str) -> Vars {
 }
 
 // The same, for a run that knows its folder: the company whose folder it is.
+// A project's own folder, or one of its copies (worktrees.rs keeps them in .dhrive/ inside it), so a
+// Terminals pane or an army task working in a copy reads the same variables.
 pub(crate) fn of_folder(app: &tauri::AppHandle, folder: &Path) -> Vars {
-    let folder = folder.to_string_lossy();
     let projects = data_dir(app).and_then(|dir| read_projects(&dir)).unwrap_or_default();
-    projects.into_iter().find(|p| p.folder == folder).map(|p| of_project(&p.id)).unwrap_or_default()
+    projects.into_iter().find(|p| belongs(folder, Path::new(&p.folder))).map(|p| of_project(&p.id)).unwrap_or_default()
+}
+
+pub(crate) fn belongs(folder: &Path, project: &Path) -> bool {
+    folder == project || folder.starts_with(project.join(".dhrive"))
 }
 
 fn is_public(name: &str) -> bool {

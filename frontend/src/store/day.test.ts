@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { CheckReport, StepRequest } from "@/lib/api";
+import type { CheckReport, StepRequest, Synced } from "@/lib/api";
 import { EMPTY_BRIEF } from "@/lib/company";
 
 // Each run stays pending until the test settles it, so a stop can land before the reply.
@@ -10,7 +10,22 @@ const pending = new Map<string, { request: StepRequest; resolve: (value: unknown
 const backups: number[] = [];
 // dhrive's checks after each task answer from this list, and find nothing to check once it's empty.
 const reports: CheckReport[] = [];
+// An army task's syncs answer from this list, and are clean once it's empty; landings are noted.
+const syncs: Synced[] = [];
+const landed: string[] = [];
+// How many syncs are in flight at once, and the most there ever were: landings must take turns.
+const syncing = { now: 0, most: 0 };
 vi.mock("@/lib/api", () => ({
+  armyPrepare: vi.fn(async (_project: string, task: string) => `/planilha/.dhrive/${task}`),
+  armySync: vi.fn(async () => {
+    syncing.now += 1;
+    syncing.most = Math.max(syncing.most, syncing.now);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    syncing.now -= 1;
+    return syncs.shift() ?? { kind: "clean" };
+  }),
+  armyLand: vi.fn(async (_project: string, _task: string, title: string) => void landed.push(title)),
+  armyDiscard: vi.fn(async () => undefined),
   readCompanyRecord: vi.fn(async () => null),
   saveCompanyRecord: vi.fn(async () => undefined),
   archiveCompanyRecord: vi.fn(async () => undefined),
@@ -47,6 +62,10 @@ const reply = (output: string) => {
   call.resolve({ output, usage: null, sessionId: null, needsAnswers: false, blocked: [] });
 };
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+// Enough turns for a stopped pass to wind down, so the next test starts a pass of its own.
+const windDown = async () => {
+  for (let i = 0; i < 8; i++) await settle();
+};
 const PLAN = JSON.stringify([
   { title: "Ads", area: "marketing", cli: "codex", prompt: "Write three ads" },
   { title: "Form", area: "code", cli: "claude", prompt: "Fix the signup form" },
@@ -56,6 +75,9 @@ describe("a company's day", () => {
   beforeEach(() => {
     pending.clear();
     reports.length = 0;
+    syncs.length = 0;
+    landed.length = 0;
+    syncing.most = 0;
     useApp.setState({
       projects: [{ id: P, name: "planilha.", folder: "/planilha", createdAt: 0 }],
       clis: [{ engine: "claude-code", installed: true }, { engine: "codex", installed: true }] as never,
@@ -92,10 +114,61 @@ describe("a company's day", () => {
     expect(day().tasks[0]).toMatchObject({ engine: "claude-code", model: "opus" });
     useDay.setState({ byProject: { [P]: { ...day(), tasks: day().tasks.map((t, i) => (i === 0 ? { ...t, agentId: qa.id } : t)) } } });
     useDay.getState().accept(P, day().tasks[0].id);
-    expect(last().request).toMatchObject({ step: "code" });
+    await settle();
+    expect(last().request).toMatchObject({ step: "code", folder: `/planilha/.dhrive/${day().tasks[0].id}` });
     expect(last().request.task).toMatch(/^You are QA, one of planilha\.'s agents/);
     useDay.getState().stop(P);
+    await windDown();
+  });
+
+  it("an army works three tasks at once, each in its own copy, and lands them one by one", async () => {
+    useArmy.setState({ byProject: { [P]: [newAgent("Back", "", { engine: "claude-code", model: "opus" })!] } });
+    useDay.setState({ byProject: { [P]: { ...EMPTY_DAY } } });
+    void useDay.getState().plan(P);
+    reply(JSON.stringify(["One", "Two", "Three", "Four"].map((title) => ({ title, area: "code", prompt: `Do ${title}` }))));
     await settle();
+    await settle();
+    const running = () => [...pending.values()].filter((p) => p.request.step === "code");
+    expect(running().map((p) => p.request.folder.split("/.dhrive/").length)).toEqual([2, 2, 2]);
+    expect(day().tasks.map((t) => t.status)).toEqual(["running", "running", "running", "planned"]);
+    syncs.push({ kind: "conflicts", files: ["src/app.ts"] });
+    reply("Did three");
+    await windDown();
+    expect(last().request.task, "a clash goes back to its agent").toContain("conflicts in: src/app.ts");
+    reply("Resolved");
+    await windDown();
+    expect(landed).toEqual(["Three"]);
+    expect(day().tasks.map((t) => t.status), "the fourth starts as soon as one lands").toEqual(["running", "running", "done", "running"]);
+    useDay.getState().stop(P);
+    await windDown();
+    expect(day().tasks.map((t) => t.status), "standing down stops every one of them").toEqual(["stopped", "stopped", "done", "stopped"]);
+  });
+
+  it("whatever order an army's tasks finish in, at most three work at once, landings take turns and every task lands", async () => {
+    for (let seed = 1; seed <= 12; seed++) {
+      let state = seed;
+      const random = () => ((state = (state * 1103515245 + 12345) % 2 ** 31) / 2 ** 31);
+      useArmy.setState({ byProject: { [P]: [newAgent("Back", "", { engine: "claude-code", model: "opus" })!] } });
+      useDay.setState({ byProject: { [P]: { ...EMPTY_DAY } } });
+      landed.length = 0;
+      syncing.most = 0;
+      void useDay.getState().plan(P);
+      const titles = ["A", "B", "C", "D", "E"];
+      reply(JSON.stringify(titles.map((title) => ({ title, area: "code", prompt: `Do ${title}` }))));
+      await windDown();
+      for (let turn = 0; turn < 40; turn++) {
+        const code = [...pending.values()].filter((p) => p.request.step === "code");
+        expect(code.length, `seed ${seed}: never more than three at once`).toBeLessThanOrEqual(3);
+        if (!code.length) break;
+        const pick = code[Math.floor(random() * code.length)];
+        pending.delete(pick.request.runId);
+        pick.resolve({ output: "ok", usage: null, sessionId: null, needsAnswers: false, blocked: [] });
+        await windDown();
+      }
+      expect(syncing.most, `seed ${seed}: one landing at a time`).toBe(1);
+      expect([...landed].sort(), `seed ${seed}: every task landed once`).toEqual(titles);
+      expect(day().tasks.every((t) => t.status === "done")).toBe(true);
+    }
   });
 
   it("runs accepted tasks one after another, each as a code step that hears the rules", async () => {
