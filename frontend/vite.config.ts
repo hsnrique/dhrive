@@ -1,3 +1,5 @@
+/// <reference types="vitest/config" />
+import { configDefaults } from "vitest/config";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -17,6 +19,8 @@ export default defineConfig({
     strictPort: true,
     watch: { ignored: ["**/src-tauri/**"] },
   },
+  // The bench's fixture is a project of its own, with its own tests.
+  test: { exclude: [...configDefaults.exclude, "bench/fixture/**"] },
   build: {
     target: "safari15",
     outDir: "dist",
