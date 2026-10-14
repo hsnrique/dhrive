@@ -4,6 +4,11 @@
 
 export const CHECKS = ["lint", "typecheck", "test", "build"] as const;
 
+// How an agent works when its company runs lean: the work itself, not the telling of it. Output is the
+// costliest token and what weighs most against a plan's limit; the one closing line is what the task
+// row, the war room and the checks' verdict read.
+export const LEAN = "Spend few words. Work without narrating: no preamble, no restating the task, no plan written out before you start, no recap of what you read or changed. Between steps say nothing, or a few words at most. Finish with one line: what you changed and which checks passed.";
+
 export const STANDARDS = `Work to this engineering standard; it is what every company's code is held to.
 
 Architecture

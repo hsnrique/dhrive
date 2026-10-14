@@ -275,6 +275,22 @@ describe("a company's day", () => {
     expect(backups.slice(-2), "backed up after each task, with no step running").toEqual([0, 0]);
   });
 
+  it("runs lean unless the owner turns it off: the agent hears to work without narrating", async () => {
+    const { LEAN } = await import("@/lib/standards");
+    void useDay.getState().plan(P);
+    reply(PLAN);
+    await settle();
+    useDay.getState().accept(P, day().tasks[0].id);
+    expect(last().request.task).toContain(LEAN);
+    reply("Wrote the ads");
+    await settle();
+    useDay.getState().setLean(P, false);
+    useDay.getState().accept(P, day().tasks[1].id);
+    expect(last().request.task).not.toContain(LEAN);
+    reply("Fixed the form");
+    await windDown();
+  });
+
   it("runs as soon as it's planned, which is how a new day starts", async () => {
     useDay.setState({ byProject: {} });
     expect(day().ask).toBe(false);

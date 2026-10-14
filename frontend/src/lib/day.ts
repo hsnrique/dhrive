@@ -2,7 +2,7 @@ import type { Engine } from "@/lib/api";
 import { savedEffort, type Choice } from "@/lib/flow";
 import { agentByName, agentIntro, type Agent } from "./army";
 import { savedSpent, type Spent } from "./spend";
-import { STANDARDS } from "./standards";
+import { LEAN, STANDARDS } from "./standards";
 
 // A company's tasks: those its agent suggests from the brief and those the owner adds, each run in
 // turn as a code step in the project, kept afterwards as what the company has done. A suggestion is a
@@ -145,10 +145,11 @@ export function handoffs(tasks: Task[], army: Agent[]): string {
 
 // What each task's agent hears around its own prompt: whose company it works for, the standards,
 // and the rule the planner was given, since this agent never saw it.
-export function taskPrompt(task: Task, company: string, agent?: Agent, lately = ""): string {
+export function taskPrompt(task: Task, company: string, agent?: Agent, lately = "", lean = false): string {
   const intro = agent ? `${agentIntro(agent, company)}\n\n` : "";
   const room = lately ? `\n\n${lately}` : "";
-  return `${intro}${task.prompt}${room}\n\nThis is one of the tasks of ${company}; its brief is in COMPANY.md and its documents, if it has them yet, in docs/ (follow docs/design-guide.md in any interface).\n\n${STANDARDS}\n\nDon't publish, post, send, buy or spend anything: write what's meant for the outside world as a draft file in the project.`;
+  const style = lean ? `\n\n${LEAN}` : "";
+  return `${intro}${task.prompt}${room}\n\nThis is one of the tasks of ${company}; its brief is in COMPANY.md and its documents, if it has them yet, in docs/ (follow docs/design-guide.md in any interface).\n\n${STANDARDS}\n\nDon't publish, post, send, buy or spend anything: write what's meant for the outside world as a draft file in the project.${style}`;
 }
 
 const count = (n: number, what: string) => `${n} ${what}${n === 1 ? "" : "s"}`;
