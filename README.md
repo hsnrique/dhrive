@@ -22,7 +22,7 @@
 say what should exist. dhrive creates the company and runs it, with the ai you already have
 
 <p align="center">
-  <img src=".github/army.gif" alt="one request split into four parts, each agent working in its own copy, all brought together" width="800" />
+  <img src=".github/army.gif" alt="a company founded from one sentence, its website going live, then its agent army working three tasks at once, each in its own copy" width="880" />
 </p>
 
 - **one sentence, one company**: describe it and dhrive writes the brief, plans the first delivery and starts building
