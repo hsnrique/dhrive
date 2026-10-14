@@ -153,7 +153,7 @@ export function StageView({ conversationId, message, step, handedOff }: { conver
       <div className="min-w-0 pb-5">
         <header className="flex min-h-6 items-center gap-2">
           <span className="text-[13px] font-medium">{step === "plan" ? "Plan" : message.chat ? "Chat" : "Code"}</span>
-          <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-border px-2 py-0.5 text-[11px] text-foreground/80">
+          <span className="inline-flex min-w-0 items-center gap-1.5 rounded-md border border-border px-2 py-0.5 text-[11px] text-foreground/80">
             <EngineMark engine={stage.engine} className="h-3 w-3" />
             <span className="truncate">{modelLabel}</span>
             <span className="text-muted-foreground">· {cliLabel(stage.engine, clis)}</span>

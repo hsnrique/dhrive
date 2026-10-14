@@ -67,7 +67,7 @@ export function ModelList({ choice, models, onPick, onGetModels }: { choice: Cho
         </button>
       ))}
       {local && (
-        <button type="button" className="mx-2 mt-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground" onClick={onGetModels}>
+        <button type="button" className="mx-2 mt-1 rounded-md border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground" onClick={onGetModels}>
           Get models
         </button>
       )}

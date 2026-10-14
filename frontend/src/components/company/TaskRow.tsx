@@ -22,7 +22,7 @@ export const AREA_LOOK: Record<Area, { label: string; Icon: LucideIcon }> = {
   research: { label: "Research", Icon: Search },
 };
 
-const action = "flex h-6 items-center gap-1 rounded-full px-2 text-[11.5px] text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
+const action = "flex h-6 items-center gap-1 rounded-md px-2 text-[11.5px] text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
 
 const STATUS: Record<TaskStatus, string> = { suggested: "Suggested", planned: "Up next", running: "Working", done: "Done", failed: "Failed", stopped: "Stopped" };
 
@@ -69,7 +69,7 @@ export function TaskRow({ projectId, task, engines }: { projectId: string; task:
         <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{task.title}</span>
         <Icon className="h-3 w-3 flex-none text-muted-foreground" strokeWidth={1.75} aria-label={label} />
         {task.status === "suggested" ? (
-          <button type="button" className="h-6 flex-none rounded-full bg-white/[0.08] px-2.5 text-[11.5px] font-medium transition-colors hover:bg-white/[0.14]" onClick={(e) => (own(e), accept(projectId, task.id))}>
+          <button type="button" className="h-6 flex-none rounded-md bg-white/[0.08] px-2.5 text-[11.5px] font-medium transition-colors hover:bg-white/[0.14]" onClick={(e) => (own(e), accept(projectId, task.id))}>
             Add
           </button>
         ) : !editable && <span className="flex-none text-[11px] text-muted-foreground">{STATUS[task.status]}</span>}

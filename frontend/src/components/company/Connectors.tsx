@@ -14,11 +14,11 @@ import { ToolsMenu } from "./ToolsMenu";
 // here (connectors.rs): its CLI is installed if missing, the owner signs in through the browser, its
 // skills land in the project; from then on every step's prompt names it.
 
-const pill = "flex h-7 flex-none items-center gap-1.5 rounded-full border border-border px-2.5 text-[12px] @[60rem]:px-3 transition-colors hover:bg-white/[0.07]";
+const pill = "flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] @[60rem]:px-3 transition-colors hover:bg-white/[0.07]";
 const label = "hidden @[60rem]:inline";
-const primary = "h-7 flex-none rounded-full bg-foreground px-3.5 text-[12px] font-medium text-background transition-opacity hover:opacity-90";
-const quiet = "flex h-7 flex-none items-center gap-1.5 rounded-full px-2.5 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground";
-const iconButton = "flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
+const primary = "h-7 flex-none rounded-md bg-foreground px-3.5 text-[12px] font-medium text-background transition-opacity hover:opacity-90";
+const quiet = "flex h-7 flex-none items-center gap-1.5 rounded-md px-2.5 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground";
+const iconButton = "flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
 
 // A connector's setup in its own terminal: the owner answers whatever a sign-in asks right there.
 // Portaled to the body: the toolbar is a size container, which would hold a fixed box inside it.

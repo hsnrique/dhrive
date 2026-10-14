@@ -92,7 +92,7 @@ function FullSidebar({ onFold }: { onFold: () => void }) {
           <BrandLogo className="h-[15px] w-[15px]" />
           <span className="text-[13.5px] font-semibold tracking-tight">dhrive</span>
           {/* Said plainly for as long as it's true. */}
-          <span className="rounded-full border border-border px-1 text-[9px] font-medium uppercase leading-[14px] tracking-[0.08em] text-muted-foreground">Beta</span>
+          <span className="rounded-md border border-border px-1 text-[9px] font-medium uppercase leading-[14px] tracking-[0.08em] text-muted-foreground">Beta</span>
         </button>
         <AccountBadge />
         <button

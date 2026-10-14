@@ -117,7 +117,7 @@ export function CompanyView({ project }: { project: Project }) {
     return () => window.removeEventListener("keydown", close);
   }, [sliding]);
   const chat = !docked && (
-    <button type="button" aria-label="Chat" aria-expanded={sliding} title="Chat" className={cn("flex h-7 flex-none items-center gap-1.5 rounded-full border border-border px-2.5 text-[12px] transition-colors hover:bg-white/[0.07]", sliding && "bg-white/[0.1]")} onClick={() => setSliding((v) => !v)}>
+    <button type="button" aria-label="Chat" aria-expanded={sliding} title="Chat" className={cn("flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] transition-colors hover:bg-white/[0.07]", sliding && "bg-white/[0.1]")} onClick={() => setSliding((v) => !v)}>
       <MessageCircle className="h-3.5 w-3.5" />
       <span className="hidden @[40rem]:inline">Chat</span>
     </button>

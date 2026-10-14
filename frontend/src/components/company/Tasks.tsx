@@ -20,8 +20,8 @@ import { TaskRow } from "./TaskRow";
 // them; what its agent suggests, waiting there only when the owner asked to look first; and what it
 // has done, newest first, the older ones folded away.
 
-const primary = "h-8 flex-none rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40";
-const quiet = "flex h-8 flex-none items-center gap-1.5 rounded-full bg-white/[0.08] px-3 text-[12.5px] transition-colors hover:bg-white/[0.12] disabled:opacity-40";
+const primary = "h-8 flex-none rounded-md bg-foreground px-4 text-[13px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40";
+const quiet = "flex h-8 flex-none items-center gap-1.5 rounded-md bg-white/[0.08] px-3 text-[12.5px] transition-colors hover:bg-white/[0.12] disabled:opacity-40";
 
 function Progress({ runId }: { runId: string }) {
   const phase = useApp((s) => s.live[runId]?.phase) || "Starting";

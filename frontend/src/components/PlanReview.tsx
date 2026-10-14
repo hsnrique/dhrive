@@ -14,7 +14,7 @@ function Choice({ primary, disabled, onClick, children }: { primary?: boolean; d
     <button
       type="button"
       disabled={disabled}
-      className={cn("flex h-7 items-center gap-1.5 rounded-full px-3 text-[12px] transition-colors disabled:opacity-40", primary ? "bg-primary font-medium text-primary-foreground hover:opacity-90" : "border border-border hover:bg-white/[0.08]")}
+      className={cn("flex h-7 items-center gap-1.5 rounded-md px-3 text-[12px] transition-colors disabled:opacity-40", primary ? "bg-primary font-medium text-primary-foreground hover:opacity-90" : "border border-border hover:bg-white/[0.08]")}
       onClick={onClick}
     >
       {children}

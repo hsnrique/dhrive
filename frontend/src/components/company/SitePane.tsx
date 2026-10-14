@@ -42,7 +42,7 @@ export function RunControl({ project }: { project: Project }) {
         disabled={site.busy}
         title={site.running ? "Stop the website" : "Run the website"}
         aria-label={site.running ? "Stop the website" : "Run the website"}
-        className={cn("flex h-7 w-7 items-center justify-center rounded-full transition-colors disabled:opacity-40", site.running ? "bg-white/[0.1] hover:bg-white/[0.16]" : "bg-foreground text-background hover:opacity-90")}
+        className={cn("flex h-7 w-7 items-center justify-center rounded-md transition-colors disabled:opacity-40", site.running ? "bg-white/[0.1] hover:bg-white/[0.16]" : "bg-foreground text-background hover:opacity-90")}
         onClick={() => {
           if (site.running) return void stop(project.id);
           useSheet.getState().show(project.id, "local");

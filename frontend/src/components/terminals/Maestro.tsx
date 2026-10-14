@@ -86,7 +86,7 @@ function PartDialog({ session, part, clis, onClose }: { session: string; part: P
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">runs with</span>
           <ChoicePicker choice={{ engine: part.engine, model: part.model }} onChoose={(choice) => edit(session, part.id, choice)} label="Subtask CLI" engines={clis.map((cli) => cli.engine)} />
-          <button type="button" className="ml-auto rounded-full bg-foreground px-4 py-1.5 text-[12.5px] font-medium text-background" onClick={onClose}>Done</button>
+          <button type="button" className="ml-auto rounded-md bg-foreground px-4 py-1.5 text-[12.5px] font-medium text-background" onClick={onClose}>Done</button>
         </div>
       </div>
     </div>
@@ -102,7 +102,7 @@ function RunBar({ session, count, room, ranAt }: { session: string; count: numbe
     <div className="flex items-center gap-3 px-1 text-xs text-muted-foreground">
       <span>{said}</span>
       <button type="button" className="ml-auto hover:text-foreground" onClick={() => useMaestro.getState().clear(session)}>Clear</button>
-      <button type="button" disabled={!fits} className="flex h-8 items-center gap-1.5 rounded-full bg-primary px-4 text-[12.5px] font-medium text-primary-foreground transition-[opacity,transform] hover:opacity-90 active:scale-95 disabled:opacity-25" onClick={() => useMaestro.getState().run(session)}>
+      <button type="button" disabled={!fits} className="flex h-8 items-center gap-1.5 rounded-md bg-primary px-4 text-[12.5px] font-medium text-primary-foreground transition-[opacity,transform] hover:opacity-90 active:scale-95 disabled:opacity-25" onClick={() => useMaestro.getState().run(session)}>
         <Play className="h-3 w-3 fill-current" /> {ranAt ? "Run again" : "Approve and run"}
       </button>
     </div>
@@ -148,11 +148,11 @@ function Brief({ session, clis }: { session: string; clis: Cli[] }) {
         {folder && <FocusPicker session={session} engine={engine} folder={folder} />}
         <span className="min-w-0 flex-1 px-1">{runId && <Progress runId={runId} />}</span>
         {runId ? (
-          <button type="button" title="Stop" aria-label="Stop" className="flex h-8 w-8 flex-none items-center justify-center rounded-full border border-border bg-white/[0.08] hover:bg-white/[0.14]" onClick={() => stop(session)}>
+          <button type="button" title="Stop" aria-label="Stop" className="flex h-8 w-8 flex-none items-center justify-center rounded-md border border-border bg-white/[0.08] hover:bg-white/[0.14]" onClick={() => stop(session)}>
             <Square className="h-3 w-3 fill-current" />
           </button>
         ) : (
-          <button type="button" title="Split (Enter)" aria-label="Split" disabled={!ready} className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-primary text-primary-foreground transition-[opacity,transform] hover:opacity-90 active:scale-95 disabled:opacity-25" onClick={submit}>
+          <button type="button" title="Split (Enter)" aria-label="Split" disabled={!ready} className="flex h-8 w-8 flex-none items-center justify-center rounded-md bg-primary text-primary-foreground transition-[opacity,transform] hover:opacity-90 active:scale-95 disabled:opacity-25" onClick={submit}>
             <ArrowUp className="h-4 w-4" strokeWidth={2.4} />
           </button>
         )}

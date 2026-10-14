@@ -25,7 +25,7 @@ function AddForm({ projectId, onDone }: { projectId: string; onDone: () => void 
       <input autoFocus spellCheck={false} autoCapitalize="characters" className={`${field} w-[40%] min-w-[140px]`} value={name} placeholder="NAME" aria-label="Variable name" onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onDone()} />
       <input type="password" autoComplete="off" spellCheck={false} className={`${field} min-w-[140px] flex-1`} value={value} placeholder="Value" aria-label="Value" onChange={(e) => setValue(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onDone()} />
       <div className="ml-auto flex items-center gap-1">
-        <button type="button" className="h-7 rounded-full px-2.5 text-[12px] text-muted-foreground hover:text-foreground" onClick={onDone}>Cancel</button>
+        <button type="button" className="h-7 rounded-md px-2.5 text-[12px] text-muted-foreground hover:text-foreground" onClick={onDone}>Cancel</button>
         <button type="submit" disabled={!name.trim() || saving} className={pill}>Save</button>
       </div>
     </form>

@@ -15,7 +15,7 @@ export function Switch({ on, label, title, onChange }: SwitchProps) {
       role="switch"
       aria-checked={on}
       title={title}
-      className="inline-flex h-7 items-center gap-2 rounded-full px-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+      className="inline-flex h-7 items-center gap-2 rounded-md px-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
       onClick={() => onChange(!on)}
     >
       <SwitchTrack on={on} />

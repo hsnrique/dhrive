@@ -10,7 +10,7 @@ import { useTogether, workPanes } from "@/store/together";
 // Bringing the session's panes together on one branch, and what came of it: what merged, what had
 // nothing new, and what conflicted, with a pane to resolve each conflict in the project folder.
 
-const pill = "inline-flex h-7 flex-none items-center gap-1.5 rounded-full border border-border px-3 text-xs transition-colors hover:bg-white/[0.08] disabled:opacity-40";
+const pill = "inline-flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-3 text-xs transition-colors hover:bg-white/[0.08] disabled:opacity-40";
 const OUTCOME: Record<Together["merges"][number]["outcome"], string> = { merged: "merged", "nothing-new": "nothing new", conflict: "conflicts", "no-copy": "no copy of its own" };
 
 export function TogetherButton({ session, className }: { session: TerminalSession; className: string }) {

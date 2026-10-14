@@ -69,8 +69,8 @@ export function FeedbackDialog({ onClose }: { onClose: () => void }) {
             />
             {error && <p className="text-[12px] text-[#ff8a8f]" role="alert">{error}</p>}
             <div className="flex items-center justify-end gap-2">
-              <button type="button" disabled={state === "sending"} className="h-8 rounded-full px-4 text-[12.5px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground disabled:opacity-40" onClick={onClose}>Cancel</button>
-              <button type="submit" disabled={!ready} className="h-8 rounded-full bg-foreground px-4 text-[12.5px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40">{state === "sending" ? "Sending…" : "Send"}</button>
+              <button type="button" disabled={state === "sending"} className="h-8 rounded-md px-4 text-[12.5px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground disabled:opacity-40" onClick={onClose}>Cancel</button>
+              <button type="submit" disabled={!ready} className="h-8 rounded-md bg-foreground px-4 text-[12.5px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40">{state === "sending" ? "Sending…" : "Send"}</button>
             </div>
           </>
         )}

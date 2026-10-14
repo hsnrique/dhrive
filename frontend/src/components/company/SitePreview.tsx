@@ -21,7 +21,7 @@ import { Page } from "../BrowserView";
 const PAGE = { width: 1280, height: 800 };
 const open = (url: string) => void openUrl(url).catch(() => undefined);
 const localAt = (port: number) => `http://localhost:${port}`;
-const iconButton = "flex h-7 w-7 flex-none items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
+const iconButton = "flex h-7 w-7 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
 
 export function SitePreview({ project }: { project: Project }) {
   const { url, at } = usePublishedOf(project.id);
