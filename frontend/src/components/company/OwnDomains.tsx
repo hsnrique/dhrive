@@ -15,7 +15,7 @@ import { TypeToConfirm } from "../TypeToConfirm";
 // and the owner stars the one the company goes by (store/favorite.ts).
 
 const MAX = 3;
-const pill = "flex h-7 flex-none items-center gap-1.5 rounded-full bg-white/[0.08] px-3 text-[12px] font-medium transition-colors hover:bg-white/[0.14] disabled:opacity-40";
+const pill = "flex h-7 flex-none items-center gap-1.5 rounded-md bg-white/[0.08] px-3 text-[12px] font-medium transition-colors hover:bg-white/[0.14] disabled:opacity-40";
 
 function Copyable({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);

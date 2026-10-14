@@ -53,7 +53,7 @@ function Details({ session, folder, label, busy }: { session: ThreadSession; fol
           type="button"
           disabled={busy || seen.compacting}
           title={busy ? "Wait for the run to end" : "Summarize the conversation so far to free room"}
-          className="rounded-full border border-border px-3 py-1 text-[12px] transition-colors hover:bg-white/[0.08] disabled:opacity-40"
+          className="rounded-md border border-border px-3 py-1 text-[12px] transition-colors hover:bg-white/[0.08] disabled:opacity-40"
           onClick={() => void useContextUsage.getState().compact({ ...session, folder })}
         >
           {seen.compacting ? "Compacting…" : "Compact now"}

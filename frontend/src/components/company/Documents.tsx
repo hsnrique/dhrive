@@ -17,7 +17,7 @@ import { SectionHead } from "./SectionHead";
 
 const ICONS: Record<DocumentId, LucideIcon> = { mission: Target, roadmap: MapIcon, "design-guide": Palette, "market-research": TrendingUp };
 
-const pill = "h-6 flex-none rounded-full bg-white/[0.08] px-2.5 text-[11.5px] font-medium transition-colors hover:bg-white/[0.14] disabled:opacity-40";
+const pill = "h-6 flex-none rounded-md bg-white/[0.08] px-2.5 text-[11.5px] font-medium transition-colors hover:bg-white/[0.14] disabled:opacity-40";
 
 function DocRow({ projectId, kind, text, can }: { projectId: string; kind: (typeof DOCUMENTS)[number]; text: string | null | undefined; can: boolean }) {
   const [open, setOpen] = useFold(`doc:${projectId}:${kind.id}`);

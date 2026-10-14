@@ -23,7 +23,7 @@ const EVENTS: Record<"done" | "failed" | "published" | "auto" | "build", { Icon:
   build: { Icon: Hammer, label: "Build failed" },
 };
 
-const action = "flex h-6 flex-none items-center gap-1 rounded-full bg-white/[0.08] px-2.5 text-[11.5px] font-medium transition-colors hover:bg-white/[0.14]";
+const action = "flex h-6 flex-none items-center gap-1 rounded-md bg-white/[0.08] px-2.5 text-[11.5px] font-medium transition-colors hover:bg-white/[0.14]";
 
 function Suggested({ projectId, said }: { projectId: string; said: Entry }) {
   return (

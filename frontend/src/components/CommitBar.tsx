@@ -14,7 +14,7 @@ import { commitStep, openPr } from "@/store/git";
 
 function Action({ primary, disabled, title, onClick, children }: { primary?: boolean; disabled?: boolean; title?: string; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" disabled={disabled} title={title} className={cn("flex h-7 items-center gap-1.5 rounded-full px-3 text-[12px] transition-colors disabled:opacity-40", primary ? "bg-primary font-medium text-primary-foreground hover:opacity-90" : "border border-border hover:bg-white/[0.08]")} onClick={onClick}>
+    <button type="button" disabled={disabled} title={title} className={cn("flex h-7 items-center gap-1.5 rounded-md px-3 text-[12px] transition-colors disabled:opacity-40", primary ? "bg-primary font-medium text-primary-foreground hover:opacity-90" : "border border-border hover:bg-white/[0.08]")} onClick={onClick}>
       {children}
     </button>
   );

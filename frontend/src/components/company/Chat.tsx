@@ -52,11 +52,11 @@ function Composer({ project, busy }: { project: Project; busy: boolean }) {
         }}
       />
       {busy ? (
-        <button type="button" aria-label="Stop" title="Stop" className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-white/[0.1] transition-colors hover:bg-white/[0.16]" onClick={() => stop(project.id)}>
+        <button type="button" aria-label="Stop" title="Stop" className="flex h-7 w-7 flex-none items-center justify-center rounded-md bg-white/[0.1] transition-colors hover:bg-white/[0.16]" onClick={() => stop(project.id)}>
           <Square className="h-2.5 w-2.5 fill-current" />
         </button>
       ) : (
-        <button type="button" aria-label="Send" title="Send" disabled={!said.trim() || !can} className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-foreground text-background transition-opacity hover:opacity-90 disabled:opacity-30" onClick={send}>
+        <button type="button" aria-label="Send" title="Send" disabled={!said.trim() || !can} className="flex h-7 w-7 flex-none items-center justify-center rounded-md bg-foreground text-background transition-opacity hover:opacity-90 disabled:opacity-30" onClick={send}>
           <ArrowUp className="h-3.5 w-3.5" strokeWidth={2.5} />
         </button>
       )}
@@ -88,7 +88,7 @@ export function Chat({ project }: { project: Project }) {
         {quiet && !runId && (
           <div className="flex flex-wrap gap-1.5">
             {STARTERS.map((starter) => (
-              <button key={starter} type="button" disabled={!companyAgent(project.id)} className="h-7 rounded-full border border-border px-3 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground disabled:opacity-40" onClick={() => void useChat.getState().ask(project.id, starter)}>
+              <button key={starter} type="button" disabled={!companyAgent(project.id)} className="h-7 rounded-md border border-border px-3 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground disabled:opacity-40" onClick={() => void useChat.getState().ask(project.id, starter)}>
                 {starter}
               </button>
             ))}

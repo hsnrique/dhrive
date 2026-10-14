@@ -9,7 +9,7 @@ import { useAuto, useAutoOf } from "@/store/auto";
 // Auto mode beside the Tasks heading: off, one button that opens the hours to hand over; on, the
 // time left and Stop. When it stopped by itself, why, in a line under the heading.
 
-const pill = "flex h-8 flex-none items-center gap-1.5 rounded-full px-3 text-[12.5px] transition-colors disabled:opacity-40";
+const pill = "flex h-8 flex-none items-center gap-1.5 rounded-md px-3 text-[12.5px] transition-colors disabled:opacity-40";
 
 export function AutoMode({ projectId, disabled }: { projectId: string; disabled: boolean }) {
   const { until } = useAutoOf(projectId);
@@ -37,7 +37,7 @@ export function AutoMode({ projectId, disabled }: { projectId: string; disabled:
             {hours}h
           </button>
         ))}
-        <button type="button" aria-label="Cancel" title="Cancel" className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground" onClick={() => setPicking(false)}>
+        <button type="button" aria-label="Cancel" title="Cancel" className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground" onClick={() => setPicking(false)}>
           <X className="h-3.5 w-3.5" />
         </button>
       </div>

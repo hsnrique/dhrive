@@ -1,7 +1,5 @@
 # Notices
 
-- [Geist and Geist Mono](https://github.com/vercel/geist-font) by Vercel, under the
-  [SIL Open Font License 1.1](https://openfontlicense.org).
-- [Instrument Serif](https://github.com/Instrument/instrument-serif) by Instrument, under the
-  [SIL Open Font License 1.1](https://openfontlicense.org).
+- [IBM Plex](https://github.com/IBM/plex) (Sans, Mono and Serif) by IBM, under the
+  [SIL Open Font License 1.1](https://openfontlicense.org), bundled through [Fontsource](https://fontsource.org).
 - Product names and marks of the tools dhrive connects to belong to their owners.

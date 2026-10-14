@@ -7,7 +7,7 @@ import { suggestTool } from "@/lib/api";
 // in a few words and what it's for. It folds back once sent.
 
 const field = "h-8 rounded-lg border border-border bg-black/30 px-2.5 text-[12.5px] outline-none placeholder:text-muted-foreground/70 focus-visible:border-white/30";
-const send = "h-8 flex-none rounded-full bg-foreground px-3.5 text-[12px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40";
+const send = "h-8 flex-none rounded-md bg-foreground px-3.5 text-[12px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40";
 
 type State = "closed" | "open" | "sending" | "sent";
 
@@ -45,7 +45,7 @@ export function SuggestTool() {
       <input className={field} value={why} maxLength={500} placeholder="What would the agents do with it? (optional)" aria-label="What it's for" onChange={(e) => setWhy(e.target.value)} />
       {error && <p className="text-[11.5px] text-[#ff8a8f]" role="alert">{error}</p>}
       <div className="flex items-center justify-end gap-2">
-        <button type="button" className="h-8 rounded-full px-3 text-[12px] text-muted-foreground hover:text-foreground" onClick={() => setState("closed")}>Cancel</button>
+        <button type="button" className="h-8 rounded-md px-3 text-[12px] text-muted-foreground hover:text-foreground" onClick={() => setState("closed")}>Cancel</button>
         <button type="submit" className={send} disabled={!tool.trim() || state === "sending"}>{state === "sending" ? "Sending…" : "Send"}</button>
       </div>
     </form>

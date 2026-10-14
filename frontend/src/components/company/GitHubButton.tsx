@@ -13,7 +13,7 @@ import { CommitBox } from "./CommitBox";
 // repo exists the company lives only on this Mac, which the attention dot says; after, every
 // finished task is backed up on its own (store/github.ts).
 
-const pill = "flex h-7 flex-none items-center gap-1.5 rounded-full border border-border px-2.5 text-[12px] @[60rem]:px-3 transition-colors hover:bg-white/[0.07] disabled:opacity-50";
+const pill = "flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] @[60rem]:px-3 transition-colors hover:bg-white/[0.07] disabled:opacity-50";
 const open = (url: string) => void openUrl(url).catch(() => undefined);
 // The toolbar is a container (CompanyView): below this the label gives way to the mark.
 const label = "hidden @[60rem]:inline";

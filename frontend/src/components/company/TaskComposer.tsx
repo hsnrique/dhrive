@@ -44,7 +44,7 @@ export function TaskComposer({ projectId, disabled }: { projectId: string; disab
                 type="button"
                 role="radio"
                 aria-checked={area === each}
-                className={cn("flex h-6 items-center gap-1 rounded-full px-2 text-[11.5px] transition-colors", area === each ? "bg-white/[0.1] text-foreground" : "text-muted-foreground hover:text-foreground")}
+                className={cn("flex h-6 items-center gap-1 rounded-md px-2 text-[11.5px] transition-colors", area === each ? "bg-white/[0.1] text-foreground" : "text-muted-foreground hover:text-foreground")}
                 onClick={() => setArea(each)}
               >
                 <Icon className="h-3 w-3" strokeWidth={1.75} />

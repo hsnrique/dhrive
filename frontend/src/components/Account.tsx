@@ -13,7 +13,7 @@ import { BrandLogo } from "./BrandLogo";
 
 function Pill({ primary, disabled, onClick, children }: { primary?: boolean; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" disabled={disabled} className={cn("h-8 rounded-full px-4 text-[12.5px] transition-colors disabled:opacity-40", primary ? "bg-primary font-medium text-primary-foreground hover:opacity-90" : "border border-border hover:bg-white/[0.08]")} onClick={onClick}>
+    <button type="button" disabled={disabled} className={cn("h-8 rounded-md px-4 text-[12.5px] transition-colors disabled:opacity-40", primary ? "bg-primary font-medium text-primary-foreground hover:opacity-90" : "border border-border hover:bg-white/[0.08]")} onClick={onClick}>
       {children}
     </button>
   );
@@ -88,7 +88,7 @@ export function AccountBadge() {
   if (!status || !urgent(status)) return null;
   const label = status.state === "trial" ? `${status.daysLeft}d left` : "Trial over";
   return (
-    <button type="button" title="Your dhrive account" className="whitespace-nowrap rounded-full border border-attention/50 px-2 py-0.5 text-[10.5px] text-attention transition-colors hover:bg-white/[0.07]" onClick={() => useAccount.getState().setSheetOpen(true)}>
+    <button type="button" title="Your dhrive account" className="whitespace-nowrap rounded-md border border-attention/50 px-2 py-0.5 text-[10.5px] text-attention transition-colors hover:bg-white/[0.07]" onClick={() => useAccount.getState().setSheetOpen(true)}>
       {label}
     </button>
   );
