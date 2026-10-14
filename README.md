@@ -21,8 +21,13 @@
 
 say what should exist. dhrive creates the company and runs it, with the ai you already have
 
+<p align="center">
+  <img src=".github/army.gif" alt="one request split into four parts, each agent working in its own copy, all brought together" width="800" />
+</p>
+
 - **one sentence, one company**: describe it and dhrive writes the brief, plans the first delivery and starts building
 - **runs on the agents you already pay for**: claude code and codex, with their own sign-in and billing. dhrive never holds an api key
+- **an army of agents**: back, front, qa, docs, growth or your own, each on its own cli and model, up to three at once in their own copies of the project
 - **a day of work that runs itself**: tasks, documents and a company chat, planned and carried out while you do something else
 - **every delivery checked**: lint, typecheck, tests and build after each task. what fails goes back to the agent until it passes
 - **ask first, or let it run**: approve each step when you want to, leave it alone when you don't, with mcp on or off
