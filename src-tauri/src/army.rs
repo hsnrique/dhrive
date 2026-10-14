@@ -13,6 +13,8 @@ use crate::worktrees::{author, branch_for, copy_dir, ensure, ensure_repo, remove
 // than the folder holds.
 
 const MAX_TITLE: usize = 120;
+// What a reviewer reads of a change; past this the diff ends with a line saying it was cut.
+const MAX_DIFF: usize = 60_000;
 
 #[derive(Debug, PartialEq, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -20,6 +22,13 @@ pub enum Synced {
     Clean,
     // A merge left in progress in the copy, with these files to resolve.
     Conflicts { files: Vec<String> },
+}
+
+#[derive(Debug, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Changes {
+    pub files: Vec<String>,
+    pub diff: String,
 }
 
 fn message(title: &str) -> String {
@@ -92,6 +101,23 @@ pub fn land(folder: &Path, task: &str, title: &str) -> Result<(), String> {
     remove(folder, &copy, task)
 }
 
+// What the task changed against the company's latest, its work committed first: the files (for its
+// territory) and the diff (for a review), cut to a size a model reads whole.
+pub fn changes(folder: &Path, task: &str, title: &str) -> Result<Changes, String> {
+    let copy = copy_of(folder, task)?;
+    commit_all(&copy, &message(title))?;
+    let onto = git(folder, &["symbolic-ref", "--short", "HEAD"])?;
+    let range = format!("{onto}...HEAD");
+    let files = git(&copy, &["diff", "--name-only", &range])?.lines().map(str::to_string).collect();
+    let mut diff = git(&copy, &["diff", &range])?;
+    if diff.len() > MAX_DIFF {
+        let cut = (0..=MAX_DIFF).rev().find(|&i| diff.is_char_boundary(i)).unwrap_or(0);
+        diff.truncate(cut);
+        diff.push_str("\n… the rest of the diff was cut for length");
+    }
+    Ok(Changes { files, diff })
+}
+
 // A task that won't land: its work stays committed on its branch for the owner, the copy goes.
 pub fn discard(folder: &Path, task: &str, title: &str) -> Result<(), String> {
     let Ok(copy) = copy_of(folder, task) else { return Ok(()) };
@@ -130,6 +156,13 @@ pub async fn army_land(app: tauri::AppHandle, project: String, task: String, tit
     checked(&task, &title)?;
     let folder = crate::terminal::project_folder(&app, &project)?;
     blocking(move || land(&folder, &task, &title)).await
+}
+
+#[tauri::command]
+pub async fn army_changes(app: tauri::AppHandle, project: String, task: String, title: String) -> Result<Changes, String> {
+    checked(&task, &title)?;
+    let folder = crate::terminal::project_folder(&app, &project)?;
+    blocking(move || changes(&folder, &task, &title)).await
 }
 
 #[tauri::command]
@@ -192,6 +225,19 @@ mod tests {
         assert_eq!(sync(&folder, B, "Digit").unwrap(), Synced::Clean);
         land(&folder, B, "Digit").unwrap();
         assert_eq!(read(folder.join("app.js")), "one\nTWO 2\nthree\n");
+        std::fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn a_task_says_what_it_changed_against_the_company_s_latest() {
+        let folder = company("changes");
+        let a = prepare(&folder, A).unwrap();
+        std::fs::create_dir_all(a.join("server")).unwrap();
+        std::fs::write(a.join("server/api.js"), "api\n").unwrap();
+        std::fs::write(a.join("app.js"), "one\nTWO\nthree\n").unwrap();
+        let seen = changes(&folder, A, "API").unwrap();
+        assert_eq!(seen.files, vec!["app.js".to_string(), "server/api.js".to_string()]);
+        assert!(seen.diff.contains("+TWO") && seen.diff.contains("+api"), "{}", seen.diff);
         std::fs::remove_dir_all(folder).unwrap();
     }
 

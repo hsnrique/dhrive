@@ -309,6 +309,8 @@ mockIPC(
       case "army_sync":
         await new Promise((resolve) => setTimeout(resolve, 400));
         return { kind: "clean" };
+      case "army_changes":
+        return { files: ["src/app.ts"], diff: "+export const ready = true;" };
       case "army_land":
       case "army_discard":
         return null;

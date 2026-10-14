@@ -1,5 +1,6 @@
 import type { Engine } from "@/lib/api";
 import { savedEffort, type Choice } from "@/lib/flow";
+import { territoryNote } from "./review";
 
 // A company's army: agents with a name and a role, each on its own CLI and model. The day's planner
 // hears the roster and names who does each task; the task then runs as that agent, its role said
@@ -13,9 +14,12 @@ export interface Agent {
   // The CLI's own default when empty.
   model: string;
   effort?: string;
+  // The folders it owns, as the owner wrote them ("server, api"); none means anywhere (review.ts).
+  owns?: string;
 }
 
 export const MAX_AGENTS = 12;
+export const MAX_OWNS = 300;
 export const MAX_NAME = 24;
 export const MAX_ROLE = 1200;
 
@@ -59,7 +63,8 @@ export function savedArmy(value: unknown): Agent[] {
     const a = (typeof item === "object" && item !== null ? item : {}) as Record<string, unknown>;
     const name = text(a.name).slice(0, MAX_NAME);
     if (typeof a.id !== "string" || !name || typeof a.engine !== "string" || typeof a.model !== "string" || agentByName(kept, name)) continue;
-    kept.push({ id: a.id, name, role: text(a.role).slice(0, MAX_ROLE), engine: a.engine as Engine, model: a.model, ...savedEffort(a.effort) });
+    const owns = text(a.owns).slice(0, MAX_OWNS);
+    kept.push({ id: a.id, name, role: text(a.role).slice(0, MAX_ROLE), engine: a.engine as Engine, model: a.model, ...savedEffort(a.effort), ...(owns ? { owns } : {}) });
   }
   return kept.slice(0, MAX_AGENTS);
 }
@@ -79,4 +84,7 @@ export const conflictPrompt = (files: string[]) =>
 export const PARALLEL = 3;
 
 // Said before the task, so the agent works as who it is.
-export const agentIntro = (agent: Agent, company: string) => `You are ${agent.name}, one of ${company}'s agents.${agent.role ? ` Your role: ${agent.role}` : ""}`;
+export const agentIntro = (agent: Agent, company: string) => {
+  const owns = territoryNote(agent.owns ?? "");
+  return `You are ${agent.name}, one of ${company}'s agents.${agent.role ? ` Your role: ${agent.role}` : ""}${owns ? ` ${owns}` : ""}`;
+};
