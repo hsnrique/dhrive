@@ -93,6 +93,7 @@ function Bar({ project, day, engines, blank }: { project: Project; day: Day; eng
       <span className="ml-auto" />
       {suggest}
       {waiting > 0 && <button type="button" disabled={!choice} className={primary} onClick={() => void run(project.id)}>Run {waiting}</button>}
+      {day.held && <p className="w-full truncate font-mono text-[11.5px] text-attention" title={`${day.held}. It looks again in a few minutes, or press Run.`}>waiting: {day.held}</p>}
     </div>
   );
 }

@@ -30,6 +30,8 @@ describe("a company's army", () => {
     const army = savedArmy({ agents: [{ id: "1", name: "Back", role: "APIs", engine: "codex", model: "" }, { id: "2", name: "back", engine: "codex", model: "" }, { id: 3, name: "Bad" }, "junk"] });
     expect(army.map((a) => [a.id, a.name, a.role])).toEqual([["1", "Back", "APIs"]]);
     expect(savedArmy(null)).toEqual([]);
+    const withBackup = savedArmy({ agents: [{ id: "1", name: "Back", engine: "codex", model: "", fallback: { engine: "claude-code", model: "sonnet" }, owns: " server " }, { id: "2", name: "Front", engine: "codex", model: "", fallback: { engine: 3 } }] });
+    expect(withBackup.map((a) => [a.fallback, a.owns])).toEqual([[{ engine: "claude-code", model: "sonnet" }, "server"], [undefined, undefined]]);
     expect(savedArmy({ agents: "no" })).toEqual([]);
   });
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pencil, X } from "lucide-react";
+import { LifeBuoy, Pencil, X } from "lucide-react";
 
 import type { Engine } from "@/lib/api";
 import { MAX_NAME, MAX_OWNS, MAX_ROLE, type Agent } from "@/lib/army";
@@ -54,6 +54,13 @@ export function AgentRow({ projectId, agent, engines }: { projectId: string; age
       </div>
       {agent.role && <p className="line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">{agent.role}</p>}
       {agent.owns && <p className="truncate font-mono text-[11px] text-muted-foreground" title="Changes land only inside these">owns {agent.owns}</p>}
+      {agent.fallback && (
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="font-mono text-[11px] text-muted-foreground" title="Where it works when its own plan is near its limit">backup</span>
+          <ChoicePicker choice={agent.fallback} onChoose={(fallback) => edit(projectId, agent.id, { fallback })} label={`Backup for ${agent.name}`} engines={engines} down tunable />
+          <button type="button" className={quiet} title="No backup: it waits for its plan to reset" onClick={() => edit(projectId, agent.id, { fallback: undefined })}><X className="h-3 w-3" /></button>
+        </div>
+      )}
       <div className={leaving ? "flex items-center gap-1.5" : "hidden items-center gap-1.5 group-hover:flex group-focus-within:flex"}>
         {leaving ? (
           <>
@@ -63,6 +70,7 @@ export function AgentRow({ projectId, agent, engines }: { projectId: string; age
         ) : (
           <>
             <button type="button" className={quiet} onClick={() => setEditing(true)}><Pencil className="h-3 w-3" />Edit</button>
+            {!agent.fallback && <button type="button" className={quiet} title="Where it works when its own plan is near its limit: pick another CLI or model" onClick={() => edit(projectId, agent.id, { fallback: { engine: agent.engine, model: agent.model, effort: agent.effort } })}><LifeBuoy className="h-3 w-3" />Backup</button>}
             <button type="button" className={quiet} onClick={() => setLeaving(true)}><X className="h-3 w-3" />Dismiss</button>
           </>
         )}

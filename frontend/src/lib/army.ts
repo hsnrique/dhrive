@@ -16,6 +16,8 @@ export interface Agent {
   effort?: string;
   // The folders it owns, as the owner wrote them ("server, api"); none means anywhere (review.ts).
   owns?: string;
+  // Where it works when its own CLI's plan is near its limit, as the owner picked (logistics.ts).
+  fallback?: Choice;
 }
 
 export const MAX_AGENTS = 12;
@@ -64,7 +66,9 @@ export function savedArmy(value: unknown): Agent[] {
     const name = text(a.name).slice(0, MAX_NAME);
     if (typeof a.id !== "string" || !name || typeof a.engine !== "string" || typeof a.model !== "string" || agentByName(kept, name)) continue;
     const owns = text(a.owns).slice(0, MAX_OWNS);
-    kept.push({ id: a.id, name, role: text(a.role).slice(0, MAX_ROLE), engine: a.engine as Engine, model: a.model, ...savedEffort(a.effort), ...(owns ? { owns } : {}) });
+    const f = (typeof a.fallback === "object" && a.fallback !== null ? a.fallback : {}) as Record<string, unknown>;
+    const fallback = typeof f.engine === "string" && typeof f.model === "string" ? { fallback: { engine: f.engine as Engine, model: f.model, ...savedEffort(f.effort) } } : {};
+    kept.push({ id: a.id, name, role: text(a.role).slice(0, MAX_ROLE), engine: a.engine as Engine, model: a.model, ...savedEffort(a.effort), ...(owns ? { owns } : {}), ...fallback });
   }
   return kept.slice(0, MAX_AGENTS);
 }
