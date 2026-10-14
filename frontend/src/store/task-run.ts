@@ -150,7 +150,7 @@ export function taskRunner({ day, patchTask }: Deps) {
     if (!project) return;
     const run = begin(projectId, task, project.folder);
     patchTask(projectId, task.id, { result: "" });
-    const prompt = taskPrompt(task, project.name, agentById(armyOf(projectId), task.agentId), army ? handoffs(day(projectId).tasks, armyOf(projectId)) : "");
+    const prompt = taskPrompt(task, project.name, agentById(armyOf(projectId), task.agentId), army ? handoffs(day(projectId).tasks, armyOf(projectId)) : "", day(projectId).lean);
     try {
       await (army ? asArmy(run, prompt) : alone(run, prompt));
     } catch (error) {

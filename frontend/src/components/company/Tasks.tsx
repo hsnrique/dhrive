@@ -60,7 +60,7 @@ function Planning() {
 function Bar({ project, day, engines, blank }: { project: Project; day: Day; engines: Engine[]; blank: boolean }) {
   useAgentOf(project.id);
   const choice = companyAgent(project.id);
-  const { plan, stopPlan, run, stop, setAsk, setMcp, setAgent } = useDay.getState();
+  const { plan, stopPlan, run, stop, setAsk, setMcp, setLean, setAgent } = useDay.getState();
   // Changeable whatever the company is doing: what's waiting moves to the new pick.
   const picker = choice && <ChoicePicker choice={choice} onChoose={(next) => setAgent(project.id, next)} label="Agent that works for the company" engines={engines} down tunable />;
   const now = useNow(false);
@@ -98,6 +98,7 @@ function Bar({ project, day, engines, blank }: { project: Project; day: Day; eng
       {picker}
       <Switch on={day.ask} label="Ask first" title={day.ask ? "Suggestions and tool use wait for your OK" : "Suggestions start right away, and tasks don't ask before using a tool"} onChange={(on) => setAsk(project.id, on)} />
       {!day.ask && <Switch on={day.mcp} label="MCP tools" title={day.mcp ? "MCP tools run without asking too: they can send, post or pay in your name" : "MCP tools are off while tasks run on their own"} onChange={(on) => setMcp(project.id, on)} />}
+      <Switch on={day.lean} label="Lean" title={day.lean ? "Agents work without narrating, one line at the end: your plan lasts longer" : "Agents explain as they work"} onChange={(on) => setLean(project.id, on)} />
       <span className="ml-auto" />
       {suggest}
       {waiting > 0 && <button type="button" disabled={!choice} className={primary} onClick={() => void run(project.id)}>Run {waiting}</button>}

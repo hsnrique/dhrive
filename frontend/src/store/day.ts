@@ -41,6 +41,8 @@ export interface Day {
   mcp: boolean;
   // Whether an army's tasks are reviewed by the company's own agent before they land; off unless asked.
   review: boolean;
+  // Whether its agents work without narrating (standards.ts LEAN); on unless turned off.
+  lean: boolean;
   // A new company's first day: its first delivery, the product and its website.
   first: boolean;
   error: string | null;
@@ -48,11 +50,11 @@ export interface Day {
   held?: string | null;
 }
 
-export const EMPTY_DAY: Day = { tasks: [], plannedAt: null, planRunId: null, ask: false, mcp: false, review: false, first: false, error: null };
+export const EMPTY_DAY: Day = { tasks: [], plannedAt: null, planRunId: null, ask: false, mcp: false, review: false, lean: true, first: false, error: null };
 
 export function savedDay(value: unknown): Day {
   const d = (typeof value === "object" && value !== null ? value : {}) as Partial<Day>;
-  return { ...EMPTY_DAY, tasks: savedTasks(d.tasks), plannedAt: typeof d.plannedAt === "number" ? d.plannedAt : null, ask: d.ask === true, mcp: d.mcp === true, review: d.review === true, first: d.first === true };
+  return { ...EMPTY_DAY, tasks: savedTasks(d.tasks), plannedAt: typeof d.plannedAt === "number" ? d.plannedAt : null, ask: d.ask === true, mcp: d.mcp === true, review: d.review === true, lean: d.lean !== false, first: d.first === true };
 }
 
 function legacyDays(): Record<string, unknown> {
@@ -60,7 +62,7 @@ function legacyDays(): Record<string, unknown> {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
 }
 
-const kept = ({ tasks, plannedAt, ask, mcp, review, first }: Day) => ({ tasks, plannedAt, ask, mcp, review, first });
+const kept = ({ tasks, plannedAt, ask, mcp, review, lean, first }: Day) => ({ tasks, plannedAt, ask, mcp, review, lean, first });
 
 // The record read after something already changed here (a company founded and planned at once): both
 // sides' tasks are kept, this side's version of any task in both.
@@ -83,6 +85,7 @@ interface DayState {
   setAsk: (projectId: string, ask: boolean) => void;
   setMcp: (projectId: string, mcp: boolean) => void;
   setReview: (projectId: string, review: boolean) => void;
+  setLean: (projectId: string, lean: boolean) => void;
   // A new agent for the company: the tasks waiting on the old one move to it; one the owner gave its
   // own CLI or model keeps it, and the one running finishes where it started.
   setAgent: (projectId: string, agent: Choice) => void;
@@ -241,6 +244,7 @@ export const useDay = create<DayState>((set, get) => {
     setAsk: (projectId, ask) => patch(projectId, () => ({ ask })),
     setMcp: (projectId, mcp) => patch(projectId, () => ({ mcp })),
     setReview: (projectId, review) => patch(projectId, () => ({ review })),
+    setLean: (projectId, lean) => patch(projectId, () => ({ lean })),
     setAgent: (projectId, agent) => {
       const before = companyAgent(projectId);
       useCompany.getState().choose(agent, projectId);
