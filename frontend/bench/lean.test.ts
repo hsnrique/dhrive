@@ -75,8 +75,8 @@ async function once(cli: string, [title, ask]: string[], lean: boolean): Promise
   const seconds = Math.round((Date.now() - started) / 1000);
   // The fixture's own checks pass untouched, so a run that changed nothing did nothing; an agent may
   // also have committed its work, which leaves the tree clean on a new commit.
-  const said = (...args: string[]) => spawnSync("git", args, { cwd: dir }).stdout.toString().trim();
-  const changed = said("status", "--porcelain").length > 0 || said("rev-list", "--count", "HEAD") !== "1";
+  const gitSays = (...args: string[]) => spawnSync("git", args, { cwd: dir }).stdout.toString().trim();
+  const changed = gitSays("status", "--porcelain").length > 0 || gitSays("rev-list", "--count", "HEAD") !== "1";
   const passed: string[] = [];
   for (const check of CHECKS) if ((await exec("npm", ["run", "-s", check], dir, 5 * 60_000)).code === 0) passed.push(check);
   rmSync(dir, { recursive: true, force: true });
