@@ -93,7 +93,7 @@ async function fakeRun(request: StepRequest) {
   }
   return {
     output: request.step === "plan" ? PLAN : request.step === "split" ? SPLIT : request.step === "company" ? COMPANY_DRAFT : request.step === "day" ? DAY_PLAN : request.step === "found" ? FOUNDED : request.step === "chat" ? CHAT_REPLY : request.step === "talk" ? TALK_REPLY : request.step === "commit" ? "Let people drop a CSV on the import step\n\nMost trials stopped at pasting." : "Done. Changed `Header.tsx` and `theme.ts`; `npm test` passes.",
-    usage: { inputTokens: 12000, outputTokens: 900, totalCostUsd: request.engine === "codex" ? null : 0.09, numTurns: 3, model: null },
+    usage: { inputTokens: 12000, cachedTokens: 9000, outputTokens: 900, totalCostUsd: request.engine === "codex" ? null : 0.09, numTurns: 3, model: null },
     sessionId: `mock-${request.engine}`,
     needsAnswers: false,
     blocked: request.step === "chat" ? ["Bash: npm test -- --run checkout"] : [],

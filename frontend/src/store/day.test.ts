@@ -324,6 +324,23 @@ describe("a company's day", () => {
     expect(day().tasks[0]).toMatchObject({ status: "done", result: "Fixed the test\n\nChecks passed after 1 fix: lint, test." });
   });
 
+  it("keeps the tokens each run spent on its task, by what it was doing, and a silent CLI adds nothing", async () => {
+    const usage = (inputTokens: number, cachedTokens: number, outputTokens: number) => ({ inputTokens, cachedTokens, outputTokens, totalCostUsd: null, numTurns: 1, model: null });
+    reports.push({ kind: "ran", checks: [{ name: "test", ok: false, tail: "1 failed" }], missing: [] }, { kind: "ran", checks: [{ name: "test", ok: true, tail: "" }], missing: [] });
+    void useDay.getState().plan(P);
+    reply(PLAN);
+    await settle();
+    useDay.getState().accept(P, day().tasks[0].id);
+    for (const used of [usage(30_000, 24_000, 1_500), usage(6_000, 5_000, 300)]) {
+      const call = last();
+      pending.delete(call.request.runId);
+      call.resolve({ output: "ok", usage: used, sessionId: "3f48b81e-5a2c", needsAnswers: false, blocked: [] });
+      await settle();
+    }
+    expect(day().tasks[0]).toMatchObject({ status: "done", spent: { input: 36_000, cached: 29_000, output: 1_800, by: { task: { input: 30_000, cached: 24_000, output: 1_500 }, fix: { input: 6_000, cached: 5_000, output: 300 } } } });
+    expect(day().tasks[1].spent, "nothing ran, nothing counted").toBeUndefined();
+  });
+
   it("after two fixes that still don't pass, the task is marked failed with what didn't", async () => {
     const failed: CheckReport = { kind: "ran", checks: [{ name: "build", ok: false, tail: "Module not found" }], missing: [] };
     reports.push(failed, failed, failed);

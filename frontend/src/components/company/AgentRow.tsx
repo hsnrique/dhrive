@@ -4,6 +4,7 @@ import { LifeBuoy, Pencil, X } from "lucide-react";
 import type { Engine } from "@/lib/api";
 import { MAX_NAME, MAX_OWNS, MAX_ROLE, type Agent } from "@/lib/army";
 import type { Choice } from "@/lib/flow";
+import { totalDetail, totalLine, type Tokens } from "@/lib/spend";
 import { useArmy } from "@/store/army";
 import { useDay } from "@/store/day";
 import { ChoicePicker } from "../ModelPicker";
@@ -33,7 +34,7 @@ export function AgentForm({ initial, onSave, onDone }: { initial?: Pick<Agent, "
   );
 }
 
-export function AgentRow({ projectId, agent, engines }: { projectId: string; agent: Agent; engines: Engine[] }) {
+export function AgentRow({ projectId, agent, engines, spent }: { projectId: string; agent: Agent; engines: Engine[]; spent?: Tokens }) {
   const [editing, setEditing] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const { edit, dismiss } = useArmy.getState();
@@ -50,6 +51,7 @@ export function AgentRow({ projectId, agent, engines }: { projectId: string; age
     <li className="group grid gap-1 border-b border-border py-2.5 pl-1">
       <div className="flex min-w-0 items-center gap-2">
         <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{agent.name}</span>
+        {spent && spent.input + spent.output > 0 && <span className="flex-none font-mono text-[11px] text-muted-foreground" title={`What ${agent.name}'s tasks spent: ${totalDetail(spent)}`}>{totalLine(spent)}</span>}
         <ChoicePicker choice={{ engine: agent.engine, model: agent.model, effort: agent.effort }} onChoose={choose} label={`CLI for ${agent.name}`} engines={engines} align="right" down tunable />
       </div>
       {agent.role && <p className="line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">{agent.role}</p>}

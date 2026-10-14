@@ -4,6 +4,7 @@ import { Square } from "lucide-react";
 import type { Engine, Project } from "@/lib/api";
 import { isBlank, type Brief } from "@/lib/company";
 import type { Task } from "@/lib/day";
+import { totalDetail, totalLine, totalOf } from "@/lib/spend";
 import { ago, useNow } from "@/lib/time";
 import { useApp } from "@/store/app";
 import { companyAgent, useAgentOf } from "@/store/company";
@@ -22,6 +23,13 @@ import { TaskRow } from "./TaskRow";
 
 const primary = "h-8 flex-none rounded-md bg-foreground px-4 text-[13px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40";
 const quiet = "flex h-8 flex-none items-center gap-1.5 rounded-md bg-white/[0.08] px-3 text-[12.5px] transition-colors hover:bg-white/[0.12] disabled:opacity-40";
+
+// What the tasks on this page spent, in one quiet figure; what it's made of is in its tooltip.
+function Spent({ tasks }: { tasks: Task[] }) {
+  const total = totalOf(tasks.map((t) => t.spent));
+  if (!total.input && !total.output) return null;
+  return <span className="font-mono text-[11px] text-muted-foreground" title={`What these tasks' runs spent, as their CLIs reported it: ${totalDetail(total)}`}>{totalLine(total)}</span>;
+}
 
 function Progress({ runId }: { runId: string }) {
   const phase = useApp((s) => s.live[runId]?.phase) || "Starting";
@@ -136,6 +144,7 @@ export function Tasks({ project, brief }: { project: Project; brief: Brief }) {
   return (
     <section className="grid gap-4">
       <SectionHead title={day.first ? "First delivery" : "Tasks"}>
+        <Spent tasks={day.tasks} />
         {!day.first && <AutoMode projectId={project.id} disabled={isBlank(brief) || !companyAgent(project.id)} />}
       </SectionHead>
       <AutoEnded projectId={project.id} />

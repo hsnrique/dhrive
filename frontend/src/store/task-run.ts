@@ -2,6 +2,7 @@ import { armyChanges, armyDiscard, armyLand, armyPrepare, armySync, runChecks, r
 import { agentById, conflictPrompt } from "@/lib/army";
 import { FIX_ATTEMPTS, failure, fixPrompt, passed, verdict } from "@/lib/checks";
 import { clipped, handoffs, taskPrompt, type Task } from "@/lib/day";
+import { addSpend, type SpentOn } from "@/lib/spend";
 import { entry } from "@/lib/log";
 import { outside, parseReview, reviewFixPrompt, reviewPrompt, territoryPrompt } from "@/lib/review";
 import { useApp } from "./app";
@@ -41,9 +42,16 @@ export function taskRunner({ day, patchTask }: Deps) {
       return runId;
     };
     const ours = () => day(projectId).tasks.find((t) => t.id === task.id)?.runId === runId;
-    const code = (prompt: string, resume: string | null, where = folder) => {
+    // Every run's tokens go on the task, by what it was doing, even when the run was stopped meanwhile:
+    // they were spent all the same.
+    const spend = (on: SpentOn, result: StepResult) => {
+      const now = day(projectId).tasks.find((t) => t.id === task.id);
+      if (now) patchTask(projectId, task.id, { spent: addSpend(now.spent, on, result.usage) });
+      return result;
+    };
+    const code = async (on: SpentOn, prompt: string, resume: string | null, where = folder) => {
       const { ask, mcp } = day(projectId);
-      return runStep({ runId: fresh(), folder: where, step: "code", engine: task.engine, model: task.model, effort: task.effort, task: prompt, resume: resume ?? undefined, unattended: !ask, mcp });
+      return spend(on, await runStep({ runId: fresh(), folder: where, step: "code", engine: task.engine, model: task.model, effort: task.effort, task: prompt, resume: resume ?? undefined, unattended: !ask, mcp }));
     };
     // dhrive's checks in `copy` (an army task's) or the folder; what fails goes back to the same
     // conversation, up to FIX_ATTEMPTS times.
@@ -52,10 +60,10 @@ export function taskRunner({ day, patchTask }: Deps) {
         const report = await runChecks(projectId, fresh(), copy && task.id);
         if (!ours()) return null;
         if (passed(report) || fixes === FIX_ATTEMPTS) return { result: { ...result, output: result.output + (passed(report) ? verdict(report, fixes) : "") }, report };
-        result = await code(fixPrompt(report, task.title), result.sessionId, copy);
+        result = await code("fix", fixPrompt(report, task.title), result.sessionId, copy);
       }
     };
-    return { projectId, task, fresh, ours, code, checked };
+    return { projectId, task, fresh, ours, spend, code, checked };
   };
   type Run = ReturnType<typeof begin>;
 
@@ -68,8 +76,8 @@ export function taskRunner({ day, patchTask }: Deps) {
 
   // Something asked of the agent before it lands, then the checks again: what it delivered then, or
   // null once it was stopped or failed (and finished as failed).
-  const amend = async (run: Run, copy: string, ask: string, result: StepResult) => {
-    const back = await run.checked(await run.code(ask, result.sessionId, copy), copy);
+  const amend = async (run: Run, on: SpentOn, copy: string, ask: string, result: StepResult) => {
+    const back = await run.checked(await run.code(on, ask, result.sessionId, copy), copy);
     if (!back || !run.ours()) return null;
     return passed(back.report) ? back.result : fail(run, failure(back.report));
   };
@@ -81,7 +89,7 @@ export function taskRunner({ day, patchTask }: Deps) {
     const strays = async () => outside((await armyChanges(run.projectId, run.task.id, run.task.title)).files, agent.owns ?? "");
     const out = await strays();
     if (!out.length) return result;
-    const back = await amend(run, copy, territoryPrompt(out, agent.owns), result);
+    const back = await amend(run, "territory", copy, territoryPrompt(out, agent.owns), result);
     if (!back) return null;
     const still = await strays();
     return still.length ? fail(run, `It changed files outside what ${agent.name} owns: ${still.join(", ")}`) : back;
@@ -92,10 +100,10 @@ export function taskRunner({ day, patchTask }: Deps) {
     const reviewer = companyAgent(run.projectId);
     if (!day(run.projectId).review || !reviewer) return result;
     const { diff } = await armyChanges(run.projectId, run.task.id, run.task.title);
-    const said = await runStep({ runId: run.fresh(), folder: copy, step: "chat", engine: reviewer.engine, model: reviewer.model, effort: reviewer.effort, task: reviewPrompt(run.task.title, run.task.prompt, diff) });
+    const said = run.spend("review", await runStep({ runId: run.fresh(), folder: copy, step: "chat", engine: reviewer.engine, model: reviewer.model, effort: reviewer.effort, task: reviewPrompt(run.task.title, run.task.prompt, diff) }));
     if (!run.ours()) return null;
     const found = parseReview(said.output);
-    return found.approve ? result : amend(run, copy, reviewFixPrompt(found.issues), result);
+    return found.approve ? result : amend(run, "review", copy, reviewFixPrompt(found.issues), result);
   };
 
   // In line with the others: the company's latest merged in (its agent resolving any conflict),
@@ -106,7 +114,7 @@ export function taskRunner({ day, patchTask }: Deps) {
       let result = done;
       let synced = await armySync(run.projectId, run.task.id, run.task.title);
       if (synced.kind === "conflicts") {
-        result = await run.code(conflictPrompt(synced.files), result.sessionId, copy);
+        result = await run.code("conflict", conflictPrompt(synced.files), result.sessionId, copy);
         if (!run.ours()) return;
         synced = await armySync(run.projectId, run.task.id, run.task.title);
         if (synced.kind === "conflicts") throw new Error(`It couldn't merge with the company's latest work: ${synced.files.join(", ")}`);
@@ -123,7 +131,7 @@ export function taskRunner({ day, patchTask }: Deps) {
   // asked, then lands in line with the others.
   const asArmy = async (run: Run, prompt: string) => {
     const copy = await armyPrepare(run.projectId, run.task.id);
-    const first = await run.checked(await run.code(prompt, null, copy), copy);
+    const first = await run.checked(await run.code("task", prompt, null, copy), copy);
     if (!first) return;
     if (!passed(first.report)) return void (await fail(run, failure(first.report)));
     const kept = await territory(run, copy, first.result);
@@ -133,7 +141,7 @@ export function taskRunner({ day, patchTask }: Deps) {
 
   // A task on its own: in the company's folder, done once its checks pass.
   const alone = async (run: Run, prompt: string) => {
-    const done = await run.checked(await run.code(prompt, null));
+    const done = await run.checked(await run.code("task", prompt, null));
     if (done) finish(run.projectId, run.task, passed(done.report) ? "done" : "failed", passed(done.report) ? done.result.output : failure(done.report));
   };
 
