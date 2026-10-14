@@ -16,13 +16,17 @@ export function failing(report: CheckReport): string[] {
 
 export function fixPrompt(report: CheckReport, title: string): string {
   if (report.kind === "skipped") return "";
-  const failed = report.checks.filter((c) => !c.ok).map((c) => `## ${c.name}\n\n${c.tail || "(it printed nothing)"}`);
+  const broken = report.checks.filter((c) => !c.ok);
+  const failed = broken.map((c) => `## ${c.name}\n\n${c.tail || "(it printed nothing)"}`);
+  const rerun = broken.length ? `${broken.map((c) => c.name).join(", ")} again until ${broken.length === 1 ? "it passes" : "they pass"}` : "the checks again until they pass";
   const missing = report.missing.length ? [`## Missing scripts\n\npackage.json has no ${report.missing.join(", ")}. Add them: typecheck is tsc --noEmit, test is vitest run.`] : [];
   return [
     `dhrive ran this project's checks after your task "${title}", and they didn't all pass.`,
     ...failed,
     ...missing,
-    "Fix the cause in the code. Never weaken, skip or delete a check, a lint rule or a test to make it pass. Then run lint, typecheck, test and build again until they all pass, and say what you fixed.",
+    // dhrive runs all four again after the fix, so the agent reruns only what failed: a build it already
+    // passed would only fill its context with output.
+    `Fix the cause in the code. Never weaken, skip or delete a check, a lint rule or a test to make it pass. Then run ${rerun}, and say what you fixed; dhrive runs all four after you.`,
   ].join("\n\n");
 }
 
