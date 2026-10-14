@@ -13,7 +13,7 @@ interface ArmyState {
   hire: (projectId: string, name: string, role: string, owns?: string) => boolean;
   // The software squad (lib/army.ts), each on the company's agent; members already there stay as they are.
   hireSquad: (projectId: string) => void;
-  edit: (projectId: string, id: string, patch: Partial<Pick<Agent, "name" | "role" | "owns">> & Partial<Choice>) => boolean;
+  edit: (projectId: string, id: string, patch: Partial<Pick<Agent, "name" | "role" | "owns" | "fallback">> & Partial<Choice>) => boolean;
   dismiss: (projectId: string, id: string) => void;
 }
 

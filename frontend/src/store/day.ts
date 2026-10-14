@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import { armyDiscard, readDocuments, runStep, stopRun } from "@/lib/api";
 import { PARALLEL, rosterNote, type Agent } from "@/lib/army";
+import { RECHECK_MS } from "@/lib/logistics";
 import { isBlank, toMarkdown } from "@/lib/company";
 import { alreadyNote, ownTask, parseDay, ready, savedTasks, trimmed, type Area, type Task } from "@/lib/day";
 import { documentPrompt, missing } from "@/lib/documents";
@@ -11,6 +12,7 @@ import { useApp } from "./app";
 import { useArmy } from "./army";
 import { companyAgent, useCompany } from "./company";
 import { useGitHub } from "./github";
+import { nextToStart } from "./army-pick";
 import { taskRunner } from "./task-run";
 import { usePublish } from "./publish";
 import { keeper } from "./records";
@@ -42,6 +44,8 @@ export interface Day {
   // A new company's first day: its first delivery, the product and its website.
   first: boolean;
   error: string | null;
+  // Why an army's next tasks wait instead of starting (their plans are full); not saved.
+  held?: string | null;
 }
 
 export const EMPTY_DAY: Day = { tasks: [], plannedAt: null, planRunId: null, ask: false, mcp: false, review: false, first: false, error: null };
@@ -139,18 +143,32 @@ export const useDay = create<DayState>((set, get) => {
   };
 
   // An army works up to PARALLEL tasks at once, each in its own copy; it backs up as each one lands.
+  // A company whose next tasks all wait on a plan looks again in a while, unless it's stopped first.
+  const rechecks = new Map<string, ReturnType<typeof setTimeout>>();
+  const setHeld = (projectId: string, held: string | null) => {
+    if (day(projectId).held !== held) set({ byProject: { ...get().byProject, [projectId]: { ...day(projectId), held } } });
+  };
+  const recheck = (projectId: string) => {
+    clearTimeout(rechecks.get(projectId));
+    rechecks.set(projectId, setTimeout(() => void get().run(projectId), RECHECK_MS));
+  };
+
   const workArmy = async (projectId: string) => {
     const running = new Set<Promise<void>>();
+    clearTimeout(rechecks.get(projectId));
     for (;;) {
       while (running.size < PARALLEL && !halted.has(projectId)) {
-        const next = nextUp(projectId);
+        const next = await nextToStart(projectId, { day, patchTask, setHeld });
         if (!next) break;
         // Marked before it starts, so the next pick never takes it again.
         patchTask(projectId, next.id, { status: "running" });
         const run: Promise<void> = runTask(projectId, next, true).finally(() => running.delete(run));
         running.add(run);
       }
-      if (!running.size) return;
+      if (!running.size) {
+        if (day(projectId).held && !halted.has(projectId)) recheck(projectId);
+        return;
+      }
       await Promise.race(running);
     }
   };
@@ -204,6 +222,8 @@ export const useDay = create<DayState>((set, get) => {
     // Every task running stops (an army stands down at once); their copies stay for a retry.
     stop: (projectId) => {
       halted.add(projectId);
+      clearTimeout(rechecks.get(projectId));
+      setHeld(projectId, null);
       for (const running of day(projectId).tasks.filter((t) => t.status === "running")) {
         patchTask(projectId, running.id, { status: "stopped", runId: null });
         if (running.runId) void stopRun(running.runId);

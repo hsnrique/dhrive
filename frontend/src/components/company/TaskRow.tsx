@@ -85,6 +85,8 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
             <Progress runId={task.runId} />
             <Approvals projectId={projectId} runId={task.runId} />
           </div>
+        ) : task.note && task.status === "planned" ? (
+          <p className="truncate font-mono text-[11.5px] text-muted-foreground" title={task.note}>{task.note}</p>
         ) : waits.length > 0 ? (
           <p className="truncate font-mono text-[11.5px] text-muted-foreground" title={`Starts once ${waits.join(", ")} ${waits.length === 1 ? "is" : "are"} done`}>waits for {waits.join(", ")}</p>
         ) : !open && summary && (

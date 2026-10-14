@@ -51,6 +51,7 @@ vi.mock("@/lib/api", () => ({
 
 const { useApp } = await import("./app");
 const { useArmy } = await import("./army");
+const { useUsage } = await import("./usage");
 const { newAgent } = await import("@/lib/army");
 const { useCompany } = await import("./company");
 const { EMPTY_DAY, useDay } = await import("./day");
@@ -82,6 +83,7 @@ describe("a company's day", () => {
     landed.length = 0;
     syncing.most = 0;
     changed.length = 0;
+    useUsage.setState({ known: {} });
     useApp.setState({
       projects: [{ id: P, name: "planilha.", folder: "/planilha", createdAt: 0 }],
       clis: [{ engine: "claude-code", installed: true }, { engine: "codex", installed: true }] as never,
@@ -198,6 +200,33 @@ describe("a company's day", () => {
     reply("Validated it");
     await windDown();
     expect(landed).toEqual(["API"]);
+  });
+
+  it("near its plan's limit a task moves to its agent's backup, and with none it waits and says why", async () => {
+    const full = { plan: "Max", account: "a@b.c", windows: [{ label: "Session (5 h)", percent: 95, resetsAt: null, warn: true }], shares: [], notes: [] };
+    useUsage.setState({ known: { "claude-code": { usage: full, at: Date.now() } } });
+    const back = { ...newAgent("Back", "", { engine: "claude-code", model: "opus" })!, fallback: { engine: "codex" as const, model: "gpt-6" } };
+    useArmy.setState({ byProject: { [P]: [back] } });
+    useDay.setState({ byProject: { [P]: { ...EMPTY_DAY } } });
+    void useDay.getState().plan(P);
+    reply(JSON.stringify([{ title: "API", area: "code", agent: "Back", prompt: "Add the API" }]));
+    await windDown();
+    expect(last().request).toMatchObject({ step: "code", engine: "codex", model: "gpt-6" });
+    expect(day().tasks[0].note).toBe("Claude Code: Session (5 h) limit is at 95%, so it runs on Codex instead");
+    useDay.getState().stop(P);
+    await windDown();
+
+    pending.clear();
+    useArmy.setState({ byProject: { [P]: [{ ...back, fallback: undefined }] } });
+    useDay.setState({ byProject: { [P]: { ...EMPTY_DAY } } });
+    void useDay.getState().plan(P);
+    reply(JSON.stringify([{ title: "API", area: "code", agent: "Back", prompt: "Add the API" }]));
+    await windDown();
+    expect(pending.size, "nothing starts on a full plan").toBe(0);
+    expect(day().tasks[0].status).toBe("planned");
+    expect(day().held).toBe("Claude Code: Session (5 h) limit is at 95%");
+    useDay.getState().stop(P);
+    expect(day().held, "stopping clears the wait").toBeNull();
   });
 
   it("whatever order an army's tasks finish in, at most three work at once, landings take turns and every task lands", async () => {

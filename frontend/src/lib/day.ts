@@ -29,6 +29,8 @@ export interface Task {
   agentId?: string;
   // The tasks it waits for, by id: it starts once each of them is done.
   after?: string[];
+  // Why it runs where it does when that changed on its own: its plan was full, it went to its backup.
+  note?: string;
 }
 
 export const AREAS: Area[] = ["code", "marketing", "support", "research"];
@@ -175,9 +177,10 @@ export function savedTasks(value: unknown): Task[] {
   return value
     .filter((t): t is Task => ["id", "title", "area", "engine", "model", "prompt", "status", "result"].every((key) => typeof (t as Record<string, unknown>)?.[key] === "string"))
     .map((t) => {
-      const { agentId, after, ...rest } = t;
+      const { agentId, after, note, ...rest } = t;
       const waits = Array.isArray(after) ? after.filter((id): id is string => typeof id === "string") : [];
-      return { ...rest, ...(typeof agentId === "string" ? { agentId } : {}), ...(waits.length ? { after: waits } : {}), status: t.status === "running" ? "stopped" : t.status, runId: null };
+      const said = typeof note === "string" ? { note: note.slice(0, 200) } : {};
+      return { ...rest, ...(typeof agentId === "string" ? { agentId } : {}), ...(waits.length ? { after: waits } : {}), ...said, status: t.status === "running" ? "stopped" : t.status, runId: null };
     });
 }
 
