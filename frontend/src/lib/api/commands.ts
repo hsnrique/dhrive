@@ -105,6 +105,8 @@ export type Synced = { kind: "clean" } | { kind: "conflicts"; files: string[] };
 export const armyPrepare = (project: string, task: string) => invoke<string>("army_prepare", { project, task });
 export const armySync = (project: string, task: string, title: string) => invoke<Synced>("army_sync", { project, task, title });
 export const armyLand = (project: string, task: string, title: string) => invoke<void>("army_land", { project, task, title });
+export type ArmyChanges = { files: string[]; diff: string };
+export const armyChanges = (project: string, task: string, title: string) => invoke<ArmyChanges>("army_changes", { project, task, title });
 export const armyDiscard = (project: string, task: string, title: string) => invoke<void>("army_discard", { project, task, title });
 export const envView = (projectId: string) => invoke<EnvView>("env_view", { projectId });
 export const envSet = (projectId: string, name: string, value: string) => invoke<EnvView>("env_set", { projectId, name, value });

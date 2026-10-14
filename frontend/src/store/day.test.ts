@@ -15,6 +15,8 @@ const syncs: Synced[] = [];
 const landed: string[] = [];
 // How many syncs are in flight at once, and the most there ever were: landings must take turns.
 const syncing = { now: 0, most: 0 };
+// What an army task changed, per ask: from this list, nothing once it's empty.
+const changed: { files: string[]; diff: string }[] = [];
 vi.mock("@/lib/api", () => ({
   armyPrepare: vi.fn(async (_project: string, task: string) => `/planilha/.dhrive/${task}`),
   armySync: vi.fn(async () => {
@@ -26,6 +28,7 @@ vi.mock("@/lib/api", () => ({
   }),
   armyLand: vi.fn(async (_project: string, _task: string, title: string) => void landed.push(title)),
   armyDiscard: vi.fn(async () => undefined),
+  armyChanges: vi.fn(async () => changed.shift() ?? { files: [], diff: "" }),
   readCompanyRecord: vi.fn(async () => null),
   saveCompanyRecord: vi.fn(async () => undefined),
   archiveCompanyRecord: vi.fn(async () => undefined),
@@ -78,6 +81,7 @@ describe("a company's day", () => {
     syncs.length = 0;
     landed.length = 0;
     syncing.most = 0;
+    changed.length = 0;
     useApp.setState({
       projects: [{ id: P, name: "planilha.", folder: "/planilha", createdAt: 0 }],
       clis: [{ engine: "claude-code", installed: true }, { engine: "codex", installed: true }] as never,
@@ -158,6 +162,42 @@ describe("a company's day", () => {
     expect(last().request.task, "and hears what the API task delivered").toContain("API (Added the API)");
     useDay.getState().stop(P);
     await windDown();
+  });
+
+  it("an agent that strays outside its territory is sent back once, then lands", async () => {
+    const back = { ...newAgent("Back", "APIs", { engine: "claude-code", model: "opus" })!, owns: "server" };
+    useArmy.setState({ byProject: { [P]: [back] } });
+    useDay.setState({ byProject: { [P]: { ...EMPTY_DAY } } });
+    void useDay.getState().plan(P);
+    reply(JSON.stringify([{ title: "API", area: "code", agent: "Back", prompt: "Add the API" }]));
+    await windDown();
+    changed.push({ files: ["server/api.ts", "app/page.tsx"], diff: "" }, { files: ["server/api.ts"], diff: "" });
+    reply("Added it, and a page");
+    await windDown();
+    expect(last().request.task, "back to its agent").toContain("outside what you own (server/): app/page.tsx");
+    reply("Took the page out");
+    await windDown();
+    expect(landed).toEqual(["API"]);
+  });
+
+  it("with review on, the company's agent reads the diff first and what it finds goes back before landing", async () => {
+    useArmy.setState({ byProject: { [P]: [newAgent("Back", "", { engine: "codex", model: "gpt-6" })!] } });
+    useDay.setState({ byProject: { [P]: { ...EMPTY_DAY, review: true } } });
+    void useDay.getState().plan(P);
+    reply(JSON.stringify([{ title: "API", area: "code", agent: "Back", prompt: "Add the API" }]));
+    await windDown();
+    changed.push({ files: ["server/api.ts"], diff: "+export const bill = (n) => n;" });
+    reply("Added it");
+    await windDown();
+    expect(last().request, "reviewed read-only on the company's agent").toMatchObject({ step: "chat", engine: "claude-code", model: "opus" });
+    expect(last().request.task).toContain("+export const bill = (n) => n;");
+    reply("CHANGES\n- Validate the amount");
+    await windDown();
+    expect(last().request).toMatchObject({ step: "code", engine: "codex" });
+    expect(last().request.task).toContain("- Validate the amount");
+    reply("Validated it");
+    await windDown();
+    expect(landed).toEqual(["API"]);
   });
 
   it("whatever order an army's tasks finish in, at most three work at once, landings take turns and every task lands", async () => {

@@ -1,19 +1,17 @@
 import { create } from "zustand";
 
-import { armyDiscard, armyLand, armyPrepare, armySync, readDocuments, runChecks, runStep, stopRun, type CheckReport, type StepResult } from "@/lib/api";
-import { PARALLEL, agentById, conflictPrompt, rosterNote, type Agent } from "@/lib/army";
-import { FIX_ATTEMPTS, failure, fixPrompt, passed, verdict } from "@/lib/checks";
+import { armyDiscard, readDocuments, runStep, stopRun } from "@/lib/api";
+import { PARALLEL, rosterNote, type Agent } from "@/lib/army";
 import { isBlank, toMarkdown } from "@/lib/company";
-import { alreadyNote, clipped, handoffs, ownTask, parseDay, ready, savedTasks, taskPrompt, trimmed, type Area, type Task } from "@/lib/day";
+import { alreadyNote, ownTask, parseDay, ready, savedTasks, trimmed, type Area, type Task } from "@/lib/day";
 import { documentPrompt, missing } from "@/lib/documents";
 import type { Choice } from "@/lib/flow";
-import { entry } from "@/lib/log";
 import { readSaved } from "@/lib/storage";
 import { useApp } from "./app";
 import { useArmy } from "./army";
 import { companyAgent, useCompany } from "./company";
-import { useLog } from "./log";
 import { useGitHub } from "./github";
+import { taskRunner } from "./task-run";
 import { usePublish } from "./publish";
 import { keeper } from "./records";
 
@@ -39,16 +37,18 @@ export interface Day {
   ask: boolean;
   // With Ask first off, whether MCP tools (which can send, post or pay in the owner's name) run too.
   mcp: boolean;
+  // Whether an army's tasks are reviewed by the company's own agent before they land; off unless asked.
+  review: boolean;
   // A new company's first day: its first delivery, the product and its website.
   first: boolean;
   error: string | null;
 }
 
-export const EMPTY_DAY: Day = { tasks: [], plannedAt: null, planRunId: null, ask: false, mcp: false, first: false, error: null };
+export const EMPTY_DAY: Day = { tasks: [], plannedAt: null, planRunId: null, ask: false, mcp: false, review: false, first: false, error: null };
 
 export function savedDay(value: unknown): Day {
   const d = (typeof value === "object" && value !== null ? value : {}) as Partial<Day>;
-  return { ...EMPTY_DAY, tasks: savedTasks(d.tasks), plannedAt: typeof d.plannedAt === "number" ? d.plannedAt : null, ask: d.ask === true, mcp: d.mcp === true, first: d.first === true };
+  return { ...EMPTY_DAY, tasks: savedTasks(d.tasks), plannedAt: typeof d.plannedAt === "number" ? d.plannedAt : null, ask: d.ask === true, mcp: d.mcp === true, review: d.review === true, first: d.first === true };
 }
 
 function legacyDays(): Record<string, unknown> {
@@ -56,7 +56,7 @@ function legacyDays(): Record<string, unknown> {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
 }
 
-const kept = ({ tasks, plannedAt, ask, mcp, first }: Day) => ({ tasks, plannedAt, ask, mcp, first });
+const kept = ({ tasks, plannedAt, ask, mcp, review, first }: Day) => ({ tasks, plannedAt, ask, mcp, review, first });
 
 // The record read after something already changed here (a company founded and planned at once): both
 // sides' tasks are kept, this side's version of any task in both.
@@ -78,6 +78,7 @@ interface DayState {
   drop: (projectId: string, id: string) => void;
   setAsk: (projectId: string, ask: boolean) => void;
   setMcp: (projectId: string, mcp: boolean) => void;
+  setReview: (projectId: string, review: boolean) => void;
   // A new agent for the company: the tasks waiting on the old one move to it; one the owner gave its
   // own CLI or model keeps it, and the one running finishes where it started.
   setAgent: (projectId: string, agent: Choice) => void;
@@ -118,93 +119,12 @@ export const useDay = create<DayState>((set, get) => {
   // The queue being worked, per project: asking to run it again joins the same pass.
   const working = new Map<string, Promise<void>>();
 
-  const finish = (projectId: string, task: Task, status: "done" | "failed", text: string) => {
-    patchTask(projectId, task.id, { status, runId: null, result: clipped(text) });
-    useLog.getState().add(projectId, entry(status, task.title, { taskId: task.id }));
-  };
-
-  // The task, then dhrive's own checks of what it delivered (checks.rs). What fails goes back to the
-  // same conversation, up to FIX_ATTEMPTS times; only a delivery that passes is done. Every run (the
-  // task, the checks, a fix) takes a fresh id, so a stop or a retry, which change the task's, end it.
-  const runTask = async (projectId: string, task: Task, army = false) => {
-    const project = projectOf(projectId);
-    if (!project) return;
-    let runId = "";
-    const fresh = () => {
-      runId = crypto.randomUUID();
-      patchTask(projectId, task.id, { status: "running", runId });
-      return runId;
-    };
-    const ours = () => day(projectId).tasks.find((t) => t.id === task.id)?.runId === runId;
-    const code = (prompt: string, resume: string | null, folder = project.folder) => {
-      const { ask, mcp } = day(projectId);
-      return runStep({ runId: fresh(), folder, step: "code", engine: task.engine, model: task.model, effort: task.effort, task: prompt, resume: resume ?? undefined, unattended: !ask, mcp });
-    };
-    patchTask(projectId, task.id, { result: "" });
-    const prompt = taskPrompt(task, project.name, agentById(armyOf(projectId), task.agentId), army ? handoffs(day(projectId).tasks, armyOf(projectId)) : "");
-    // Checks in `copy` (an army task's) or the folder, fixes going back to the same conversation.
-    const checked = async (result: StepResult, copy?: string): Promise<{ result: StepResult; report: CheckReport } | null> => {
-      for (let fixes = 0; ; fixes++) {
-        const report = await runChecks(projectId, fresh(), copy && task.id);
-        if (!ours()) return null;
-        if (passed(report) || fixes === FIX_ATTEMPTS) return { result: { ...result, output: result.output + (passed(report) ? verdict(report, fixes) : "") }, report };
-        result = await code(fixPrompt(report, task.title), result.sessionId, copy);
-      }
-    };
-    try {
-      if (!army) {
-        const done = await checked(await code(prompt, null));
-        if (done) finish(projectId, task, passed(done.report) ? "done" : "failed", passed(done.report) ? done.result.output : failure(done.report));
-        return;
-      }
-      // A task that doesn't pass keeps its work on its branch, never in the company's folder.
-      const fail = async (report: CheckReport) => {
-        await armyDiscard(projectId, task.id, task.title);
-        finish(projectId, task, "failed", failure(report));
-      };
-      // An army's task works in its own copy, checked there, then lands in line with the others: the
-      // company's latest merged in (its agent resolving any conflict), checked once more, merged back.
-      const copy = await armyPrepare(projectId, task.id);
-      const first = await checked(await code(prompt, null, copy), copy);
-      if (!first) return;
-      if (!passed(first.report)) return await fail(first.report);
-      await inLine(projectId, async () => {
-        if (!ours()) return;
-        let result = first.result;
-        let synced = await armySync(projectId, task.id, task.title);
-        if (synced.kind === "conflicts") {
-          result = await code(conflictPrompt(synced.files), result.sessionId, copy);
-          if (!ours()) return;
-          synced = await armySync(projectId, task.id, task.title);
-          if (synced.kind === "conflicts") throw new Error(`It couldn't merge with the company's latest work: ${synced.files.join(", ")}`);
-        }
-        const report = await runChecks(projectId, fresh(), task.id);
-        if (!ours()) return;
-        if (!passed(report)) return await fail(report);
-        await armyLand(projectId, task.id, task.title);
-        finish(projectId, task, "done", result.output);
-        await useGitHub.getState().backup(projectId);
-      });
-    } catch (error) {
-      if (ours()) {
-        if (army) await armyDiscard(projectId, task.id, task.title).catch(() => undefined);
-        finish(projectId, task, "failed", String(error));
-      }
-    }
-  };
+  const { runTask } = taskRunner({ day, patchTask });
 
   // The first task up next whose tasks it waits for are done.
   const nextUp = (projectId: string) => {
     const { tasks } = day(projectId);
     return tasks.find((t) => t.status === "planned" && ready(t, tasks));
-  };
-
-  // One landing at a time per company, so each merges onto the one before it.
-  const landing = new Map<string, Promise<void>>();
-  const inLine = (projectId: string, step: () => Promise<void>) => {
-    const next = (landing.get(projectId) ?? Promise.resolve()).then(step);
-    landing.set(projectId, next.catch(() => undefined));
-    return next;
   };
 
   const work = async (projectId: string) => {
@@ -300,6 +220,7 @@ export const useDay = create<DayState>((set, get) => {
     },
     setAsk: (projectId, ask) => patch(projectId, () => ({ ask })),
     setMcp: (projectId, mcp) => patch(projectId, () => ({ mcp })),
+    setReview: (projectId, review) => patch(projectId, () => ({ review })),
     setAgent: (projectId, agent) => {
       const before = companyAgent(projectId);
       useCompany.getState().choose(agent, projectId);

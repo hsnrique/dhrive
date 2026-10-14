@@ -155,6 +155,7 @@ pub fn run() {
             army::army_prepare,
             army::army_sync,
             army::army_land,
+            army::army_changes,
             army::army_discard,
             feedback::suggest_tool,
             feedback::send_feedback,

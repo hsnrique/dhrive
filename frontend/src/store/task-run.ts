@@ -1,0 +1,164 @@
+import { armyChanges, armyDiscard, armyLand, armyPrepare, armySync, runChecks, runStep, type CheckReport, type StepResult } from "@/lib/api";
+import { agentById, conflictPrompt } from "@/lib/army";
+import { FIX_ATTEMPTS, failure, fixPrompt, passed, verdict } from "@/lib/checks";
+import { clipped, handoffs, taskPrompt, type Task } from "@/lib/day";
+import { entry } from "@/lib/log";
+import { outside, parseReview, reviewFixPrompt, reviewPrompt, territoryPrompt } from "@/lib/review";
+import { useApp } from "./app";
+import { useArmy } from "./army";
+import { companyAgent } from "./company";
+import type { Day } from "./day";
+import { useGitHub } from "./github";
+import { useLog } from "./log";
+
+// How one of a company's tasks runs (the day store decides which and when): the task, then dhrive's
+// own checks of what it delivered (checks.rs). What fails goes back to the same conversation, up to
+// FIX_ATTEMPTS times; only a delivery that passes is done. Every run (the task, the checks, a fix)
+// takes a fresh id, so a stop or a retry, which change the task's, end it. An army's task works in a
+// copy of its own and lands in line with the others.
+
+interface Deps {
+  day: (projectId: string) => Day;
+  patchTask: (projectId: string, id: string, change: Partial<Task>) => void;
+}
+
+const projectOf = (projectId: string) => useApp.getState().projects.find((p) => p.id === projectId);
+const armyOf = (projectId: string) => useArmy.getState().byProject[projectId] ?? [];
+
+export function taskRunner({ day, patchTask }: Deps) {
+  const finish = (projectId: string, task: Task, status: "done" | "failed", text: string) => {
+    patchTask(projectId, task.id, { status, runId: null, result: clipped(text) });
+    useLog.getState().add(projectId, entry(status, task.title, { taskId: task.id }));
+  };
+
+  // One run of a task: a fresh id for every step (the task, the checks, a fix), so a stop or a
+  // retry, which change the task's, end it; `ours` says whether this run is still the task's.
+  const begin = (projectId: string, task: Task, folder: string) => {
+    let runId = "";
+    const fresh = () => {
+      runId = crypto.randomUUID();
+      patchTask(projectId, task.id, { status: "running", runId });
+      return runId;
+    };
+    const ours = () => day(projectId).tasks.find((t) => t.id === task.id)?.runId === runId;
+    const code = (prompt: string, resume: string | null, where = folder) => {
+      const { ask, mcp } = day(projectId);
+      return runStep({ runId: fresh(), folder: where, step: "code", engine: task.engine, model: task.model, effort: task.effort, task: prompt, resume: resume ?? undefined, unattended: !ask, mcp });
+    };
+    // dhrive's checks in `copy` (an army task's) or the folder; what fails goes back to the same
+    // conversation, up to FIX_ATTEMPTS times.
+    const checked = async (result: StepResult, copy?: string): Promise<{ result: StepResult; report: CheckReport } | null> => {
+      for (let fixes = 0; ; fixes++) {
+        const report = await runChecks(projectId, fresh(), copy && task.id);
+        if (!ours()) return null;
+        if (passed(report) || fixes === FIX_ATTEMPTS) return { result: { ...result, output: result.output + (passed(report) ? verdict(report, fixes) : "") }, report };
+        result = await code(fixPrompt(report, task.title), result.sessionId, copy);
+      }
+    };
+    return { projectId, task, fresh, ours, code, checked };
+  };
+  type Run = ReturnType<typeof begin>;
+
+  // An army task that doesn't pass keeps its work on its branch, never in the company's folder.
+  const fail = async (run: Run, why: string) => {
+    await armyDiscard(run.projectId, run.task.id, run.task.title);
+    finish(run.projectId, run.task, "failed", why);
+    return null;
+  };
+
+  // Something asked of the agent before it lands, then the checks again: what it delivered then, or
+  // null once it was stopped or failed (and finished as failed).
+  const amend = async (run: Run, copy: string, ask: string, result: StepResult) => {
+    const back = await run.checked(await run.code(ask, result.sessionId, copy), copy);
+    if (!back || !run.ours()) return null;
+    return passed(back.report) ? back.result : fail(run, failure(back.report));
+  };
+
+  // Its territory: files it changed outside the folders its agent owns go back to it, once.
+  const territory = async (run: Run, copy: string, result: StepResult) => {
+    const agent = agentById(armyOf(run.projectId), run.task.agentId);
+    if (!agent?.owns) return result;
+    const strays = async () => outside((await armyChanges(run.projectId, run.task.id, run.task.title)).files, agent.owns ?? "");
+    const out = await strays();
+    if (!out.length) return result;
+    const back = await amend(run, copy, territoryPrompt(out, agent.owns), result);
+    if (!back) return null;
+    const still = await strays();
+    return still.length ? fail(run, `It changed files outside what ${agent.name} owns: ${still.join(", ")}`) : back;
+  };
+
+  // A review by the company's own agent, when the company asks for one: what it finds goes back once.
+  const review = async (run: Run, copy: string, result: StepResult) => {
+    const reviewer = companyAgent(run.projectId);
+    if (!day(run.projectId).review || !reviewer) return result;
+    const { diff } = await armyChanges(run.projectId, run.task.id, run.task.title);
+    const said = await runStep({ runId: run.fresh(), folder: copy, step: "chat", engine: reviewer.engine, model: reviewer.model, effort: reviewer.effort, task: reviewPrompt(run.task.title, run.task.prompt, diff) });
+    if (!run.ours()) return null;
+    const found = parseReview(said.output);
+    return found.approve ? result : amend(run, copy, reviewFixPrompt(found.issues), result);
+  };
+
+  // In line with the others: the company's latest merged in (its agent resolving any conflict),
+  // checked once more, merged back into the folder, backed up.
+  const land = (run: Run, copy: string, done: StepResult) =>
+    inLine(run.projectId, async () => {
+      if (!run.ours()) return;
+      let result = done;
+      let synced = await armySync(run.projectId, run.task.id, run.task.title);
+      if (synced.kind === "conflicts") {
+        result = await run.code(conflictPrompt(synced.files), result.sessionId, copy);
+        if (!run.ours()) return;
+        synced = await armySync(run.projectId, run.task.id, run.task.title);
+        if (synced.kind === "conflicts") throw new Error(`It couldn't merge with the company's latest work: ${synced.files.join(", ")}`);
+      }
+      const report = await runChecks(run.projectId, run.fresh(), run.task.id);
+      if (!run.ours()) return;
+      if (!passed(report)) return void (await fail(run, failure(report)));
+      await armyLand(run.projectId, run.task.id, run.task.title);
+      finish(run.projectId, run.task, "done", result.output);
+      await useGitHub.getState().backup(run.projectId);
+    });
+
+  // An army's task works in its own copy, passes its checks there, its territory and a review if
+  // asked, then lands in line with the others.
+  const asArmy = async (run: Run, prompt: string) => {
+    const copy = await armyPrepare(run.projectId, run.task.id);
+    const first = await run.checked(await run.code(prompt, null, copy), copy);
+    if (!first) return;
+    if (!passed(first.report)) return void (await fail(run, failure(first.report)));
+    const kept = await territory(run, copy, first.result);
+    const reviewed = kept && (await review(run, copy, kept));
+    if (reviewed) await land(run, copy, reviewed);
+  };
+
+  // A task on its own: in the company's folder, done once its checks pass.
+  const alone = async (run: Run, prompt: string) => {
+    const done = await run.checked(await run.code(prompt, null));
+    if (done) finish(run.projectId, run.task, passed(done.report) ? "done" : "failed", passed(done.report) ? done.result.output : failure(done.report));
+  };
+
+  const runTask = async (projectId: string, task: Task, army = false) => {
+    const project = projectOf(projectId);
+    if (!project) return;
+    const run = begin(projectId, task, project.folder);
+    patchTask(projectId, task.id, { result: "" });
+    const prompt = taskPrompt(task, project.name, agentById(armyOf(projectId), task.agentId), army ? handoffs(day(projectId).tasks, armyOf(projectId)) : "");
+    try {
+      await (army ? asArmy(run, prompt) : alone(run, prompt));
+    } catch (error) {
+      if (!run.ours()) return;
+      if (army) await armyDiscard(projectId, task.id, task.title).catch(() => undefined);
+      finish(projectId, task, "failed", String(error));
+    }
+  };
+
+  // One landing at a time per company, so each merges onto the one before it.
+  const landing = new Map<string, Promise<void>>();
+  const inLine = (projectId: string, step: () => Promise<void>) => {
+    const next = (landing.get(projectId) ?? Promise.resolve()).then(step);
+    landing.set(projectId, next.catch(() => undefined));
+    return next;
+  };
+
+  return { runTask };
+}

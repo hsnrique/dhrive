@@ -4,7 +4,8 @@ import type { Project } from "@/lib/api";
 import { MAX_AGENTS, PARALLEL, SQUAD, agentByName } from "@/lib/army";
 import { useApp } from "@/store/app";
 import { useArmy, useArmyOf } from "@/store/army";
-import { useDayOf } from "@/store/day";
+import { useDay, useDayOf } from "@/store/day";
+import { Switch } from "../ui/switch";
 import { AgentForm, AgentRow } from "./AgentRow";
 import { pill } from "./EnvRow";
 import { SectionHead } from "./SectionHead";
@@ -20,7 +21,8 @@ export function Army({ project }: { project: Project }) {
   const full = army.length >= MAX_AGENTS;
   const squad = !full && SQUAD.some((s) => !agentByName(army, s.name));
   // The war room, as the owner sees it: what the agents delivered lately, newest first.
-  const lately = useDayOf(project.id).tasks.filter((t) => t.status === "done" && army.some((a) => a.id === t.agentId)).slice(-4).reverse();
+  const day = useDayOf(project.id);
+  const lately = day.tasks.filter((t) => t.status === "done" && army.some((a) => a.id === t.agentId)).slice(-4).reverse();
   return (
     <section className="grid gap-3">
       <SectionHead title="Army">
@@ -28,8 +30,13 @@ export function Army({ project }: { project: Project }) {
         {!hiring && !full && <button type="button" className={pill} onClick={() => setHiring(true)}>Recruit</button>}
       </SectionHead>
       <p className="-mt-1 text-[11.5px] text-muted-foreground">Each task goes to the agent whose role fits it. Up to {PARALLEL} work at once, each in its own copy.</p>
+      {army.length > 0 && (
+        <div className="-ml-1.5">
+          <Switch on={day.review} label="Review before landing" title={day.review ? "The company's agent reads each change and sends back what it finds before it lands" : "Changes land once their checks pass"} onChange={(on) => useDay.getState().setReview(project.id, on)} />
+        </div>
+      )}
       <ul className="grid">
-        {hiring && <li><AgentForm onSave={(name, role) => hire(project.id, name, role)} onDone={() => setHiring(false)} /></li>}
+        {hiring && <li><AgentForm onSave={(name, role, owns) => hire(project.id, name, role, owns)} onDone={() => setHiring(false)} /></li>}
         {army.map((agent) => <AgentRow key={agent.id} projectId={project.id} agent={agent} engines={engines} />)}
         {!army.length && !hiring && <li className="px-1 py-2 text-[12px] text-muted-foreground">No agents yet: the company's own agent does every task.</li>}
       </ul>
