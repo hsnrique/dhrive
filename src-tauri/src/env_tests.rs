@@ -120,3 +120,12 @@ fn agents_hear_the_names_and_where_a_new_one_goes_never_a_value() {
     let none = prompt_note(&Vec::new());
     assert!(none.contains("No environment variables") && none.contains(".env.example"), "{none}");
 }
+
+#[test]
+fn a_copy_of_the_project_reads_its_variables_and_a_neighbour_does_not() {
+    let project = Path::new("/Users/ana/acme");
+    assert!(belongs(project, project));
+    assert!(belongs(Path::new("/Users/ana/acme/.dhrive/1a2b3c4d-0000"), project));
+    assert!(!belongs(Path::new("/Users/ana/acme-two"), project));
+    assert!(!belongs(Path::new("/Users/ana/acme/src"), project));
+}

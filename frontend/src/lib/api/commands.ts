@@ -98,7 +98,14 @@ export const connectorOpen = (id: string, connector: string, project: string, co
 // A tool the owner wishes were in the menu, to the dhrive team (suggest.rs).
 export const suggestTool = (tool: string, why: string) => invoke<null>("suggest_tool", { tool, why });
 export const sendFeedback = (message: string) => invoke<null>("send_feedback", { message });
-export const runChecks = (project: string, runId: string) => invoke<CheckReport>("run_checks", { project, runId });
+// In the company's folder, or in an army task's copy (army.rs) when `task` is given.
+export const runChecks = (project: string, runId: string, task?: string) => invoke<CheckReport>("run_checks", { project, runId, task: task ?? null });
+export type Synced = { kind: "clean" } | { kind: "conflicts"; files: string[] };
+// An army task's copy of the company: made, synced with the company's latest, landed, or put away.
+export const armyPrepare = (project: string, task: string) => invoke<string>("army_prepare", { project, task });
+export const armySync = (project: string, task: string, title: string) => invoke<Synced>("army_sync", { project, task, title });
+export const armyLand = (project: string, task: string, title: string) => invoke<void>("army_land", { project, task, title });
+export const armyDiscard = (project: string, task: string, title: string) => invoke<void>("army_discard", { project, task, title });
 export const envView = (projectId: string) => invoke<EnvView>("env_view", { projectId });
 export const envSet = (projectId: string, name: string, value: string) => invoke<EnvView>("env_set", { projectId, name, value });
 export const envRemove = (projectId: string, name: string) => invoke<EnvView>("env_remove", { projectId, name });

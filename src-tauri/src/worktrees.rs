@@ -25,7 +25,7 @@ pub fn valid_pane(pane: &str) -> bool {
     (8..=40).contains(&pane.len()) && pane.chars().all(|c| c.is_ascii_hexdigit() || c == '-') && pane.starts_with(|c: char| c.is_ascii_hexdigit())
 }
 
-fn branch_for(pane: &str) -> String {
+pub(crate) fn branch_for(pane: &str) -> String {
     format!("dhrive/{}", &pane[..8])
 }
 
@@ -42,11 +42,13 @@ pub(crate) fn ensure_repo(folder: &Path) -> Result<(), String> {
         return Ok(());
     }
     git(folder, &["add", "-A"])?;
-    // Without a name and email set, git refuses to commit; dhrive signs this one first commit instead.
-    let signed = git(folder, &["config", "user.email"]).is_ok();
-    let who: &[&str] = if signed { &[] } else { &["-c", "user.name=dhrive", "-c", "user.email=dhrive@localhost"] };
-    git(folder, &[who, &["commit", "-q", "--allow-empty", "-m", "Start"]].concat()).map_err(|e| format!("Couldn't make the project's first commit: {e}"))?;
+    git(folder, &[author(folder), &["commit", "-q", "--allow-empty", "-m", "Start"]].concat()).map_err(|e| format!("Couldn't make the project's first commit: {e}"))?;
     Ok(())
+}
+
+// Without a name and email set, git refuses to commit; dhrive signs its own commits instead.
+pub(crate) fn author(folder: &Path) -> &'static [&'static str] {
+    if git(folder, &["config", "user.email"]).is_ok() { &[] } else { &["-c", "user.name=dhrive", "-c", "user.email=dhrive@localhost"] }
 }
 
 fn hide_copies(folder: &Path) -> Result<(), String> {

@@ -71,5 +71,12 @@ export function rosterNote(army: Agent[]): string {
   return `The company's agents:\n${lines}\n\nFor each task also give "agent": the name of the one agent above whose role fits it best.`;
 }
 
+// What an agent hears when the company's latest, merged into its copy, clashed with its work.
+export const conflictPrompt = (files: string[]) =>
+  `Merging the company's latest work into yours left conflicts in: ${files.join(", ")}. Resolve every one, keeping what both sides meant, remove every conflict marker, and make sure it still builds and its tests pass. Don't commit: dhrive does.`;
+
+// How many of an army's tasks work at once, each in its own copy of the company.
+export const PARALLEL = 3;
+
 // Said before the task, so the agent works as who it is.
 export const agentIntro = (agent: Agent, company: string) => `You are ${agent.name}, one of ${company}'s agents.${agent.role ? ` Your role: ${agent.role}` : ""}`;
