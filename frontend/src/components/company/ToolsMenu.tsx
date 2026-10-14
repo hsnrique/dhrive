@@ -13,8 +13,8 @@ import { SiteLink, ToolMark } from "./ToolMark";
 // suggest one that isn't there. GitHub heads the code and
 // data, connected through gh the way the GitHub button does.
 
-const connect = "h-7 flex-none rounded-full border border-border px-3 text-[12px] transition-colors hover:bg-white/[0.08]";
-const again = "flex h-7 flex-none items-center gap-1.5 rounded-full px-2 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground";
+const connect = "h-7 flex-none rounded-md border border-border px-3 text-[12px] transition-colors hover:bg-white/[0.08]";
+const again = "flex h-7 flex-none items-center gap-1.5 rounded-md px-2 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground";
 
 const GITHUB = { id: "github", name: "GitHub", what: "Code, commits and backups", group: "Code and data", site: "https://github.com" };
 

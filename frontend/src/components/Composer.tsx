@@ -37,7 +37,7 @@ function ModeSwitch() {
           role="radio"
           aria-checked={mode === option}
           title={MODE_INFO[option].title}
-          className={cn("h-6 rounded-full px-2.5 text-xs transition-colors", mode === option ? "bg-white/[0.12] font-medium text-foreground" : "text-muted-foreground hover:text-foreground")}
+          className={cn("h-6 rounded-md px-2.5 text-xs transition-colors", mode === option ? "bg-white/[0.12] font-medium text-foreground" : "text-muted-foreground hover:text-foreground")}
           onClick={() => setMode(option)}
         >
           {MODE_INFO[option].label}
@@ -56,7 +56,7 @@ function Handoff() {
       type="button"
       aria-pressed={!autoCode}
       title={autoCode ? "The code starts right after the plan. Click to approve each plan first." : "You approve each plan before the code starts. Click to code right after the plan."}
-      className="flex h-6 items-center gap-1 rounded-full px-1.5 text-xs text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground"
+      className="flex h-6 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground"
       onClick={() => setAutoCode(!autoCode)}
     >
       {!autoCode && (
@@ -127,7 +127,7 @@ export function Composer({ open, projectName, folder }: { open: Open; projectNam
       {blocked && (
         <div className="mb-1.5 flex items-center gap-2 rounded-xl bg-white/[0.05] px-3 py-2 text-[12.5px]">
           <span className="flex-1 text-muted-foreground">Your free days are over. Subscribe to keep sending.</span>
-          <button type="button" className="rounded-full bg-primary px-3 py-1 text-[12px] font-medium text-primary-foreground hover:opacity-90" onClick={() => useAccount.getState().setSheetOpen(true)}>
+          <button type="button" className="rounded-md bg-primary px-3 py-1 text-[12px] font-medium text-primary-foreground hover:opacity-90" onClick={() => useAccount.getState().setSheetOpen(true)}>
             Subscribe
           </button>
         </div>
@@ -170,7 +170,7 @@ export function Composer({ open, projectName, folder }: { open: Open; projectNam
           title={files.full ? "Up to 10 files per request" : "Attach files (or paste a screenshot, or drop files here)"}
           aria-label="Attach files"
           disabled={files.full}
-          className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground disabled:opacity-40"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground disabled:opacity-40"
           onClick={() => void files.pick()}
         >
           <Paperclip className="h-3.5 w-3.5" />
@@ -182,7 +182,7 @@ export function Composer({ open, projectName, folder }: { open: Open; projectNam
             <button
               type="button"
               title="Stop"
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-border bg-white/[0.08] text-foreground transition-colors hover:bg-white/[0.14]"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-white/[0.08] text-foreground transition-colors hover:bg-white/[0.14]"
               onClick={() => conversationId && stop(conversationId)}
             >
               <Square className="h-3 w-3 fill-current" />
@@ -193,7 +193,7 @@ export function Composer({ open, projectName, folder }: { open: Open; projectNam
               type="button"
               title={running ? "Queue it (Enter)" : "Send (Enter)"}
               disabled={!canSend}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-[opacity,transform] hover:opacity-90 active:scale-95 disabled:opacity-25"
+              className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground transition-[opacity,transform] hover:opacity-90 active:scale-95 disabled:opacity-25"
               onClick={submit}
             >
               <ArrowUp className="h-4 w-4" strokeWidth={2.4} />

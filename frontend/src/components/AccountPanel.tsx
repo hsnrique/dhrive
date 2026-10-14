@@ -11,7 +11,7 @@ import { useAccount } from "@/store/account";
 // subscribing or managing billing on dhrive.app, and signing out (which asks once, since it stops
 // every company's work on this Mac until signing back in).
 
-const pill = "flex h-8 items-center gap-1.5 rounded-full px-4 text-[12.5px] transition-colors disabled:opacity-40";
+const pill = "flex h-8 items-center gap-1.5 rounded-md px-4 text-[12.5px] transition-colors disabled:opacity-40";
 const quiet = cn(pill, "border border-border hover:bg-white/[0.08]");
 const loud = cn(pill, "bg-primary font-medium text-primary-foreground hover:opacity-90");
 

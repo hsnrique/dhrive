@@ -12,7 +12,7 @@ import type { PaneEvent } from "@/lib/terminal-status";
 
 type TerminalEvent = { id: string; kind: "data"; data: string } | { id: string; kind: "exit"; code: number };
 
-const FONT = '"Geist Mono", ui-monospace, Menlo, monospace';
+const FONT = '"IBM Plex Mono", ui-monospace, Menlo, monospace';
 const THEME = { background: "#050506", foreground: "#e8e8ea", cursor: "#e8e8ea", selectionBackground: "#ffffff33", black: "#1a1a1d", brightBlack: "#5c5c63" };
 
 // How long a CLI stays silent before it counts as done with its turn. Claude's spinner redraws
@@ -59,7 +59,7 @@ export function TerminalView({ id, engine, start, project, copy, model, task, on
       clearTimeout(quiet);
       quiet = setTimeout(() => report.current.onEvent({ kind: "quiet" }), QUIET_MS);
     };
-    // xterm measures one cell once, when it opens; measured on the fallback font, every Geist Mono
+    // xterm measures one cell once, when it opens; measured on the fallback font, every Plex Mono
     // letter would sit in a cell too wide.
     const fonts = document.fonts.load(`12.5px ${FONT}`).catch(() => undefined).then(() => {
       if (ended) return;

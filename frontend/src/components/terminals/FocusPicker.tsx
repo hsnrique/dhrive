@@ -71,7 +71,7 @@ export function FocusPicker({ session, engine, folder }: { session: string; engi
   const empty = loading && offered.length === 0 ? "Asking the CLI what it has…" : error && offered.length === 0 ? error : offered.length === 0 ? "Nothing connected here." : null;
   return (
     <div className="relative">
-      <button type="button" aria-haspopup="dialog" aria-expanded={open} title="Skills, MCP servers and plugins to use" className={cn("inline-flex h-7 items-center gap-1.5 rounded-full border border-border px-2.5 text-xs transition-colors hover:bg-white/[0.08]", count ? "text-foreground" : "text-muted-foreground")} onClick={() => setOpen((v) => !v)}>
+      <button type="button" aria-haspopup="dialog" aria-expanded={open} title="Skills, MCP servers and plugins to use" className={cn("inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs transition-colors hover:bg-white/[0.08]", count ? "text-foreground" : "text-muted-foreground")} onClick={() => setOpen((v) => !v)}>
         <Puzzle className="h-3.5 w-3.5" />
         {count ? `Using ${count}` : "Use…"}
       </button>

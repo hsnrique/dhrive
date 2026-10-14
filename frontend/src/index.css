@@ -2,36 +2,25 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Self-hosted brand fonts (copied to frontend/public/fonts). */
-@font-face {
-  font-family: "Geist";
-  src: url("/fonts/Geist-Variable.woff2") format("woff2");
-  font-weight: 100 900;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Geist Mono";
-  src: url("/fonts/GeistMono-Variable.woff2") format("woff2");
-  font-weight: 100 900;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Instrument Serif";
-  src: url("/fonts/InstrumentSerif-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-display: swap;
-}
+/* IBM Plex in its three voices, bundled with the app (only the latin files, which cover pt and
+   es): the sans for the interface, the mono for anything a machine said, the serif for display. */
+@import "@fontsource/ibm-plex-sans/latin-400.css";
+@import "@fontsource/ibm-plex-sans/latin-500.css";
+@import "@fontsource/ibm-plex-sans/latin-600.css";
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource/ibm-plex-mono/latin-400-italic.css";
+@import "@fontsource/ibm-plex-mono/latin-500.css";
+@import "@fontsource/ibm-plex-serif/latin-300.css";
+@import "@fontsource/ibm-plex-serif/latin-400.css";
 
-/* dhrive is always-dark — the identity palette lives here as the default theme, re-expressed
-   from the old styles.css as tokens (no 3000-line stylesheet). shadcn/Radix components read
-   these via @theme inline below. */
+/* dhrive is always-dark: black, white as the only accent, red only for failure. The surfaces are
+   flat and ruled with hairlines, the corners nearly square. shadcn/Radix components read these via @theme inline below. */
 :root {
   --background: #0c0c0c;
   --foreground: #f2f2f2;
-  /* Liquid glass: translucent surfaces that frost the ambient field behind them. */
-  --card: rgba(24, 24, 28, 0.45);
+  --card: #0a0a0b;
   --card-foreground: #f2f2f2;
-  --popover: rgba(20, 20, 24, 0.94);
+  --popover: #121214;
   --popover-foreground: #f2f2f2;
   --primary: #f2f2f2;
   --primary-foreground: #0c0c0c;
@@ -56,7 +45,7 @@
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.14);
   --ring: rgba(255, 255, 255, 0.32);
-  --radius: 0.85rem;
+  --radius: 4px;
 }
 
 @theme inline {
@@ -86,15 +75,16 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  /* Nearly square at every size: a container is never rounder than a button. */
+  --radius-sm: 2px;
+  --radius-md: 3px;
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 5px);
-  --radius-2xl: calc(var(--radius) + 9px);
-  --radius-3xl: calc(var(--radius) + 17px);
-  --font-sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --radius-xl: 5px;
+  --radius-2xl: 6px;
+  --radius-3xl: 8px;
+  --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
 }
 
 @layer base {
@@ -105,40 +95,21 @@
     color: var(--foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    /* Flat black, same as the landing — the liquid glass is the star, not the background. */
     background: #000;
   }
-  /* Quiet dot grid, densest at the top-right and fading out — subtle texture over the black,
-     matching the landing. Sits behind the content + gets frosted by the glass. */
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
-    background-size: 34px 34px;
-    -webkit-mask-image: radial-gradient(ellipse 110% 90% at 100% 0%, #000, transparent 75%);
-    mask-image: radial-gradient(ellipse 110% 90% at 100% 0%, #000, transparent 75%);
-  }
-  /* Liquid glass: every card/popover surface frosts the ambient field with a heavy backdrop
-     blur, a top sheen, a bright specular rim + hairline edge, and a soft depth shadow. */
+  /* A raised surface is a flat panel with a hairline edge; nothing frosts, nothing glows. */
   [class~="bg-card"],
   [class~="bg-popover"] {
-    backdrop-filter: saturate(190%) blur(30px);
-    -webkit-backdrop-filter: saturate(190%) blur(30px);
-    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015));
+    box-shadow: inset 0 0 0 1px var(--border);
+  }
+  [class~="bg-popover"] {
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.16),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.05),
-      0 24px 55px -30px rgba(0, 0, 0, 0.75);
-    transition:
-      box-shadow 0.25s ease,
-      border-color 0.25s ease;
+      inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+      0 16px 40px -20px rgba(0, 0, 0, 0.9);
   }
 }
 
-/* Smooth entrance for overlays/modals — the "liquid" of liquid glass. */
+/* Smooth entrance for overlays/modals. */
 @keyframes pop-in {
   from {
     opacity: 0;
@@ -220,7 +191,7 @@
   }
   ::-webkit-scrollbar-thumb {
     border: 3px solid transparent;
-    border-radius: 999px;
+    border-radius: 2px;
     background: rgba(255, 255, 255, 0.12) padding-box;
   }
   ::-webkit-scrollbar-thumb:hover {
@@ -293,7 +264,7 @@
   }
 }
 
-/* Geist Mono joins runs like "..." and "->" into ligatures. xterm measures each character as a run
+/* A mono font may join runs like "..." and "->" into ligatures. xterm measures each character as a run
    of 32, so a joined run reads as a narrow glyph and gets padded out of its cell. */
 .xterm,
 .xterm * {
