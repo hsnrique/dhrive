@@ -4,7 +4,7 @@ import { armyDiscard, armyLand, armyPrepare, armySync, readDocuments, runChecks,
 import { PARALLEL, agentById, conflictPrompt, rosterNote, type Agent } from "@/lib/army";
 import { FIX_ATTEMPTS, failure, fixPrompt, passed, verdict } from "@/lib/checks";
 import { isBlank, toMarkdown } from "@/lib/company";
-import { alreadyNote, clipped, ownTask, parseDay, savedTasks, taskPrompt, trimmed, type Area, type Task } from "@/lib/day";
+import { alreadyNote, clipped, handoffs, ownTask, parseDay, ready, savedTasks, taskPrompt, trimmed, type Area, type Task } from "@/lib/day";
 import { documentPrompt, missing } from "@/lib/documents";
 import type { Choice } from "@/lib/flow";
 import { entry } from "@/lib/log";
@@ -141,7 +141,7 @@ export const useDay = create<DayState>((set, get) => {
       return runStep({ runId: fresh(), folder, step: "code", engine: task.engine, model: task.model, effort: task.effort, task: prompt, resume: resume ?? undefined, unattended: !ask, mcp });
     };
     patchTask(projectId, task.id, { result: "" });
-    const prompt = taskPrompt(task, project.name, agentById(armyOf(projectId), task.agentId));
+    const prompt = taskPrompt(task, project.name, agentById(armyOf(projectId), task.agentId), army ? handoffs(day(projectId).tasks, armyOf(projectId)) : "");
     // Checks in `copy` (an army task's) or the folder, fixes going back to the same conversation.
     const checked = async (result: StepResult, copy?: string): Promise<{ result: StepResult; report: CheckReport } | null> => {
       for (let fixes = 0; ; fixes++) {
@@ -193,6 +193,12 @@ export const useDay = create<DayState>((set, get) => {
     }
   };
 
+  // The first task up next whose tasks it waits for are done.
+  const nextUp = (projectId: string) => {
+    const { tasks } = day(projectId);
+    return tasks.find((t) => t.status === "planned" && ready(t, tasks));
+  };
+
   // One landing at a time per company, so each merges onto the one before it.
   const landing = new Map<string, Promise<void>>();
   const inLine = (projectId: string, step: () => Promise<void>) => {
@@ -204,7 +210,7 @@ export const useDay = create<DayState>((set, get) => {
   const work = async (projectId: string) => {
     halted.delete(projectId);
     if (armyOf(projectId).length) return workArmy(projectId);
-    for (let next = day(projectId).tasks.find((t) => t.status === "planned"); next && !halted.has(projectId); next = day(projectId).tasks.find((t) => t.status === "planned")) {
+    for (let next = nextUp(projectId); next && !halted.has(projectId); next = nextUp(projectId)) {
       await runTask(projectId, next);
       // Between tasks, so no CLI is editing while it commits.
       // ponytail: the record writes of the task just ended may land in the next backup, not this one.
@@ -217,7 +223,7 @@ export const useDay = create<DayState>((set, get) => {
     const running = new Set<Promise<void>>();
     for (;;) {
       while (running.size < PARALLEL && !halted.has(projectId)) {
-        const next = day(projectId).tasks.find((t) => t.status === "planned");
+        const next = nextUp(projectId);
         if (!next) break;
         // Marked before it starts, so the next pick never takes it again.
         patchTask(projectId, next.id, { status: "running" });

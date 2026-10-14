@@ -11,11 +11,11 @@ const LIGHT = "#f2f2f2";
 
 export function ToolMark({ id, size = 30 }: { id: string; size?: number }) {
   const brand = BRANDS[id];
-  if (!brand) return <span className="flex-none rounded-[9px] bg-white/[0.06]" style={{ width: size, height: size }} />;
+  if (!brand) return <span className="flex-none rounded-md bg-white/[0.06]" style={{ width: size, height: size }} />;
   // Eight-digit hex: the brand color at about an eighth, so the tile carries it without shouting.
   const tint = brand.color === LIGHT ? "rgba(255,255,255,0.06)" : `${brand.color}20`;
   return (
-    <span className="flex flex-none items-center justify-center rounded-[9px] border border-white/[0.06]" style={{ width: size, height: size, background: tint }}>
+    <span className="flex flex-none items-center justify-center rounded-md border border-white/[0.06]" style={{ width: size, height: size, background: tint }}>
       <svg viewBox={brand.viewBox} aria-hidden fill="currentColor" style={{ color: brand.color, width: size * 0.52, height: size * 0.52 }}>
         {brand.paths.map((d) => <path key={d.slice(0, 24)} d={d} />)}
       </svg>

@@ -4,6 +4,7 @@ import type { Project } from "@/lib/api";
 import { MAX_AGENTS, PARALLEL, SQUAD, agentByName } from "@/lib/army";
 import { useApp } from "@/store/app";
 import { useArmy, useArmyOf } from "@/store/army";
+import { useDayOf } from "@/store/day";
 import { AgentForm, AgentRow } from "./AgentRow";
 import { pill } from "./EnvRow";
 import { SectionHead } from "./SectionHead";
@@ -18,6 +19,8 @@ export function Army({ project }: { project: Project }) {
   const { hire, hireSquad } = useArmy.getState();
   const full = army.length >= MAX_AGENTS;
   const squad = !full && SQUAD.some((s) => !agentByName(army, s.name));
+  // The war room, as the owner sees it: what the agents delivered lately, newest first.
+  const lately = useDayOf(project.id).tasks.filter((t) => t.status === "done" && army.some((a) => a.id === t.agentId)).slice(-4).reverse();
   return (
     <section className="grid gap-3">
       <SectionHead title="Army">
@@ -30,6 +33,16 @@ export function Army({ project }: { project: Project }) {
         {army.map((agent) => <AgentRow key={agent.id} projectId={project.id} agent={agent} engines={engines} />)}
         {!army.length && !hiring && <li className="px-1 py-2 text-[12px] text-muted-foreground">No agents yet: the company's own agent does every task.</li>}
       </ul>
+      {lately.length > 0 && (
+        <div className="grid gap-1.5 pt-1">
+          <p className="font-mono text-[11px] text-muted-foreground">Lately</p>
+          {lately.map((t) => (
+            <p key={t.id} className="truncate text-[12px]">
+              <span className="font-mono text-muted-foreground">{army.find((a) => a.id === t.agentId)?.name}</span> {t.title}
+            </p>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

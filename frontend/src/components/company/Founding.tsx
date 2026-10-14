@@ -97,7 +97,7 @@ function Ask() {
         <h1 className="font-serif text-[46px] leading-[1.04] tracking-[-0.01em]">What company should exist?</h1>
         <p className="max-w-[48ch] text-[14px] leading-relaxed text-muted-foreground">Say it in a sentence, or let dhrive pick. It creates the company and runs it.</p>
       </div>
-      <div className="@container grid gap-2 rounded-[22px] border border-border bg-card p-2 focus-within:border-ring">
+      <div className="@container grid gap-2 rounded-2xl border border-border bg-card p-2 focus-within:border-ring">
         <textarea
           autoFocus
           rows={3}

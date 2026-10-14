@@ -144,6 +144,22 @@ describe("a company's day", () => {
     expect(day().tasks.map((t) => t.status), "standing down stops every one of them").toEqual(["stopped", "stopped", "done", "stopped"]);
   });
 
+  it("the General's order holds: a task waiting for another starts only once that one has landed", async () => {
+    useArmy.setState({ byProject: { [P]: [newAgent("Back", "", { engine: "claude-code", model: "opus" })!] } });
+    useDay.setState({ byProject: { [P]: { ...EMPTY_DAY } } });
+    void useDay.getState().plan(P);
+    expect(last().request.task).toContain('"after"');
+    reply(JSON.stringify([{ title: "API", area: "code", prompt: "Add the API" }, { title: "Page", area: "code", prompt: "Build the page", after: ["API"] }]));
+    await windDown();
+    expect(day().tasks.map((t) => t.status), "three could run, but the page waits").toEqual(["running", "planned"]);
+    reply("Added the API");
+    await windDown();
+    expect(day().tasks.map((t) => t.status)).toEqual(["done", "running"]);
+    expect(last().request.task, "and hears what the API task delivered").toContain("API (Added the API)");
+    useDay.getState().stop(P);
+    await windDown();
+  });
+
   it("whatever order an army's tasks finish in, at most three work at once, landings take turns and every task lands", async () => {
     for (let seed = 1; seed <= 12; seed++) {
       let state = seed;
