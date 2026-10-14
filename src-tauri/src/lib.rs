@@ -1,5 +1,6 @@
 mod account;
 mod approvals;
+mod army;
 mod attachments;
 mod browser;
 mod cancel;
@@ -151,6 +152,11 @@ pub fn run() {
             github::pending_changes,
             connectors::connectors,
             connectors::connector_open,
+            army::army_prepare,
+            army::army_sync,
+            army::army_land,
+            army::army_changes,
+            army::army_discard,
             feedback::suggest_tool,
             feedback::send_feedback,
             checks::run_checks,

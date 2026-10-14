@@ -93,6 +93,7 @@ function Bar({ project, day, engines, blank }: { project: Project; day: Day; eng
       <span className="ml-auto" />
       {suggest}
       {waiting > 0 && <button type="button" disabled={!choice} className={primary} onClick={() => void run(project.id)}>Run {waiting}</button>}
+      {day.held && <p className="w-full truncate font-mono text-[11.5px] text-attention" title={`${day.held}. It looks again in a few minutes, or press Run.`}>waiting: {day.held}</p>}
     </div>
   );
 }
@@ -131,7 +132,7 @@ export function Tasks({ project, brief }: { project: Project; brief: Brief }) {
   const open = day.tasks.filter((t) => t.status === "running" || t.status === "planned");
   const suggested = day.tasks.filter((t) => t.status === "suggested");
   const finished = day.tasks.filter((t) => t.status === "done" || t.status === "failed" || t.status === "stopped");
-  const row = (task: Task) => <TaskRow key={task.id} projectId={project.id} task={task} engines={engines} />;
+  const row = (task: Task) => <TaskRow key={task.id} projectId={project.id} task={task} engines={engines} tasks={day.tasks} />;
   return (
     <section className="grid gap-4">
       <SectionHead title={day.first ? "First delivery" : "Tasks"}>

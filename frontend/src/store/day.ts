@@ -1,17 +1,19 @@
 import { create } from "zustand";
 
-import { readDocuments, runChecks, runStep, stopRun } from "@/lib/api";
-import { FIX_ATTEMPTS, failure, fixPrompt, passed, verdict } from "@/lib/checks";
+import { armyDiscard, readDocuments, runStep, stopRun } from "@/lib/api";
+import { PARALLEL, rosterNote, type Agent } from "@/lib/army";
+import { RECHECK_MS } from "@/lib/logistics";
 import { isBlank, toMarkdown } from "@/lib/company";
-import { alreadyNote, clipped, ownTask, parseDay, savedTasks, taskPrompt, trimmed, type Area, type Task } from "@/lib/day";
+import { alreadyNote, ownTask, parseDay, ready, savedTasks, trimmed, type Area, type Task } from "@/lib/day";
 import { documentPrompt, missing } from "@/lib/documents";
 import type { Choice } from "@/lib/flow";
-import { entry } from "@/lib/log";
 import { readSaved } from "@/lib/storage";
 import { useApp } from "./app";
+import { useArmy } from "./army";
 import { companyAgent, useCompany } from "./company";
-import { useLog } from "./log";
 import { useGitHub } from "./github";
+import { nextToStart } from "./army-pick";
+import { taskRunner } from "./task-run";
 import { usePublish } from "./publish";
 import { keeper } from "./records";
 
@@ -37,16 +39,20 @@ export interface Day {
   ask: boolean;
   // With Ask first off, whether MCP tools (which can send, post or pay in the owner's name) run too.
   mcp: boolean;
+  // Whether an army's tasks are reviewed by the company's own agent before they land; off unless asked.
+  review: boolean;
   // A new company's first day: its first delivery, the product and its website.
   first: boolean;
   error: string | null;
+  // Why an army's next tasks wait instead of starting (their plans are full); not saved.
+  held?: string | null;
 }
 
-export const EMPTY_DAY: Day = { tasks: [], plannedAt: null, planRunId: null, ask: false, mcp: false, first: false, error: null };
+export const EMPTY_DAY: Day = { tasks: [], plannedAt: null, planRunId: null, ask: false, mcp: false, review: false, first: false, error: null };
 
 export function savedDay(value: unknown): Day {
   const d = (typeof value === "object" && value !== null ? value : {}) as Partial<Day>;
-  return { ...EMPTY_DAY, tasks: savedTasks(d.tasks), plannedAt: typeof d.plannedAt === "number" ? d.plannedAt : null, ask: d.ask === true, mcp: d.mcp === true, first: d.first === true };
+  return { ...EMPTY_DAY, tasks: savedTasks(d.tasks), plannedAt: typeof d.plannedAt === "number" ? d.plannedAt : null, ask: d.ask === true, mcp: d.mcp === true, review: d.review === true, first: d.first === true };
 }
 
 function legacyDays(): Record<string, unknown> {
@@ -54,7 +60,7 @@ function legacyDays(): Record<string, unknown> {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
 }
 
-const kept = ({ tasks, plannedAt, ask, mcp, first }: Day) => ({ tasks, plannedAt, ask, mcp, first });
+const kept = ({ tasks, plannedAt, ask, mcp, review, first }: Day) => ({ tasks, plannedAt, ask, mcp, review, first });
 
 // The record read after something already changed here (a company founded and planned at once): both
 // sides' tasks are kept, this side's version of any task in both.
@@ -76,9 +82,13 @@ interface DayState {
   drop: (projectId: string, id: string) => void;
   setAsk: (projectId: string, ask: boolean) => void;
   setMcp: (projectId: string, mcp: boolean) => void;
+  setReview: (projectId: string, review: boolean) => void;
   // A new agent for the company: the tasks waiting on the old one move to it; one the owner gave its
   // own CLI or model keeps it, and the one running finishes where it started.
   setAgent: (projectId: string, agent: Choice) => void;
+  // An army agent changed CLI or model, or was dismissed (null): the tasks waiting on it follow, a
+  // dismissed agent's going back to the company's own agent.
+  follow: (projectId: string, agentId: string, agent: Agent | null) => void;
   add: (projectId: string, said: string, area: Area) => boolean;
   // A task already written, as the company's chat suggests one; queued as the owner's and started.
   queue: (projectId: string, task: Task) => void;
@@ -88,6 +98,8 @@ interface DayState {
 }
 
 const projectOf = (projectId: string) => useApp.getState().projects.find((p) => p.id === projectId);
+const armyOf = (projectId: string) => useArmy.getState().byProject[projectId] ?? [];
+const waiting = (t: Task) => t.status === "planned" || t.status === "suggested";
 
 export const useDay = create<DayState>((set, get) => {
   const day = (projectId: string) => get().byProject[projectId] ?? EMPTY_DAY;
@@ -111,50 +123,53 @@ export const useDay = create<DayState>((set, get) => {
   // The queue being worked, per project: asking to run it again joins the same pass.
   const working = new Map<string, Promise<void>>();
 
-  const finish = (projectId: string, task: Task, status: "done" | "failed", text: string) => {
-    patchTask(projectId, task.id, { status, runId: null, result: clipped(text) });
-    useLog.getState().add(projectId, entry(status, task.title, { taskId: task.id }));
-  };
+  const { runTask } = taskRunner({ day, patchTask });
 
-  // The task, then dhrive's own checks of what it delivered (checks.rs). What fails goes back to the
-  // same conversation, up to FIX_ATTEMPTS times; only a delivery that passes is done. Every run (the
-  // task, the checks, a fix) takes a fresh id, so a stop or a retry, which change the task's, end it.
-  const runTask = async (projectId: string, task: Task) => {
-    const project = projectOf(projectId);
-    if (!project) return;
-    let runId = "";
-    const fresh = () => {
-      runId = crypto.randomUUID();
-      patchTask(projectId, task.id, { status: "running", runId });
-      return runId;
-    };
-    const ours = () => day(projectId).tasks.find((t) => t.id === task.id)?.runId === runId;
-    const code = (prompt: string, resume: string | null) => {
-      const { ask, mcp } = day(projectId);
-      return runStep({ runId: fresh(), folder: project.folder, step: "code", engine: task.engine, model: task.model, effort: task.effort, task: prompt, resume: resume ?? undefined, unattended: !ask, mcp });
-    };
-    patchTask(projectId, task.id, { result: "" });
-    try {
-      let result = await code(taskPrompt(task, project.name), null);
-      for (let fixes = 0; ; fixes++) {
-        const report = await runChecks(projectId, fresh());
-        if (!ours()) return;
-        if (passed(report)) return finish(projectId, task, "done", result.output + verdict(report, fixes));
-        if (fixes === FIX_ATTEMPTS) return finish(projectId, task, "failed", failure(report));
-        result = await code(fixPrompt(report, task.title), result.sessionId);
-      }
-    } catch (error) {
-      if (ours()) finish(projectId, task, "failed", String(error));
-    }
+  // The first task up next whose tasks it waits for are done.
+  const nextUp = (projectId: string) => {
+    const { tasks } = day(projectId);
+    return tasks.find((t) => t.status === "planned" && ready(t, tasks));
   };
 
   const work = async (projectId: string) => {
     halted.delete(projectId);
-    for (let next = day(projectId).tasks.find((t) => t.status === "planned"); next && !halted.has(projectId); next = day(projectId).tasks.find((t) => t.status === "planned")) {
+    if (armyOf(projectId).length) return workArmy(projectId);
+    for (let next = nextUp(projectId); next && !halted.has(projectId); next = nextUp(projectId)) {
       await runTask(projectId, next);
       // Between tasks, so no CLI is editing while it commits.
       // ponytail: the record writes of the task just ended may land in the next backup, not this one.
       await useGitHub.getState().backup(projectId);
+    }
+  };
+
+  // An army works up to PARALLEL tasks at once, each in its own copy; it backs up as each one lands.
+  // A company whose next tasks all wait on a plan looks again in a while, unless it's stopped first.
+  const rechecks = new Map<string, ReturnType<typeof setTimeout>>();
+  const setHeld = (projectId: string, held: string | null) => {
+    if (day(projectId).held !== held) set({ byProject: { ...get().byProject, [projectId]: { ...day(projectId), held } } });
+  };
+  const recheck = (projectId: string) => {
+    clearTimeout(rechecks.get(projectId));
+    rechecks.set(projectId, setTimeout(() => void get().run(projectId), RECHECK_MS));
+  };
+
+  const workArmy = async (projectId: string) => {
+    const running = new Set<Promise<void>>();
+    clearTimeout(rechecks.get(projectId));
+    for (;;) {
+      while (running.size < PARALLEL && !halted.has(projectId)) {
+        const next = await nextToStart(projectId, { day, patchTask, setHeld });
+        if (!next) break;
+        // Marked before it starts, so the next pick never takes it again.
+        patchTask(projectId, next.id, { status: "running" });
+        const run: Promise<void> = runTask(projectId, next, true).finally(() => running.delete(run));
+        running.add(run);
+      }
+      if (!running.size) {
+        if (day(projectId).held && !halted.has(projectId)) recheck(projectId);
+        return;
+      }
+      await Promise.race(running);
     }
   };
 
@@ -181,11 +196,12 @@ export const useDay = create<DayState>((set, get) => {
       // Fresh suggestions replace the ones still waiting.
       patch(projectId, (d) => ({ planRunId, tasks: d.tasks.filter((t) => t.status !== "suggested"), first: also !== undefined, error: null }));
       try {
-        const task = [toMarkdown(brief, project.name), alreadyNote(day(projectId).tasks), also].filter(Boolean).join("\n\n");
+        const army = armyOf(projectId);
+        const task = [toMarkdown(brief, project.name), rosterNote(army), alreadyNote(day(projectId).tasks), also].filter(Boolean).join("\n\n");
         const result = await runStep({ runId: planRunId, folder: project.folder, step: "day", engine: choice.engine, model: choice.model, effort: choice.effort, task });
         if (day(projectId).planRunId !== planRunId) return;
         const status = day(projectId).ask ? "suggested" : "planned";
-        const fresh = parseDay(result.output, choice).map((t) => ({ ...t, status }) as Task);
+        const fresh = parseDay(result.output, choice, army).map((t) => ({ ...t, status }) as Task);
         patch(projectId, (d) => ({ planRunId: null, tasks: [...d.tasks, ...fresh], plannedAt: Date.now(), error: fresh.length ? null : NOTHING }));
         if (status === "planned" && fresh.length) void get().run(projectId);
       } catch (error) {
@@ -203,24 +219,46 @@ export const useDay = create<DayState>((set, get) => {
       working.set(projectId, pass);
       return pass;
     },
+    // Every task running stops (an army stands down at once); their copies stay for a retry.
     stop: (projectId) => {
       halted.add(projectId);
-      const running = day(projectId).tasks.find((t) => t.status === "running");
-      if (!running?.runId) return;
-      patchTask(projectId, running.id, { status: "stopped", runId: null });
-      void stopRun(running.runId);
+      clearTimeout(rechecks.get(projectId));
+      setHeld(projectId, null);
+      for (const running of day(projectId).tasks.filter((t) => t.status === "running")) {
+        patchTask(projectId, running.id, { status: "stopped", runId: null });
+        if (running.runId) void stopRun(running.runId);
+      }
     },
     hold: (projectId) => void halted.add(projectId),
     edit: (projectId, id, change) => patchTask(projectId, id, change),
-    drop: (projectId, id) => patch(projectId, (d) => ({ tasks: d.tasks.filter((t) => t.id !== id || t.status === "running") })),
+    drop: (projectId, id) => {
+      const task = day(projectId).tasks.find((t) => t.id === id && t.status !== "running");
+      if (!task) return;
+      patch(projectId, (d) => ({ tasks: d.tasks.filter((t) => t.id !== id) }));
+      // A stopped army task may have a copy left: its work goes to its branch, the copy away.
+      if (task.status === "stopped" && armyOf(projectId).length) void armyDiscard(projectId, id, task.title).catch(() => undefined);
+    },
     setAsk: (projectId, ask) => patch(projectId, () => ({ ask })),
     setMcp: (projectId, mcp) => patch(projectId, () => ({ mcp })),
+    setReview: (projectId, review) => patch(projectId, () => ({ review })),
     setAgent: (projectId, agent) => {
       const before = companyAgent(projectId);
       useCompany.getState().choose(agent, projectId);
       if (!before) return;
-      const was = (t: Task) => (t.status === "planned" || t.status === "suggested") && t.engine === before.engine && t.model === before.model;
+      const was = (t: Task) => waiting(t) && !t.agentId && t.engine === before.engine && t.model === before.model;
       patch(projectId, (d) => ({ tasks: d.tasks.map((t) => (was(t) ? { ...t, engine: agent.engine, model: agent.model, effort: agent.effort } : t)) }));
+    },
+    follow: (projectId, agentId, agent) => {
+      const company = companyAgent(projectId);
+      const to = agent ?? company;
+      if (!to) return;
+      const moved = (t: Task): Task => {
+        const next = { ...t, engine: to.engine, model: to.model, effort: to.effort };
+        if (agent) return next;
+        const { agentId: _, ...own } = next;
+        return own;
+      };
+      patch(projectId, (d) => ({ tasks: d.tasks.map((t) => (waiting(t) && t.agentId === agentId ? moved(t) : t)) }));
     },
     add: (projectId, said, area) => {
       const choice = companyAgent(projectId);

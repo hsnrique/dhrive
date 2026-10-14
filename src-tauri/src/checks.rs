@@ -149,11 +149,18 @@ pub(crate) fn run(folder: &Path, env: &[(String, String)], run_id: &str, reporte
 }
 
 #[tauri::command]
-pub async fn run_checks(app: tauri::AppHandle, project: String, run_id: String) -> Result<Report, String> {
+// In the company's folder, or in an army task's copy of it (army.rs) when one is named.
+pub async fn run_checks(app: tauri::AppHandle, project: String, run_id: String, task: Option<String>) -> Result<Report, String> {
     if run_id.is_empty() || run_id.len() > 64 {
         return Err("Missing run id.".into());
     }
-    let folder = crate::terminal::project_folder(&app, &project)?;
+    let mut folder = crate::terminal::project_folder(&app, &project)?;
+    if let Some(task) = task {
+        folder = crate::worktrees::copy_dir(&folder, &task)?;
+        if !folder.join(".git").exists() {
+            return Err("This task has no copy of the company.".into());
+        }
+    }
     let env = crate::env::of_project(&project);
     let reporter = crate::events::make_reporter(&app, run_id.clone());
     crate::cancel::begin(&run_id);

@@ -23,7 +23,7 @@ export const readInstructions = () => invoke<string>("read_instructions");
 export const readCompany = (project: string) => invoke<string>("read_company", { project });
 export const saveCompany = (project: string, text: string) => invoke<void>("save_company", { project, text });
 // A company's documents under docs/, each null until its agent writes it.
-export type RecordName = "tasks" | "log" | "site" | "connectors" | "agent";
+export type RecordName = "tasks" | "log" | "site" | "connectors" | "agent" | "army";
 export const readCompanyRecord = (project: string, name: RecordName) => invoke<unknown>("read_company_record", { project, name });
 export const saveCompanyRecord = (project: string, name: RecordName, value: unknown) => invoke<void>("save_company_record", { project, name, value });
 export const archiveCompanyRecord = (project: string, name: RecordName, items: unknown[]) => invoke<void>("archive_company_record", { project, name, items });
@@ -98,7 +98,16 @@ export const connectorOpen = (id: string, connector: string, project: string, co
 // A tool the owner wishes were in the menu, to the dhrive team (suggest.rs).
 export const suggestTool = (tool: string, why: string) => invoke<null>("suggest_tool", { tool, why });
 export const sendFeedback = (message: string) => invoke<null>("send_feedback", { message });
-export const runChecks = (project: string, runId: string) => invoke<CheckReport>("run_checks", { project, runId });
+// In the company's folder, or in an army task's copy (army.rs) when `task` is given.
+export const runChecks = (project: string, runId: string, task?: string) => invoke<CheckReport>("run_checks", { project, runId, task: task ?? null });
+export type Synced = { kind: "clean" } | { kind: "conflicts"; files: string[] };
+// An army task's copy of the company: made, synced with the company's latest, landed, or put away.
+export const armyPrepare = (project: string, task: string) => invoke<string>("army_prepare", { project, task });
+export const armySync = (project: string, task: string, title: string) => invoke<Synced>("army_sync", { project, task, title });
+export const armyLand = (project: string, task: string, title: string) => invoke<void>("army_land", { project, task, title });
+export type ArmyChanges = { files: string[]; diff: string };
+export const armyChanges = (project: string, task: string, title: string) => invoke<ArmyChanges>("army_changes", { project, task, title });
+export const armyDiscard = (project: string, task: string, title: string) => invoke<void>("army_discard", { project, task, title });
 export const envView = (projectId: string) => invoke<EnvView>("env_view", { projectId });
 export const envSet = (projectId: string, name: string, value: string) => invoke<EnvView>("env_set", { projectId, name, value });
 export const envRemove = (projectId: string, name: string) => invoke<EnvView>("env_remove", { projectId, name });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_KEPT, MAX_TASKS, alreadyNote, ownTask, parseDay, savedTasks, standing, taskPrompt, taskSummary, trimmed, type Task } from "./day";
+import { newAgent } from "./army";
+import { MAX_KEPT, MAX_TASKS, alreadyNote, handoffs, ownTask, parseDay, ready, savedTasks, standing, taskPrompt, taskSummary, trimmed, waitingOn, type Task } from "./day";
 
 const AGENT = { engine: "claude-code" as const, model: "sonnet" };
 
@@ -13,6 +14,45 @@ describe("a company's day", () => {
       ["Fix", "code", "claude-code", "sonnet", "planned"],
     ]);
     expect(parseDay("no plan", AGENT)).toEqual([]);
+  });
+
+  it("gives each task to the army's agent the planner named, on that agent's CLI, else to the company's", () => {
+    const back = newAgent("Back", "APIs", { engine: "codex", model: "gpt-6" })!;
+    const reply = JSON.stringify([
+      { title: "API", area: "code", agent: "back", prompt: "Add the billing API" },
+      { title: "Post", area: "marketing", agent: "Nobody", prompt: "Draft a post" },
+    ]);
+    const [api, post] = parseDay(reply, AGENT, [back]);
+    expect([api.agentId, api.engine, api.model]).toEqual([back.id, "codex", "gpt-6"]);
+    expect([post.agentId, post.engine, post.model]).toEqual([undefined, "claude-code", "sonnet"]);
+    expect(taskPrompt(api, "planilha.", back)).toMatch(/^You are Back, one of planilha\.'s agents\. Your role: APIs\n\nAdd the billing API/);
+    expect(savedTasks([{ ...api, agentId: 3 }, api]).map((t) => t.agentId)).toEqual([undefined, back.id]);
+  });
+
+  it("turns what a task waits for from titles into ids, dropping names that aren't in the reply", () => {
+    const reply = JSON.stringify([
+      { title: "API", area: "code", prompt: "Add the API" },
+      { title: "Page", area: "code", prompt: "Build the page", after: ["api", "Nowhere", "Page"] },
+    ]);
+    const [api, page] = parseDay(reply, AGENT);
+    expect(api.after).toBeUndefined();
+    expect(page.after).toEqual([api.id]);
+    expect(ready(page, [api, page])).toBe(false);
+    expect(waitingOn(page, [api, page])).toEqual(["API"]);
+    expect(ready(page, [{ ...api, status: "done" }, page])).toBe(true);
+    expect(ready(page, [{ ...api, status: "failed" }, page]), "a failed one still holds it").toBe(false);
+    expect(ready(page, [page]), "a dropped one no longer does").toBe(true);
+    expect(savedTasks([{ ...page, after: [api.id, 7] }])[0].after).toEqual([api.id]);
+  });
+
+  it("tells each agent what the others delivered lately", () => {
+    const back = newAgent("Back", "", AGENT)!;
+    const [api] = parseDay('[{"title": "API", "area": "code", "prompt": "Add it"}]', AGENT);
+    expect(handoffs([], [back])).toBe("");
+    const done = { ...api, status: "done" as const, agentId: back.id, result: "Added POST /billing, contract in docs/api/billing.md" };
+    const note = handoffs([done], [back]);
+    expect(note).toContain("- Back: API (Added POST /billing, contract in docs/api/billing.md)");
+    expect(taskPrompt(api, "planilha.", undefined, note)).toContain("delivered lately");
   });
 
   it("keeps at most a day's worth of tasks", () => {
@@ -77,6 +117,7 @@ describe("where the company stands", () => {
     expect(standing([task("done"), task("running"), task("planned")], true)).toEqual({ live: true, text: "Working on its first delivery · 1 of 3 done" });
     expect(standing([task("done"), task("done")], true).text).toBe("First delivery done");
     expect(standing([task("done"), task("running"), task("planned")], false).text).toBe("Working · 1 up next");
+    expect(standing([task("running"), task("running"), task("running"), task("planned")], false).text, "an army says how many work at once").toBe("3 working · 1 up next");
     expect(standing([task("done"), task("stopped"), task("planned")], false).text).toBe("1 task up next");
     expect(standing([task("suggested"), task("suggested")], false).text).toBe("2 suggested tasks to look over");
     expect(standing([], false).text).toBe("Resting");

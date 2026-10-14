@@ -1,5 +1,6 @@
 import type { Engine } from "@/lib/api";
 import { savedEffort, type Choice } from "@/lib/flow";
+import { agentByName, agentIntro, type Agent } from "./army";
 import { STANDARDS } from "./standards";
 
 // A company's tasks: those its agent suggests from the brief and those the owner adds, each run in
@@ -24,6 +25,12 @@ export interface Task {
   runId: string | null;
   // What the CLI said when it finished, or why it failed.
   result: string;
+  // The army's agent doing it (army.ts); none for the company's own agent.
+  agentId?: string;
+  // The tasks it waits for, by id: it starts once each of them is done.
+  after?: string[];
+  // Why it runs where it does when that changed on its own: its plan was full, it went to its backup.
+  note?: string;
 }
 
 export const AREAS: Area[] = ["code", "marketing", "support", "research"];
@@ -49,14 +56,17 @@ function arrayIn(output: string): unknown[] {
   }
 }
 
-// Every task goes to the agent the owner picked for the company; dhrive never picks one for them.
-function taskOf(item: unknown, agent: Choice): Task | null {
+// A task goes to the army's agent the planner named, on that agent's CLI and model, or else to the
+// agent the owner picked for the company; dhrive never picks a model for them.
+function taskOf(item: unknown, agent: Choice, army: Agent[]): Task | null {
   if (typeof item !== "object" || item === null) return null;
-  const { title, area, prompt } = item as Record<string, unknown>;
+  const { title, area, prompt, agent: who } = item as Record<string, unknown>;
   const ask = text(prompt);
   if (!ask || ask.length > MAX_PROMPT) return null;
   const said = text(area).toLowerCase() as Area;
-  return newTask(ask, text(title).slice(0, MAX_TITLE) || ask.slice(0, 40), AREAS.includes(said) ? said : "code", agent);
+  const named = agentByName(army, who);
+  const task = newTask(ask, text(title).slice(0, MAX_TITLE) || ask.slice(0, 40), AREAS.includes(said) ? said : "code", named ?? agent);
+  return named ? { ...task, agentId: named.id } : task;
 }
 
 function newTask(prompt: string, title: string, area: Area, agent: Choice): Task {
@@ -90,18 +100,52 @@ export function alreadyNote(tasks: Task[]): string {
   return [done && `Already done:\n${done}`, queued && `Already queued:\n${queued}`].filter(Boolean).join("\n\n");
 }
 
-export function parseDay(output: string, agent: Choice): Task[] {
-  return arrayIn(output)
-    .map((item) => taskOf(item, agent))
-    .filter((task): task is Task => task !== null)
-    .slice(0, MAX_TASKS);
+// The planner names what a task waits for by the other tasks' titles in the same reply; they become
+// ids here, and a name that isn't one of them, or the task itself, is dropped.
+export function parseDay(output: string, agent: Choice, army: Agent[] = []): Task[] {
+  const items = arrayIn(output);
+  const pairs = items.map((item) => [item, taskOf(item, agent, army)] as const).filter((p): p is readonly [unknown, Task] => p[1] !== null).slice(0, MAX_TASKS);
+  const byTitle = new Map(pairs.map(([, t]) => [t.title.trim().toLowerCase(), t.id]));
+  return pairs.map(([item, task]) => {
+    const said = (item as { after?: unknown }).after;
+    const after = (Array.isArray(said) ? said : [])
+      .map((title) => (typeof title === "string" ? byTitle.get(title.trim().toLowerCase()) : undefined))
+      .filter((id): id is string => id !== undefined && id !== task.id);
+    return after.length ? { ...task, after: [...new Set(after)] } : task;
+  });
+}
+
+// A task may start once every task it waits for is done; one the owner dropped no longer holds it.
+export const ready = (task: Task, tasks: Task[]) =>
+  (task.after ?? []).every((id) => {
+    const before = tasks.find((t) => t.id === id);
+    return !before || before.status === "done";
+  });
+
+// The titles of what it still waits for, for its card.
+export const waitingOn = (task: Task, tasks: Task[]) =>
+  (task.after ?? []).map((id) => tasks.find((t) => t.id === id)).filter((t): t is Task => t !== undefined && t.status !== "done").map((t) => t.title);
+
+// The war room: what the army delivered lately, so each agent knows what the others just did.
+export function handoffs(tasks: Task[], army: Agent[]): string {
+  const lines = tasks
+    .filter((t) => t.status === "done")
+    .slice(-6)
+    .map((t) => {
+      const who = army.find((a) => a.id === t.agentId)?.name ?? "The company's agent";
+      const said = taskSummary(t);
+      return `- ${who}: ${t.title}${said ? ` (${said.slice(0, 160)})` : ""}`;
+    });
+  return lines.length ? `What the company's other agents delivered lately:\n${lines.join("\n")}` : "";
 }
 
 
 // What each task's agent hears around its own prompt: whose company it works for, the standards,
 // and the rule the planner was given, since this agent never saw it.
-export function taskPrompt(task: Task, company: string): string {
-  return `${task.prompt}\n\nThis is one of the tasks of ${company}; its brief is in COMPANY.md and its documents, if it has them yet, in docs/ (follow docs/design-guide.md in any interface).\n\n${STANDARDS}\n\nDon't publish, post, send, buy or spend anything: write what's meant for the outside world as a draft file in the project.`;
+export function taskPrompt(task: Task, company: string, agent?: Agent, lately = ""): string {
+  const intro = agent ? `${agentIntro(agent, company)}\n\n` : "";
+  const room = lately ? `\n\n${lately}` : "";
+  return `${intro}${task.prompt}${room}\n\nThis is one of the tasks of ${company}; its brief is in COMPANY.md and its documents, if it has them yet, in docs/ (follow docs/design-guide.md in any interface).\n\n${STANDARDS}\n\nDon't publish, post, send, buy or spend anything: write what's meant for the outside world as a draft file in the project.`;
 }
 
 const count = (n: number, what: string) => `${n} ${what}${n === 1 ? "" : "s"}`;
@@ -116,7 +160,9 @@ export function standing(tasks: Task[], first: boolean): { live: boolean; text: 
     if (live) return { live, text: `Working on its first delivery · ${done} of ${tasks.length} done` };
     if (tasks.length > 0 && done === tasks.length) return { live, text: "First delivery done" };
   }
-  if (live) return { live, text: queued ? `Working · ${queued} up next` : "Working" };
+  const working = tasks.filter((t) => t.status === "running").length;
+  const doing = working > 1 ? `${working} working` : "Working";
+  if (live) return { live, text: queued ? `${doing} · ${queued} up next` : doing };
   if (queued) return { live, text: `${count(queued, "task")} up next` };
   if (suggested) return { live, text: `${count(suggested, "suggested task")} to look over` };
   return { live, text: "Resting" };
@@ -130,7 +176,12 @@ export function savedTasks(value: unknown): Task[] {
   if (!Array.isArray(value)) return [];
   return value
     .filter((t): t is Task => ["id", "title", "area", "engine", "model", "prompt", "status", "result"].every((key) => typeof (t as Record<string, unknown>)?.[key] === "string"))
-    .map((t) => ({ ...t, status: t.status === "running" ? "stopped" : t.status, runId: null }));
+    .map((t) => {
+      const { agentId, after, note, ...rest } = t;
+      const waits = Array.isArray(after) ? after.filter((id): id is string => typeof id === "string") : [];
+      const said = typeof note === "string" ? { note: note.slice(0, 200) } : {};
+      return { ...rest, ...(typeof agentId === "string" ? { agentId } : {}), ...(waits.length ? { after: waits } : {}), ...said, status: t.status === "running" ? "stopped" : t.status, runId: null };
+    });
 }
 
 // One plain line for a task's folded card: what it asks beyond its title while it waits, what the CLI

@@ -17,7 +17,7 @@ describe("columnsFor", () => {
     for (const count of [1, 2, 3]) {
       const placed = columnsFor(count);
       expect(placed).toHaveLength(count);
-      expect(placed.flat().sort()).toEqual(["brief", "documents", "environment", "overview", "tasks", "website"]);
+      expect(placed.flat().sort()).toEqual(["army", "brief", "documents", "environment", "overview", "tasks", "website"]);
       expect(placed[0][0]).toBe("overview");
     }
     expect(columnsFor(2)[0]).toContain("tasks");
