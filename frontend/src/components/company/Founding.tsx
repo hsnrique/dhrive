@@ -4,7 +4,7 @@ import { Check, Dices, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
 import { companyAgent, useCompany } from "@/store/company";
-import { useFounding, type Phase } from "@/store/founding";
+import { STOPPED, useFounding, type Phase } from "@/store/founding";
 import { useLiveLast, useLivePhase } from "@/store/live";
 import { buttonVariants } from "@/components/ui/button";
 import { Approvals } from "../Approvals";
@@ -45,7 +45,7 @@ function Step({ label, state, children }: { label: string; state: "done" | "now"
 
 function Working() {
   const { phase, name, idea, ask, runId, projectId, error } = useFounding();
-  const { stop, reset, start } = useFounding.getState();
+  const { stop, reset, start, replan } = useFounding.getState();
   const at = STEPS.findIndex((s) => s.phase === phase);
   const failed = phase === "failed";
   return (
@@ -63,11 +63,18 @@ function Working() {
           </Step>
         ))}
       </ol>
-      {failed && <p className="text-[13px] text-failure">{error}</p>}
-      <div className="flex items-center gap-2">
-        {failed ? (
+      {failed && <p className={cn("text-[13px]", error === STOPPED ? "text-muted-foreground" : "text-failure")} role={error === STOPPED ? undefined : "alert"}>{error}</p>}
+      <div className="flex flex-wrap items-center gap-2">
+        {failed && projectId ? (
+          // The company exists already: open it as it is, or plan its first delivery again there.
           <>
-            {!projectId && <button type="button" className={primary} onClick={() => void start(idea, ask)}>Try again</button>}
+            <button type="button" className={primary} onClick={() => (reset(), useCompany.getState().open(projectId))}>Open {name}</button>
+            <button type="button" className={quiet} onClick={() => void replan()}>Plan the first delivery again</button>
+            <button type="button" className={quiet} onClick={reset}>Start another company</button>
+          </>
+        ) : failed ? (
+          <>
+            <button type="button" className={primary} onClick={() => void start(idea, ask)}>Try again</button>
             <button type="button" className={quiet} onClick={reset}>Start over</button>
           </>
         ) : (
