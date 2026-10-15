@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { ArrowUpRight, Play, RotateCw, X } from "lucide-react";
 
@@ -10,6 +10,7 @@ import { useAddress } from "@/store/favorite";
 import { usePublishedOf } from "@/store/publish";
 import { useSheet } from "@/store/sheet";
 import { useSite, useSiteOf } from "@/store/site";
+import { Dialog } from "@/components/ui/layer";
 import { buttonVariants } from "@/components/ui/button";
 import { Page } from "../BrowserView";
 
@@ -99,37 +100,28 @@ export function SiteSheet({ project }: { project: Project }) {
   const close = useSheet((s) => s.close);
   const { here, browser, label } = useShown(project, shown === "live");
   const [version, setVersion] = useState(0);
-  useEffect(() => {
-    if (!shown) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [shown, close]);
   if (!shown) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-      <div aria-hidden className="fade-in absolute inset-0 bg-black/60" onClick={close} />
-      <div role="dialog" aria-modal="true" aria-label={`${project.name}'s website`} className="relative flex h-full max-h-[820px] w-full max-w-[1180px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-dialog">
-        <div className="flex h-11 flex-none items-center gap-2 border-b border-border pl-4 pr-2">
-          <span className="flex-none text-[12.5px] font-medium">{label}</span>
-          {here && <span className="min-w-0 truncate font-mono text-[11.5px] text-muted-foreground">{hostOf(browser ?? here)}</span>}
-          <span className="ml-auto" />
-          {here && (
-            <>
-              <button type="button" title="Reload" aria-label="Reload" className={iconButton} onClick={() => setVersion((v) => v + 1)}>
-                <RotateCw className="h-3.5 w-3.5" />
-              </button>
-              <button type="button" title="Open in your browser" aria-label="Open in your browser" className={iconButton} onClick={() => open(browser ?? here)}>
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              </button>
-            </>
-          )}
-          <button type="button" title="Close" aria-label="Close" className={iconButton} onClick={close}>
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-        <div className="min-h-0 flex-1 bg-white">{here ? <Page url={here} version={version} /> : <div className="h-full bg-background"><NotAnswering project={project} /></div>}</div>
+    <Dialog label={`${project.name}'s website`} onClose={close} className="flex h-full max-h-[820px] max-w-[1180px] flex-col overflow-hidden bg-background">
+      <div className="flex h-11 flex-none items-center gap-2 border-b border-border pl-4 pr-2">
+        <span className="flex-none text-[12.5px] font-medium">{label}</span>
+        {here && <span className="min-w-0 truncate font-mono text-[11.5px] text-muted-foreground">{hostOf(browser ?? here)}</span>}
+        <span className="ml-auto" />
+        {here && (
+          <>
+            <button type="button" title="Reload" aria-label="Reload" className={iconButton} onClick={() => setVersion((v) => v + 1)}>
+              <RotateCw className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" title="Open in your browser" aria-label="Open in your browser" className={iconButton} onClick={() => open(browser ?? here)}>
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </button>
+          </>
+        )}
+        <button type="button" title="Close" aria-label="Close" className={iconButton} onClick={close}>
+          <X className="h-3.5 w-3.5" />
+        </button>
       </div>
-    </div>
+      <div className="min-h-0 flex-1 bg-background">{here ? <Page url={here} version={version} /> : <div className="h-full bg-background"><NotAnswering project={project} /></div>}</div>
+    </Dialog>
   );
 }

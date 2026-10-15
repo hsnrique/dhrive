@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Maximize2, Play, X } from "lucide-react";
 
 import type { Cli } from "@/lib/api";
@@ -9,6 +9,7 @@ import { useApp } from "@/store/app";
 import { useDraft, useMaestro } from "@/store/maestro";
 import { useTerminals } from "@/store/terminals";
 import { useLiveLast, useLivePhase } from "@/store/live";
+import { Dialog } from "@/components/ui/layer";
 import { buttonVariants } from "@/components/ui/button";
 import { ChoicePicker } from "../ModelPicker";
 import { FocusPicker } from "./FocusPicker";
@@ -71,28 +72,21 @@ function PartCard({ session, part, clis, onOpen }: { session: string; part: Part
 // One subtask at full size, to read it through and change it before it runs.
 function PartDialog({ session, part, clis, onClose }: { session: string; part: Part; clis: Cli[]; onClose: () => void }) {
   const { edit } = useMaestro.getState();
-  useEffect(() => {
-    const close = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [onClose]);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-6 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-label={part.title} className="pop-in flex max-h-full w-full max-w-[760px] flex-col gap-3 rounded-2xl border border-border bg-popover p-4 shadow-dialog">
-        <div className="flex items-center gap-2">
-          <input aria-label="Title" value={part.title} className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold tracking-tight outline-none" onChange={(e) => edit(session, part.id, { title: e.target.value })} />
-          <button type="button" aria-label="Close" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <textarea autoFocus aria-label="Prompt" value={part.prompt} className="h-[55vh] w-full resize-none rounded-xl border border-border bg-black/30 p-3 text-[13px] leading-relaxed outline-none focus:border-ring" onChange={(e) => edit(session, part.id, { prompt: e.target.value })} />
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">runs with</span>
-          <ChoicePicker choice={{ engine: part.engine, model: part.model }} onChoose={(choice) => edit(session, part.id, choice)} label="Subtask CLI" engines={clis.map((cli) => cli.engine)} />
-          <button type="button" className={cn(buttonVariants({ variant: "primary", size: "md" }), "ml-auto px-4")} onClick={onClose}>Done</button>
-        </div>
+    <Dialog label={part.title} onClose={onClose} className="flex max-h-full max-w-[760px] flex-col gap-3 p-4">
+      <div className="flex items-center gap-2">
+        <input aria-label="Title" value={part.title} className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold tracking-tight outline-none" onChange={(e) => edit(session, part.id, { title: e.target.value })} />
+        <button type="button" aria-label="Close" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </button>
       </div>
-    </div>
+      <textarea autoFocus aria-label="Prompt" value={part.prompt} className="h-[55vh] w-full resize-none rounded-xl border border-border bg-black/30 p-3 text-[13px] leading-relaxed outline-none focus:border-ring" onChange={(e) => edit(session, part.id, { prompt: e.target.value })} />
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">runs with</span>
+        <ChoicePicker choice={{ engine: part.engine, model: part.model }} onChoose={(choice) => edit(session, part.id, choice)} label="Subtask CLI" engines={clis.map((cli) => cli.engine)} />
+        <button type="button" className={cn(buttonVariants({ variant: "primary", size: "md" }), "ml-auto px-4")} onClick={onClose}>Done</button>
+      </div>
+    </Dialog>
   );
 }
 

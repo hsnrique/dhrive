@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Puzzle } from "lucide-react";
 
 import type { Engine } from "@/lib/api";
@@ -6,6 +6,7 @@ import type { Focus } from "@/lib/maestro";
 import { cn } from "@/lib/utils";
 import { connectionsKey, useConnections } from "@/store/connections";
 import { useDraft, useMaestro } from "@/store/maestro";
+import { useLayer } from "@/components/ui/layer";
 import { fieldVariants } from "@/components/ui/field";
 
 // The skills, MCP servers and plugins the maestro's CLI has in this project, to point it at the ones
@@ -64,6 +65,8 @@ function FocusList({ session, offered, filter }: { session: string; offered: Foc
 export function FocusPicker({ session, engine, folder }: { session: string; engine: Engine; folder: string }) {
   const count = useDraft(session).focus.length;
   const [open, setOpen] = useState(false);
+  const panel = useRef<HTMLDivElement>(null);
+  useLayer(panel, () => setOpen(false), { active: open });
   const [filter, setFilter] = useState("");
   const { offered, loading, error } = useOffered(engine, folder);
   useEffect(() => {
@@ -79,8 +82,8 @@ export function FocusPicker({ session, engine, folder }: { session: string; engi
       {open && (
         <>
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <div role="dialog" aria-label="Skills, MCP servers and plugins" className="pop-in absolute left-0 top-full z-30 mt-2 w-80 rounded-xl border border-border bg-popover shadow-popover p-1.5">
-            <input autoFocus aria-label="Filter" placeholder="Filter" value={filter} className={cn(fieldVariants({ size: "md" }), "mx-0.5 mb-1 w-[calc(100%-4px)] text-xs")} onChange={(e) => setFilter(e.target.value)} onKeyDown={(e) => e.key === "Escape" && setOpen(false)} />
+          <div ref={panel} role="dialog" aria-label="Skills, MCP servers and plugins" className="pop-in absolute left-0 top-full z-30 mt-2 w-80 rounded-xl border border-border bg-popover shadow-popover p-1.5">
+            <input autoFocus aria-label="Filter" placeholder="Filter" value={filter} className={cn(fieldVariants({ size: "md" }), "mx-0.5 mb-1 w-[calc(100%-4px)] text-xs")} onChange={(e) => setFilter(e.target.value)} />
             {empty ? <p className="px-2 py-2 text-xs text-muted-foreground">{empty}</p> : <FocusList session={session} offered={offered} filter={filter} />}
           </div>
         </>

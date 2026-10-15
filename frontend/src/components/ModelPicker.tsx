@@ -7,6 +7,7 @@ import type { Choice } from "@/lib/flow";
 import { cliLabel, effortLabel } from "@/lib/names";
 import { cn } from "@/lib/utils";
 import { useApp, useModelName } from "@/store/app";
+import { useLayer } from "@/components/ui/layer";
 import { fieldVariants } from "@/components/ui/field";
 import { EngineMark } from "./EngineMark";
 import { CliTabs, EffortMeter, ModelList } from "./PickerParts";
@@ -56,17 +57,15 @@ export function ChoicePicker({ choice, onChoose, label, engines, align = "left",
   // list doesn't count.
   useEffect(() => {
     if (!open) return;
-    const close = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     const moved = (e: Event) => !panel.current?.contains(e.target as Node) && setOpen(false);
-    window.addEventListener("keydown", close);
     window.addEventListener("scroll", moved, true);
     window.addEventListener("resize", moved);
     return () => {
-      window.removeEventListener("keydown", close);
       window.removeEventListener("scroll", moved, true);
       window.removeEventListener("resize", moved);
     };
   }, [open]);
+  useLayer(panel, () => setOpen(false), { active: open });
 
   // On the body, not where the trigger sits: inside a glass card the panel would lose its own glass
   // (WebKit drops a backdrop filter nested in another) and the cards after it would paint over it.

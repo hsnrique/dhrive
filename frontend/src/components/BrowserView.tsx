@@ -17,13 +17,20 @@ const slotOf = (el: HTMLElement) => {
   return { x, y, width, height };
 };
 
-// Every popover and sheet in dhrive is a role="dialog". A native webview draws above all of them,
-// so the page steps aside while one is open, unless the page is inside it (the website's sheet).
+const overlaps = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+
+// A native webview draws above everything on the page, so it steps aside while a modal dims the
+// window or a popover actually lies over it; a picker opened elsewhere leaves it be. Never when the
+// page is inside the dialog itself (the website's sheet).
 function useDialogOpen(enabled: boolean, slot: RefObject<HTMLDivElement | null>) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (!enabled) return;
-    const check = () => setOpen([...document.querySelectorAll('[role="dialog"]')].some((dialog) => !dialog.contains(slot.current)));
+    const check = () => {
+      const here = slot.current?.getBoundingClientRect();
+      const covers = (dialog: Element) => !dialog.contains(slot.current) && (dialog.getAttribute("aria-modal") === "true" || (!!here && overlaps(dialog.getBoundingClientRect(), here)));
+      setOpen([...document.querySelectorAll('[role="dialog"], [role="alertdialog"]')].some(covers));
+    };
     const watch = new MutationObserver(check);
     watch.observe(document.body, { childList: true, subtree: true });
     check();
@@ -112,7 +119,7 @@ export function BrowserView({ folder }: { folder: string }) {
           <ExternalLink className="h-3.5 w-3.5" />
         </button>
       </div>
-      <div className="min-h-0 flex-1 bg-white">
+      <div className="min-h-0 flex-1 bg-background">
         {url ? (
           <Page url={url} version={version} />
         ) : (

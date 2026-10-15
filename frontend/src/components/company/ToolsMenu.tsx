@@ -5,6 +5,7 @@ import type { Connector, Project } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useConnectedOf, useConnectors } from "@/store/connectors";
 import { useGitHub, useGitHubOf } from "@/store/github";
+import { useLayer } from "@/components/ui/layer";
 import { buttonVariants } from "@/components/ui/button";
 import { SuggestTool } from "./SuggestTool";
 import { SiteLink, ToolMark } from "./ToolMark";
@@ -75,14 +76,10 @@ export function ToolsMenu({ project, onRun, onClose }: { project: Project; onRun
   useEffect(() => {
     // The menu and its button share a parent; a press on the button is its own toggle.
     const away = (e: PointerEvent) => !box.current?.parentElement?.contains(e.target as Node) && onClose();
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("pointerdown", away);
-    window.addEventListener("keydown", esc);
-    return () => {
-      window.removeEventListener("pointerdown", away);
-      window.removeEventListener("keydown", esc);
-    };
+    return () => window.removeEventListener("pointerdown", away);
   }, [onClose]);
+  useLayer(box, onClose);
   const connectGitHub = () => {
     if (!github?.gh) return void openUrl("https://cli.github.com").catch(() => undefined);
     onClose();

@@ -90,7 +90,7 @@ export function UsageHover({ engine, label, active, onOpen, children }: { engine
           paints later. React still counts it inside this row, so moving onto it keeps it open. */}
       {at &&
         createPortal(
-          <div role="dialog" aria-label={`${label} plan usage`} className="pop-in fixed z-50 w-72 rounded-xl border border-border bg-popover p-3.5 shadow-popover" style={{ left: at.right + 12, bottom: Math.max(8, window.innerHeight - at.bottom) }}>
+          <div role="tooltip" aria-label={`${label} plan usage`} className="pop-in fixed z-50 w-72 rounded-xl border border-border bg-popover p-3.5 shadow-popover" style={{ left: at.right + 12, bottom: Math.max(8, window.innerHeight - at.bottom) }}>
             <PlanUsageCard engine={engine} label={label} />
           </div>,
           document.body,

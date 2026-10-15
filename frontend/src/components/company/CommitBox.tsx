@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { useGitHub, useGitHubOf } from "@/store/github";
+import { useLayer } from "@/components/ui/layer";
 import { fieldVariants } from "@/components/ui/field";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -20,14 +21,10 @@ export function CommitBox({ projectId, changes, onClose }: { projectId: string; 
   useEffect(() => {
     // The box and the button that opens it share a parent; a press on the button is its own toggle.
     const away = (e: PointerEvent) => !box.current?.parentElement?.contains(e.target as Node) && onClose();
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("pointerdown", away);
-    window.addEventListener("keydown", esc);
-    return () => {
-      window.removeEventListener("pointerdown", away);
-      window.removeEventListener("keydown", esc);
-    };
+    return () => window.removeEventListener("pointerdown", away);
   }, [onClose]);
+  useLayer(box, onClose);
   const submit = () => {
     onClose();
     void save(projectId, message.trim() || undefined);

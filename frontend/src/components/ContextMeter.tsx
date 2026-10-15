@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { fullness, percentOf, sessionsOf, tokens, type ThreadSession } from "@/lib/context";
 import { cliLabel } from "@/lib/names";
@@ -6,6 +6,7 @@ import { activeRun } from "@/lib/thread";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
 import { contextKey, useContextUsage } from "@/store/context";
+import { useLayer } from "@/components/ui/layer";
 import { EngineMark } from "./EngineMark";
 
 // How full each CLI session the conversation continues is: a ring in the header, and on a click what
@@ -69,12 +70,8 @@ function Meter({ conversationId, session, folder }: { conversationId: string; se
   const seen = useContextUsage((s) => s.seen[contextKey(session.engine, session.session)]);
   const busy = useApp((s) => activeRun(s.threads[conversationId]) !== null);
   const label = useApp((s) => cliLabel(session.engine, s.clis));
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [open]);
+  const panel = useRef<HTMLDivElement>(null);
+  useLayer(panel, () => setOpen(false), { active: open });
   if (!seen?.value) return null;
   const percent = percentOf(seen.value.used, seen.value.max);
   return (
@@ -87,7 +84,9 @@ function Meter({ conversationId, session, folder }: { conversationId: string; se
       {open && (
         <>
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <Details session={session} folder={folder} label={label} busy={busy} />
+          <div ref={panel} className="contents">
+            <Details session={session} folder={folder} label={label} busy={busy} />
+          </div>
         </>
       )}
     </div>

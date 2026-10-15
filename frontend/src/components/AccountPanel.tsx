@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useAccount } from "@/store/account";
 import { useApp } from "@/store/app";
 import { standDown } from "@/store/stand-down";
+import { Dialog } from "@/components/ui/layer";
 import { buttonVariants } from "@/components/ui/button";
 
 // The account, all of it in one place: who's signed in on this Mac, the plan and where it stands,
@@ -88,34 +89,27 @@ function SignOut() {
 
 export function AccountPanel({ status, onClose }: { status: AccountStatus; onClose: () => void }) {
   const email = emailOf(status);
-  useEffect(() => {
-    void useAccount.getState().load();
-    const close = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [onClose]);
+  useEffect(() => void useAccount.getState().load(), []);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-6 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-label="Account" className="pop-in grid w-full max-w-[440px] gap-4 rounded-2xl border border-border bg-popover p-5 shadow-dialog">
-        <div className="flex items-center gap-3">
-          <Avatar email={email} className="h-10 w-10 text-[15px]" />
-          <div className="grid min-w-0 flex-1">
-            <p className="truncate text-[14px] font-medium">{email ?? "Your account"}</p>
-            <p className="text-[12px] text-muted-foreground">Signed in on this Mac</p>
-          </div>
-          <button type="button" aria-label="Close" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </button>
+    <Dialog label="Account" onClose={onClose} className="grid max-w-[440px] gap-4 p-5">
+      <div className="flex items-center gap-3">
+        <Avatar email={email} className="h-10 w-10 text-[15px]" />
+        <div className="grid min-w-0 flex-1">
+          <p className="truncate text-[14px] font-medium">{email ?? "Your account"}</p>
+          <p className="text-[12px] text-muted-foreground">Signed in on this Mac</p>
         </div>
-        {status.state === "free" ? <p className="text-[12.5px] text-muted-foreground">This build of dhrive has no account.</p> : <Plan status={status} />}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <button type="button" className="flex items-center gap-1 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground" onClick={() => open(ACCOUNT_URL)}>
-            Account on the web
-            <ArrowUpRight className="h-3.5 w-3.5" />
-          </button>
-          {status.state !== "free" && <SignOut />}
-        </div>
+        <button type="button" aria-label="Close" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </button>
       </div>
-    </div>
+      {status.state === "free" ? <p className="text-[12.5px] text-muted-foreground">This build of dhrive has no account.</p> : <Plan status={status} />}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <button type="button" className="flex items-center gap-1 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground" onClick={() => open(ACCOUNT_URL)}>
+          Account on the web
+          <ArrowUpRight className="h-3.5 w-3.5" />
+        </button>
+        {status.state !== "free" && <SignOut />}
+      </div>
+    </Dialog>
   );
 }

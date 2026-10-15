@@ -1,11 +1,11 @@
-import { useEffect, useId, useState } from "react";
-import { createPortal } from "react-dom";
+import { useId, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { MessageSquare } from "lucide-react";
 
 import { sendFeedback } from "@/lib/api";
 import { BRANDS } from "@/lib/brands";
 import { cn } from "@/lib/utils";
+import { Dialog } from "@/components/ui/layer";
 import { fieldVariants } from "@/components/ui/field";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -45,14 +45,9 @@ export function FeedbackDialog({ onClose }: { onClose: () => void }) {
       setState("writing");
     }
   };
-  useEffect(() => {
-    const close = (e: KeyboardEvent) => e.key === "Escape" && state !== "sending" && onClose();
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [state, onClose]);
-  return createPortal(
-    <div className="fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-6" onMouseDown={(e) => e.target === e.currentTarget && state !== "sending" && onClose()}>
-      <form role="dialog" aria-modal="true" aria-labelledby={titleId} className="pop-in grid w-full max-w-[440px] gap-3 rounded-2xl border border-border bg-popover p-5 shadow-dialog" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
+  return (
+    <Dialog labelledBy={titleId} onClose={() => state !== "sending" && onClose()} className="max-w-[440px]">
+      <form className="grid gap-3 p-5" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
         <h2 id={titleId} className="text-[15px] font-medium">Feedback</h2>
         {state === "sent" ? (
           <p className="py-6 text-center text-[13px] text-muted-foreground">Sent. Thank you, every one gets read.</p>
@@ -78,8 +73,7 @@ export function FeedbackDialog({ onClose }: { onClose: () => void }) {
           </>
         )}
       </form>
-    </div>,
-    document.body,
+    </Dialog>
   );
 }
 

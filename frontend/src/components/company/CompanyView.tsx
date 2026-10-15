@@ -11,6 +11,7 @@ import { useDayOf } from "@/store/day";
 import { useDomains } from "@/store/domains";
 import { useFavorite } from "@/store/favorite";
 import { usePublish, usePublishedOf } from "@/store/publish";
+import { useLayer } from "@/components/ui/layer";
 import { Army } from "./Army";
 import { BriefCard } from "./BriefCard";
 import { Documents } from "./Documents";
@@ -112,12 +113,8 @@ export function CompanyView({ project }: { project: Project }) {
   useEffect(() => {
     if (docked) setSliding(false);
   }, [docked]);
-  useEffect(() => {
-    if (!sliding) return;
-    const close = (e: KeyboardEvent) => e.key === "Escape" && setSliding(false);
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [sliding]);
+  const slid = useRef<HTMLDivElement>(null);
+  useLayer(slid, () => setSliding(false), { active: sliding });
   const chat = !docked && (
     <button type="button" aria-label="Chat" aria-expanded={sliding} title="Chat" className={cn("flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] transition-colors hover:bg-hover", sliding && "bg-selected")} onClick={() => setSliding((v) => !v)}>
       <MessageCircle className="h-3.5 w-3.5" />
@@ -140,7 +137,9 @@ export function CompanyView({ project }: { project: Project }) {
       {sliding && (
         <>
           <div aria-hidden className="fade-in absolute inset-x-0 bottom-0 top-[52px] z-30 bg-black/50" onClick={() => setSliding(false)} />
-          <SidePane project={project} className="slide-in-right absolute bottom-0 right-0 top-[52px] z-40 flex w-[min(420px,100%)] shadow-dialog" />
+          <div ref={slid} className="slide-in-right absolute bottom-0 right-0 top-[52px] z-40 flex w-[min(420px,100%)] shadow-dialog">
+            <SidePane project={project} className="flex w-full" />
+          </div>
         </>
       )}
       <SiteSheet project={project} />

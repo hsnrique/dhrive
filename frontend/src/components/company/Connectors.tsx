@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { Plug, X } from "lucide-react";
 
 import { connectorOpen, type Connector, type Project } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useConnectedOf, useConnectors } from "@/store/connectors";
+import { Dialog } from "@/components/ui/layer";
 import { buttonVariants } from "@/components/ui/button";
 import { TerminalView } from "../terminals/TerminalView";
 import { SiteLink, ToolMark } from "./ToolMark";
@@ -27,11 +27,6 @@ function Run({ project, connector, onClose }: { project: Project; connector: Con
   const [attempt, setAttempt] = useState(0);
   const [ended, setEnded] = useState<"connected" | "stopped" | null>(null);
   const id = `connect-${connector.id}-${attempt}`;
-  useEffect(() => {
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", esc);
-    return () => window.removeEventListener("keydown", esc);
-  }, [onClose]);
   const start = useCallback((cols: number, rows: number) => connectorOpen(id, connector.id, project.id, cols, rows), [id, connector.id, project.id]);
   const onEvent = (event: { kind: string; code?: number }) => {
     if (event.kind !== "exit") return;
@@ -39,31 +34,27 @@ function Run({ project, connector, onClose }: { project: Project; connector: Con
     setEnded(ok ? "connected" : "stopped");
     if (ok) void useConnectors.getState().connected(project.id, connector.id);
   };
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-      <div aria-hidden className="fade-in absolute inset-0 bg-black/60" onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-label={`Connecting ${connector.name}`} className="relative flex h-[min(560px,calc(100vh-48px))] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-dialog">
-        <div className="flex h-12 flex-none items-center gap-2.5 border-b border-border pl-3 pr-2">
-          <ToolMark id={connector.id} size={26} />
-          <span className="text-[13px] font-medium">Connecting {connector.name}</span>
-          <SiteLink site={connector.site} />
-          <span className="ml-auto" />
-          <button type="button" title="Close" aria-label="Close" className={iconButton} onClick={onClose}><X className="h-3.5 w-3.5" /></button>
-        </div>
-        <div className="min-h-0 flex-1">
-          <TerminalView key={id} id={id} start={start} project={project.id} copy={null} model="" task={null} onStarted={() => undefined} onEvent={onEvent} onTitle={() => undefined} onBranch={() => undefined} />
-        </div>
-        {ended && (
-          <div className="flex h-12 flex-none items-center gap-3 border-t border-border px-4">
-            <span className={cn("text-[12.5px]", ended === "stopped" && "text-failure")}>{ended === "connected" ? `${connector.name} is connected. The agents can use it now.` : "It stopped before finishing."}</span>
-            <span className="ml-auto" />
-            {ended === "stopped" && <button type="button" className={quiet} onClick={() => { setEnded(null); setAttempt((n) => n + 1); }}>Try again</button>}
-            <button type="button" className={primary} onClick={onClose}>Done</button>
-          </div>
-        )}
+  return (
+    <Dialog label={`Connecting ${connector.name}`} onClose={onClose} className="flex h-[min(560px,calc(100vh-48px))] max-w-[760px] flex-col overflow-hidden bg-background">
+      <div className="flex h-12 flex-none items-center gap-2.5 border-b border-border pl-3 pr-2">
+        <ToolMark id={connector.id} size={26} />
+        <span className="text-[13px] font-medium">Connecting {connector.name}</span>
+        <SiteLink site={connector.site} />
+        <span className="ml-auto" />
+        <button type="button" title="Close" aria-label="Close" className={iconButton} onClick={onClose}><X className="h-3.5 w-3.5" /></button>
       </div>
-    </div>,
-    document.body,
+      <div className="min-h-0 flex-1">
+        <TerminalView key={id} id={id} start={start} project={project.id} copy={null} model="" task={null} onStarted={() => undefined} onEvent={onEvent} onTitle={() => undefined} onBranch={() => undefined} />
+      </div>
+      {ended && (
+        <div className="flex h-12 flex-none items-center gap-3 border-t border-border px-4">
+          <span className={cn("text-[12.5px]", ended === "stopped" && "text-failure")}>{ended === "connected" ? `${connector.name} is connected. The agents can use it now.` : "It stopped before finishing."}</span>
+          <span className="ml-auto" />
+          {ended === "stopped" && <button type="button" className={quiet} onClick={() => { setEnded(null); setAttempt((n) => n + 1); }}>Try again</button>}
+          <button type="button" className={primary} onClick={onClose}>Done</button>
+        </div>
+      )}
+    </Dialog>
   );
 }
 

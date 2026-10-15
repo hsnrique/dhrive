@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { PanelLeftClose, Plus, Search } from "lucide-react";
 
@@ -10,6 +10,7 @@ import { useCompany } from "@/store/company";
 import { useConversations } from "@/store/conversations";
 import { useSearch } from "@/store/search";
 import { WIDE, sidebarMode, useMediaQuery, useSidebar } from "@/store/sidebar";
+import { useLayer } from "@/components/ui/layer";
 import { AccountBadge, AccountRow } from "./Account";
 import { BrandLogo } from "./BrandLogo";
 import { CommunityRow } from "./Community";
@@ -155,8 +156,6 @@ function useSidebarKeys(wide: boolean) {
       if (e.metaKey && e.key.toLowerCase() === "b") {
         e.preventDefault();
         useSidebar.getState().toggle(wide);
-      } else if (e.key === "Escape" && useSidebar.getState().overlay) {
-        useSidebar.getState().fold();
       }
     };
     window.addEventListener("keydown", keys);
@@ -170,7 +169,9 @@ export function Sidebar() {
   const overlay = useSidebar((s) => s.overlay);
   const mode = sidebarMode(open, wide, overlay);
   const { toggle, fold } = useSidebar.getState();
+  const folded = useRef<HTMLDivElement>(null);
   useSidebarKeys(wide);
+  useLayer(folded, fold, { active: mode === "overlay" });
   return (
     <>
       <div className={cn("flex flex-none overflow-hidden transition-[width] duration-200 ease-out motion-reduce:transition-none", mode === "docked" ? "w-[244px]" : "w-[72px]")}>
@@ -179,7 +180,7 @@ export function Sidebar() {
       {mode === "overlay" && (
         <>
           <div aria-hidden className="fade-in fixed inset-0 z-40 bg-black/50" onClick={fold} />
-          <div role="dialog" aria-label="Sidebar" className="slide-in-left fixed inset-y-0 left-0 z-50 flex shadow-dialog">
+          <div ref={folded} role="dialog" aria-modal="true" aria-label="Sidebar" className="slide-in-left fixed inset-y-0 left-0 z-50 flex shadow-dialog">
             <FullSidebar onFold={fold} />
           </div>
         </>

@@ -9,6 +9,7 @@ import { useApp } from "@/store/app";
 import { useFiles } from "@/store/files";
 import { useInstructions } from "@/store/instructions";
 import { usePanel } from "@/store/panel";
+import { Dialog } from "@/components/ui/layer";
 
 // The owner's own AGENTS.md, for every project, and what one conversation adds on top. Every agent
 // dhrive runs gets both, even in a project that has no AGENTS.md or CLAUDE.md of its own.
@@ -105,44 +106,37 @@ function ProjectFiles({ folder, onOpen }: { folder: string; onOpen: () => void }
   );
 }
 
-function Dialog({ open, folder, onClose }: { open: Open; folder: string; onClose: () => void }) {
+function InstructionsDialog({ open, folder, onClose }: { open: Open; folder: string; onClose: () => void }) {
   const [scope, setScope] = useState<Scope>("every");
   const everyProject = useInstructions((s) => s.everyProject);
   const here = useApp((s) => (open.conversationId ? (s.threads[open.conversationId]?.instructions ?? "") : readDraft(instructionsKeyOf(open))));
-  useEffect(() => {
-    const close = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [onClose]);
   const hint = SCOPES.find((s) => s.id === scope)!.hint;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-6 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-label="Instructions" className="pop-in grid w-full max-w-[640px] gap-3 rounded-2xl border border-border bg-popover p-4 shadow-dialog">
-        <div className="flex items-center gap-2">
-          <ScrollText className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-[14px] font-semibold tracking-tight">Instructions</h2>
-          <button type="button" aria-label="Close" className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="flex items-center gap-3">
-          <div role="tablist" className="flex rounded-lg border border-border p-0.5">
-            {SCOPES.map((s) => (
-              <button key={s.id} type="button" role="tab" aria-selected={scope === s.id} className={cn("rounded-md px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:text-foreground", scope === s.id && "bg-selected text-foreground")} onClick={() => setScope(s.id)}>
-                {s.label}
-              </button>
-            ))}
-          </div>
-          <p className="min-w-0 truncate text-[11.5px] text-muted-foreground">{hint}</p>
-        </div>
-        {scope === "every" ? (
-          everyProject === null ? <p className="py-10 text-center text-[12px] text-muted-foreground">Loading…</p> : <Editor key="every" initial={everyProject} save={useInstructions.getState().save} />
-        ) : (
-          <Editor key={`here:${open.conversationId ?? instructionsKeyOf(open)}`} initial={here} save={saveHere(open)} />
-        )}
-        <ProjectFiles folder={folder} onOpen={onClose} />
+    <Dialog label="Instructions" onClose={onClose} className="grid max-w-[640px] gap-3 p-4">
+      <div className="flex items-center gap-2">
+        <ScrollText className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-[14px] font-semibold tracking-tight">Instructions</h2>
+        <button type="button" aria-label="Close" className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </button>
       </div>
-    </div>
+      <div className="flex items-center gap-3">
+        <div role="tablist" className="flex rounded-lg border border-border p-0.5">
+          {SCOPES.map((s) => (
+            <button key={s.id} type="button" role="tab" aria-selected={scope === s.id} className={cn("rounded-md px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:text-foreground", scope === s.id && "bg-selected text-foreground")} onClick={() => setScope(s.id)}>
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <p className="min-w-0 truncate text-[11.5px] text-muted-foreground">{hint}</p>
+      </div>
+      {scope === "every" ? (
+        everyProject === null ? <p className="py-10 text-center text-[12px] text-muted-foreground">Loading…</p> : <Editor key="every" initial={everyProject} save={useInstructions.getState().save} />
+      ) : (
+        <Editor key={`here:${open.conversationId ?? instructionsKeyOf(open)}`} initial={here} save={saveHere(open)} />
+      )}
+      <ProjectFiles folder={folder} onOpen={onClose} />
+    </Dialog>
   );
 }
 
@@ -158,7 +152,7 @@ export function InstructionsButton({ open, folder }: { open: Open; folder: strin
         <ScrollText className="h-4 w-4" />
       </button>
       {/* On the body: the glass header's backdrop filter would otherwise hold a fixed overlay inside it. */}
-      {shown && createPortal(<Dialog open={open} folder={folder} onClose={() => setShown(false)} />, document.body)}
+      {shown && createPortal(<InstructionsDialog open={open} folder={folder} onClose={() => setShown(false)} />, document.body)}
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { ShieldCheck, ShieldQuestion, X } from "lucide-react";
 
 import { disallowInProject, type Project, type Question } from "@/lib/api";
@@ -6,6 +6,7 @@ import { asking, ruleLabel } from "@/lib/approvals";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
 import { answer, type Answer } from "@/store/runs";
+import { useLayer } from "@/components/ui/layer";
 import { buttonVariants } from "@/components/ui/button";
 
 // Claude Code asks before a tool call it isn't allowed to make on its own; the run waits here for
@@ -61,12 +62,8 @@ export function Approvals({ projectId, runId }: { projectId: string | undefined;
 export function AllowedRules({ project }: { project: Project }) {
   const [open, setOpen] = useState(false);
   const rules = project.allowed ?? [];
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [open]);
+  const panel = useRef<HTMLDivElement>(null);
+  useLayer(panel, () => setOpen(false), { active: open });
   if (rules.length === 0) return null;
   const remove = async (rule: string) => {
     try {
@@ -85,7 +82,7 @@ export function AllowedRules({ project }: { project: Project }) {
       {open && (
         <>
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <div role="dialog" aria-label="Always allowed" className="pop-in absolute right-0 top-full z-30 mt-2 w-72 rounded-xl border border-border bg-popover shadow-popover p-1.5">
+          <div ref={panel} role="dialog" aria-label="Always allowed" className="pop-in absolute right-0 top-full z-30 mt-2 w-72 rounded-xl border border-border bg-popover shadow-popover p-1.5">
             <p className="px-2 pb-1 pt-1 text-[11px] text-muted-foreground">Always allowed in {project.name}</p>
             {rules.map((rule) => (
               <div key={rule} className="flex items-center gap-2 rounded-lg px-2 py-1 text-[12px] hover:bg-hover" title={rule}>

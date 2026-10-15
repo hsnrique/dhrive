@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
 import { useConversations } from "@/store/conversations";
 import { useSearch } from "@/store/search";
+import { Dialog } from "@/components/ui/layer";
 import { EngineMark } from "./EngineMark";
 
 // ⌘K: jump to any conversation, CLI session or project by typing part of its name or of anything said
@@ -80,41 +81,38 @@ function Palette() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-center bg-black/55 px-6 pt-[14vh] backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && close()}>
-      <div role="dialog" aria-label="Search" className="pop-in flex h-fit max-h-[62vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl border border-border bg-popover shadow-dialog">
-        <label className="flex items-center gap-2.5 border-b border-border px-4">
-          <Search className="h-4 w-4 flex-none text-muted-foreground" />
-          <input
-            autoFocus
-            role="combobox"
-            aria-expanded
-            aria-controls="search-results"
-            aria-label="Search conversations"
-            placeholder="Search conversations, sessions and projects"
-            spellCheck={false}
-            value={query}
-            className="h-12 min-w-0 flex-1 bg-transparent text-[14px] outline-none placeholder:text-muted-foreground"
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") close();
-              if (e.key === "Enter") pick(results[active]);
-              if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-                e.preventDefault();
-                const step = e.key === "ArrowDown" ? 1 : -1;
-                setActive((i) => (results.length ? (i + step + results.length) % results.length : 0));
-              }
-            }}
-          />
-        </label>
-        <div id="search-results" role="listbox" className="min-h-0 overflow-y-auto p-1.5">
-          {!query.trim() && results.length > 0 && <p className="px-3 pb-1 pt-1.5 text-[11px] text-muted-foreground">Recent</p>}
-          {results.map((result, i) => (
-            <Row key={result.key} result={result} query={query} active={i === active} onPick={() => pick(result)} onHover={() => setActive(i)} />
-          ))}
-          {results.length === 0 && <p className="px-3 py-6 text-center text-[12.5px] text-muted-foreground">{query.trim() ? "Nothing found." : "No conversations yet."}</p>}
-        </div>
+    <Dialog label="Search" onClose={close} top className="flex h-fit max-h-[62vh] max-w-[600px] flex-col overflow-hidden">
+      <label className="flex items-center gap-2.5 border-b border-border px-4">
+        <Search className="h-4 w-4 flex-none text-muted-foreground" />
+        <input
+          autoFocus
+          role="combobox"
+          aria-expanded
+          aria-controls="search-results"
+          aria-label="Search conversations"
+          placeholder="Search conversations, sessions and projects"
+          spellCheck={false}
+          value={query}
+          className="h-12 min-w-0 flex-1 bg-transparent text-[14px] outline-none placeholder:text-muted-foreground"
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") pick(results[active]);
+            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+              e.preventDefault();
+              const step = e.key === "ArrowDown" ? 1 : -1;
+              setActive((i) => (results.length ? (i + step + results.length) % results.length : 0));
+            }
+          }}
+        />
+      </label>
+      <div id="search-results" role="listbox" className="min-h-0 overflow-y-auto p-1.5">
+        {!query.trim() && results.length > 0 && <p className="px-3 pb-1 pt-1.5 text-[11px] text-muted-foreground">Recent</p>}
+        {results.map((result, i) => (
+          <Row key={result.key} result={result} query={query} active={i === active} onPick={() => pick(result)} onHover={() => setActive(i)} />
+        ))}
+        {results.length === 0 && <p className="px-3 py-6 text-center text-[12.5px] text-muted-foreground">{query.trim() ? "Nothing found." : "No conversations yet."}</p>}
       </div>
-    </div>
+    </Dialog>
   );
 }
 
