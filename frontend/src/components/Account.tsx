@@ -50,7 +50,7 @@ export function SignInGate() {
       {signedOut && (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 pb-[44px] text-center">
           <BrandLogo className="h-6 w-6" />
-          <h1 className="font-serif text-[34px] leading-[1.1]">Sign in to start</h1>
+          <h1 className="display-title">Sign in to start</h1>
           <p className="text-[13px] text-muted-foreground">14 days free, no card. Your CLIs and their plans stay as they are.</p>
           <SignInButton />
         </div>

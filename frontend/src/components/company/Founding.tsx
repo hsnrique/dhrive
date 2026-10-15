@@ -49,7 +49,7 @@ function Working() {
   const failed = phase === "failed";
   return (
     <div className="grid gap-8">
-      <h1 className="font-serif text-[46px] leading-[1.04] tracking-[-0.01em]">{name || (idea ? "Founding your company" : "Finding a company worth starting")}</h1>
+      <h1 className="display-hero">{name || (idea ? "Founding your company" : "Finding a company worth starting")}</h1>
       <ol className="grid gap-4">
         {STEPS.map((s, i) => (
           <Step key={s.phase} label={s.label} state={i < at ? "done" : i === at ? "now" : "next"}>
@@ -95,7 +95,7 @@ function Ask() {
   return (
     <div className="grid gap-6">
       <div className="grid gap-4">
-        <h1 className="font-serif text-[46px] leading-[1.04] tracking-[-0.01em]">What company should exist?</h1>
+        <h1 className="display-hero">What company should exist?</h1>
         <p className="max-w-[48ch] text-[14px] leading-relaxed text-muted-foreground">Say it in a sentence, or let dhrive pick. It creates the company and runs it.</p>
       </div>
       <div className="@container grid gap-2 rounded-2xl border border-border bg-card p-2 focus-within:border-ring">

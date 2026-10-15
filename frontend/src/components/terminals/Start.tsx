@@ -19,7 +19,7 @@ export function Intro() {
   return (
     <div className="mb-3 px-1">
       <MaestroMark />
-      <h2 className="mt-5 font-serif text-[40px] leading-[1.05] tracking-[-0.01em]">
+      <h2 className="mt-5 display-title">
         One task.
         <br />
         Several CLIs at once.

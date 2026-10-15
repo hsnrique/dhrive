@@ -35,7 +35,7 @@ function Overview({ project, brief }: { project: Project; brief: Brief }) {
   const live = usePublishedOf(project.id);
   return (
     <section className="grid gap-3">
-      <h1 className="break-words font-serif text-[38px] leading-[1.02] tracking-[-0.015em]">{project.name}</h1>
+      <h1 className="break-words display-title">{project.name}</h1>
       {line ? <p className="text-[14.5px] leading-relaxed text-foreground/80">{line}</p> : <p className="text-[13.5px] text-muted-foreground">An autonomous company. It works from its brief, one task after another.</p>}
       {!isBlank(brief) && (
         <p className="flex min-w-0 items-center gap-2 text-[12.5px] text-muted-foreground">

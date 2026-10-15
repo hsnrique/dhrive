@@ -10,7 +10,7 @@ export function ErrorToast() {
   return (
     <div
       role="alert"
-      className="fixed bottom-6 right-6 z-50 flex max-w-sm items-center gap-3 rounded-xl border border-failure/40 bg-card px-4 py-3 text-sm"
+      className="fixed bottom-6 right-6 z-50 flex max-w-sm items-center gap-3 rounded-xl border border-failure/40 bg-card px-4 py-3 text-[12.5px]"
     >
       <span className="flex-1">{error}</span>
       <button

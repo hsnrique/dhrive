@@ -107,6 +107,30 @@
      or sheet that takes the window. */
   --shadow-popover: 0 18px 50px rgba(0, 0, 0, 0.55);
   --shadow-dialog: 0 24px 70px rgba(0, 0, 0, 0.6);
+  /* 12px reads on the same 1.5 line as every other UI size, not Tailwind's tighter 16px. */
+  --text-xs--line-height: 1.5;
+  /* One curve for everything that enters, and one length for it. */
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --duration-enter: 200ms;
+}
+
+/* The serif titles: the home's question, a page's title, a section's head. */
+@utility display-hero {
+  font-family: var(--font-serif);
+  font-size: 46px;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+}
+@utility display-title {
+  font-family: var(--font-serif);
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+@utility display-section {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  line-height: 1;
 }
 
 @layer base {
@@ -133,7 +157,7 @@
   }
 }
 .pop-in {
-  animation: pop-in 0.18s cubic-bezier(0.33, 1, 0.68, 1);
+  animation: pop-in var(--duration-enter) var(--ease-out);
 }
 
 /* The sidebar opening over the work on a narrow window, and the dim behind it. */
@@ -156,15 +180,15 @@
 }
 
 .slide-in-left {
-  animation: slide-in-left 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+  animation: slide-in-left var(--duration-enter) var(--ease-out);
 }
 
 .slide-in-right {
-  animation: slide-in-right 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+  animation: slide-in-right var(--duration-enter) var(--ease-out);
 }
 
 .fade-in {
-  animation: fade-in 0.2s ease-out;
+  animation: fade-in var(--duration-enter) var(--ease-out);
 }
 
 /* Inside the company's columns every grid track may shrink to its column, so no long word or row
@@ -242,7 +266,7 @@
   border-radius: inherit;
   background: rgba(242, 242, 242, 0.35);
   pointer-events: none;
-  animation: node-breathe 1.6s cubic-bezier(0.33, 1, 0.68, 1) infinite;
+  animation: node-breathe 1.6s var(--ease-out) infinite;
 }
 
 /* The relay: the line from the plan to the code fills downward the moment the plan hands off. */

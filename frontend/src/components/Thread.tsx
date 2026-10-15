@@ -72,7 +72,7 @@ function EmptyThread({ from }: { from: PastSession | null }) {
   const coder = code ? coderName : "the coder";
   return (
     <div className="m-auto grid max-w-md justify-items-center gap-3 py-20 text-center">
-      <h2 className="font-serif text-[36px] leading-[1.1]">
+      <h2 className="display-title">
         {mode === "chat" && <>Think it through with {plan ? planner : "the planner"}.</>}
         {mode === "relay" && plan && (
           <>

@@ -161,7 +161,7 @@ export function LocalModels() {
     <div data-tauri-drag-region className="h-full overflow-y-auto">
       <div className="mx-auto w-full max-w-[640px] px-8 pb-16 pt-[68px]">
         <EngineMark engine="ollama" className="h-7 w-7" />
-        <h1 className="mt-5 font-serif text-[40px] leading-[1.05] tracking-[-0.01em]">Models on this Mac.</h1>
+        <h1 className="mt-5 display-title">Models on this Mac.</h1>
         <p className="mt-2 font-mono text-[11.5px] text-muted-foreground">{scan ? machineLine(scan.machine) : "Checking this Mac…"}</p>
         {scan && (
           <>

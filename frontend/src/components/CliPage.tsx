@@ -79,7 +79,7 @@ export function CliPage({ engine }: { engine: Engine }) {
     <div data-tauri-drag-region className="h-full overflow-y-auto">
       <div className="mx-auto w-full max-w-[680px] px-8 pb-16 pt-[68px]">
         <EngineMark engine={engine} className="h-7 w-7" />
-        <h1 className="mt-5 font-serif text-[40px] leading-[1.05] tracking-[-0.01em]">{label}</h1>
+        <h1 className="mt-5 display-title">{label}</h1>
         <div className="mt-2 flex items-center gap-2 font-mono text-[11.5px] text-muted-foreground">
           {cli?.version && <span>{cli.version}</span>}
           <span aria-hidden>·</span>
