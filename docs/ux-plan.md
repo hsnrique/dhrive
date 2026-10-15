@@ -118,9 +118,14 @@ pinned, an error queue with context instead of one toast, motion details.
 
 ## Progress
 
+Phase 1 notes for whoever continues: `.company/` was already outside step snapshots (the audit was
+wrong there); build and publish still run beside a code step in the same folder (they only read it
+and write their own output), which the folder lock could take later if a build ever catches a step
+halfway.
+
 | Phase | PR | State |
 | --- | --- | --- |
-| 1. Reliability | | planned |
+| 1. Reliability | feat/ux-reliability | done: auto mode, unreadable files, Stop, one writer per folder, Suggest, small guards (326 frontend tests, 264 backend) |
 | 2. Performance | | planned |
 | 3. Design system | | planned |
 | 4. Accessibility | | planned |
