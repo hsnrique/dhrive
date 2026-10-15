@@ -130,11 +130,17 @@ batching, the freeing and the cap. Runs outside conversations and company tasks 
 the planner, briefs) rely on the 32-run cap rather than an explicit drop. The panel's width drag
 was measured as one small storage write per frame and left alone.
 
+Phase 3 notes: the UI's text sizes were left as they are (11 to 15px in half-pixel steps); folding
+them into fewer steps changes the look and is the owner's call. Title recipes, text-xs's line height
+and the motion tokens did change. Outside clicks still close popovers three ways (a transparent
+catcher, a window pointerdown, a backdrop), which works; ui/layer is where to unify them if needed.
+Phase 4 builds on the layers: the terminals' key to leave the pane, focus contrast, live regions.
+
 | Phase | PR | State |
 | --- | --- | --- |
 | 1. Reliability | feat/ux-reliability | done: auto mode, unreadable files, Stop, one writer per folder, Suggest, small guards (326 frontend tests, 264 backend) |
 | 2. Performance | feat/ux-performance | done: live store, thread re-renders, edit diffs, log flush, startup, cheap wins (333 frontend tests, 266 backend) |
-| 3. Design system | | planned |
+| 3. Design system | feat/ux-design-system | done: one hairline, color and title tokens, Button/Field/compose, Dialog and layers, InlineConfirm (334 frontend tests) |
 | 4. Accessibility | | planned |
 | 5. Journeys | | planned |
 | 6. Polish | | planned |
