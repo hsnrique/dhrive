@@ -21,7 +21,7 @@ import { useCompanyPulse } from "./company/CompanyRow";
 // community, and the account.
 // Every button names itself beside the rail on hover, since initials and marks alone don't.
 
-const tool = "flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground";
+const tool = "flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
 
 // Placed on the window, not inside the rail: the rail scrolls, and a scrolling box clips what pokes out.
 function Tip({ label, children }: { label: string; children: ReactNode }) {
@@ -52,7 +52,7 @@ function CompanyChip({ project }: { project: Project }) {
         type="button"
         aria-label={project.name}
         aria-current={active ? "page" : undefined}
-        className={cn("relative flex h-10 w-10 items-center justify-center rounded-xl text-[12.5px] font-medium transition-colors", active ? "bg-foreground text-background" : "bg-white/[0.06] text-foreground/80 hover:bg-white/[0.12] hover:text-foreground")}
+        className={cn("relative flex h-10 w-10 items-center justify-center rounded-xl text-[12.5px] font-medium transition-colors", active ? "bg-foreground text-background" : "bg-white/[0.06] text-foreground/80 hover:bg-pressed hover:text-foreground")}
         onClick={() => useCompany.getState().open(project.id)}
       >
         {initialsOf(project.name)}

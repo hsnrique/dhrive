@@ -14,7 +14,7 @@ import { field, pill } from "./EnvRow";
 // dismiss. A new CLI or model moves the tasks waiting on it too; a dismissed agent's waiting tasks go
 // back to the company's own agent. Dismissing asks once more, by name.
 
-const quiet = "flex h-6 items-center gap-1 rounded-md px-2 text-[11.5px] text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
+const quiet = "flex h-6 items-center gap-1 rounded-md px-2 text-[11.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
 
 export function AgentForm({ initial, onSave, onDone }: { initial?: Pick<Agent, "name" | "role" | "owns">; onSave: (name: string, role: string, owns: string) => boolean; onDone: () => void }) {
   const [name, setName] = useState(initial?.name ?? "");
@@ -66,7 +66,7 @@ export function AgentRow({ projectId, agent, engines, spent }: { projectId: stri
       <div className={leaving ? "flex items-center gap-1.5" : "hidden items-center gap-1.5 group-hover:flex group-focus-within:flex"}>
         {leaving ? (
           <>
-            <button type="button" className="h-6 rounded-md border border-[#ff8a8f]/50 px-2.5 text-[11.5px] text-[#ff8a8f] transition-colors hover:bg-[#ff8a8f]/10" onClick={leave}>Dismiss {agent.name}</button>
+            <button type="button" className="h-6 rounded-md border border-failure/50 px-2.5 text-[11.5px] text-failure transition-colors hover:bg-failure/10" onClick={leave}>Dismiss {agent.name}</button>
             <button type="button" className={quiet} onClick={() => setLeaving(false)}>Keep</button>
           </>
         ) : (

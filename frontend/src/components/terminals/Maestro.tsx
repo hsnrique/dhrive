@@ -18,7 +18,7 @@ import { Intro, MaestroMark, PaneStarters } from "./Start";
 
 const words = "flex-none px-0.5 text-xs text-muted-foreground";
 const MAX_HEIGHT = 240;
-const iconButton = "flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
+const iconButton = "flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
 
 // The phase, then the CLI's latest action, on one line next to the CLI that's splitting.
 function Progress({ runId }: { runId: string }) {
@@ -33,8 +33,8 @@ function Splitting() {
   return (
     <div className="grid grid-cols-3 gap-2">
       {[0, 1, 2].map((at) => (
-        <div key={at} className="ghost-sweep flex h-36 flex-col gap-2 rounded-lg border border-border bg-[#050506] p-3" style={{ animationDelay: `${at * 0.25}s` }}>
-          <span className="h-2.5 w-2/5 rounded-full bg-white/[0.08]" />
+        <div key={at} className="ghost-sweep flex h-36 flex-col gap-2 rounded-lg border border-border bg-terminal p-3" style={{ animationDelay: `${at * 0.25}s` }}>
+          <span className="h-2.5 w-2/5 rounded-full bg-selected" />
           <span className="mt-1 h-2 w-full rounded-full bg-white/[0.05]" />
           <span className="h-2 w-4/5 rounded-full bg-white/[0.05]" />
           <span className="h-2 w-3/5 rounded-full bg-white/[0.05]" />
@@ -47,7 +47,7 @@ function Splitting() {
 function PartCard({ session, part, clis, onOpen }: { session: string; part: Part; clis: Cli[]; onOpen: () => void }) {
   const { edit, drop } = useMaestro.getState();
   return (
-    <div className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-border bg-[#050506] p-2.5">
+    <div className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-border bg-terminal p-2.5">
       <div className="flex items-center gap-1">
         <input aria-label="Title" value={part.title} className="min-w-0 flex-1 bg-transparent text-[12.5px] font-medium outline-none" onChange={(e) => edit(session, part.id, { title: e.target.value })} />
         <button type="button" aria-label="Read and edit" title="Read and edit" className={iconButton} onClick={onOpen}>
@@ -79,7 +79,7 @@ function PartDialog({ session, part, clis, onClose }: { session: string; part: P
       <div role="dialog" aria-label={part.title} className="pop-in flex max-h-full w-full max-w-[760px] flex-col gap-3 rounded-2xl border border-border bg-popover p-4 shadow-dialog">
         <div className="flex items-center gap-2">
           <input aria-label="Title" value={part.title} className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold tracking-tight outline-none" onChange={(e) => edit(session, part.id, { title: e.target.value })} />
-          <button type="button" aria-label="Close" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground" onClick={onClose}>
+          <button type="button" aria-label="Close" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onClose}>
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -149,7 +149,7 @@ function Brief({ session, clis }: { session: string; clis: Cli[] }) {
         {folder && <FocusPicker session={session} engine={engine} folder={folder} />}
         <span className="min-w-0 flex-1 px-1">{runId && <Progress runId={runId} />}</span>
         {runId ? (
-          <button type="button" title="Stop" aria-label="Stop" className="flex h-8 w-8 flex-none items-center justify-center rounded-md border border-border bg-white/[0.08] hover:bg-white/[0.14]" onClick={() => stop(session)}>
+          <button type="button" title="Stop" aria-label="Stop" className="flex h-8 w-8 flex-none items-center justify-center rounded-md border border-border bg-selected hover:bg-pressed" onClick={() => stop(session)}>
             <Square className="h-3 w-3 fill-current" />
           </button>
         ) : (
@@ -176,7 +176,7 @@ export function Maestro({ session, clis, room, fill }: { session: string; clis: 
         <Brief session={session} clis={clis} />
         {idle && <PaneStarters session={session} clis={clis} />}
         {runId && <Splitting />}
-        {error && <p className="select-text whitespace-pre-wrap px-2 text-xs leading-relaxed text-diff-remove">{error}</p>}
+        {error && <p className="select-text whitespace-pre-wrap px-2 text-xs leading-relaxed text-failure">{error}</p>}
         {parts.length > 0 && (
           <>
             <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(parts.length, 3)}, minmax(0, 1fr))` }}>

@@ -34,7 +34,7 @@ export function BriefSection({ heading, hint, example, value, drafting, onChange
       </div>
       {drafting && !value ? (
         <div className="ghost-sweep -mx-3 grid gap-2 rounded-xl px-3 py-3" aria-hidden>
-          <span className="h-2.5 w-11/12 rounded-full bg-white/[0.07]" />
+          <span className="h-2.5 w-11/12 rounded-full bg-selected" />
           <span className="h-2.5 w-3/5 rounded-full bg-white/[0.05]" />
         </div>
       ) : (
@@ -47,7 +47,7 @@ export function BriefSection({ heading, hint, example, value, drafting, onChange
           spellCheck
           className={cn(
             "-mx-3 w-[calc(100%+1.5rem)] resize-none overflow-hidden rounded-xl border border-transparent bg-transparent px-3 py-2 text-[14.5px] leading-[1.65] outline-none transition-colors",
-            "placeholder:text-muted-foreground hover:bg-white/[0.03] focus:border-border focus:bg-black/30",
+            "placeholder:text-muted-foreground hover:bg-hover focus:border-border focus:bg-black/30",
           )}
           onChange={(e) => onChange(e.target.value)}
         />

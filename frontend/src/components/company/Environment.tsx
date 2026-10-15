@@ -45,7 +45,7 @@ export function Environment({ project }: { project: Project }) {
         {!adding && <button type="button" className={pill} onClick={() => setAdding(true)}>Add a variable</button>}
       </SectionHead>
       <p className="-mt-1 text-[11.5px] text-muted-foreground">In your Mac's Keychain, never in the repo.</p>
-      {error && <p className="text-[12px] text-[#ff8a8f]" role="alert">{error}</p>}
+      {error && <p className="text-[12px] text-failure" role="alert">{error}</p>}
       {view && (
         <ul className="grid">
           {adding && <AddForm projectId={project.id} onDone={() => setAdding(false)} />}

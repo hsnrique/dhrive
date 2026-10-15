@@ -15,7 +15,7 @@ import { TypeToConfirm } from "../TypeToConfirm";
 // and the owner stars the one the company goes by (store/favorite.ts).
 
 const MAX = 3;
-const pill = "flex h-7 flex-none items-center gap-1.5 rounded-md bg-white/[0.08] px-3 text-[12px] font-medium transition-colors hover:bg-white/[0.14] disabled:opacity-40";
+const pill = "flex h-7 flex-none items-center gap-1.5 rounded-md bg-selected px-3 text-[12px] font-medium transition-colors hover:bg-pressed disabled:opacity-40";
 
 function Copyable({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
@@ -31,7 +31,7 @@ function Copyable({ value }: { value: string }) {
 function Live({ host }: { host: string }) {
   return (
     <button type="button" className="flex items-center gap-1.5 text-[12px] text-foreground/85 transition-colors hover:text-foreground" onClick={() => void openUrl(`https://${host}`).catch(() => undefined)}>
-      <span className="h-1.5 w-1.5 rounded-full bg-[#3ddc84]" />
+      <span className="h-1.5 w-1.5 rounded-full bg-live" />
       Live
       <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
     </button>
@@ -45,7 +45,7 @@ function Favorite({ projectId, host, on }: { projectId: string; host: string; on
       aria-pressed={on}
       aria-label={on ? `${host} is the favorite` : `Make ${host} the favorite`}
       title={on ? "The favorite: the toolbar opens this one" : "Make it the favorite"}
-      className="flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground"
+      className="flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground"
       onClick={() => useFavorite.getState().pick(projectId, host)}
     >
       <Star className={cn("h-3.5 w-3.5", on && "fill-attention text-attention")} />
@@ -114,7 +114,7 @@ export function OwnDomains({ projectId }: { projectId: string }) {
                   {busy === domain ? "Checking…" : "Check again"}
                 </button>
               )}
-              <button type="button" aria-label={`Remove ${domain}`} title="Remove" disabled={busy !== null} className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-white/[0.08] hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100" onClick={() => setRemoving(domain)}>
+              <button type="button" aria-label={`Remove ${domain}`} title="Remove" disabled={busy !== null} className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-hover hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100" onClick={() => setRemoving(domain)}>
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -149,7 +149,7 @@ export function OwnDomains({ projectId }: { projectId: string }) {
           </li>
         )}
       </ul>
-      {error && <p className="px-1 text-[12.5px] text-[#ff8a8f]">{error}</p>}
+      {error && <p className="px-1 text-[12.5px] text-failure">{error}</p>}
       {removing && (
         <TypeToConfirm
           title={`Remove ${removing}?`}

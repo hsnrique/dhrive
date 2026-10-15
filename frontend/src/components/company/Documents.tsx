@@ -17,7 +17,7 @@ import { SectionHead } from "./SectionHead";
 
 const ICONS: Record<DocumentId, LucideIcon> = { mission: Target, roadmap: MapIcon, "design-guide": Palette, "market-research": TrendingUp };
 
-const pill = "h-6 flex-none rounded-md bg-white/[0.08] px-2.5 text-[11.5px] font-medium transition-colors hover:bg-white/[0.14] disabled:opacity-40";
+const pill = "h-6 flex-none rounded-md bg-selected px-2.5 text-[11.5px] font-medium transition-colors hover:bg-pressed disabled:opacity-40";
 
 function DocRow({ projectId, kind, text, can }: { projectId: string; kind: (typeof DOCUMENTS)[number]; text: string | null | false | undefined; can: boolean }) {
   const [open, setOpen] = useFold(`doc:${projectId}:${kind.id}`);
@@ -28,7 +28,7 @@ function DocRow({ projectId, kind, text, can }: { projectId: string; kind: (type
   return (
     <li className="border-b border-border last:border-0">
       <div
-        className={cn("flex min-h-10 min-w-0 items-center gap-2.5 rounded-md px-1 py-2 outline-none focus-visible:ring-1 focus-visible:ring-ring", text && "cursor-pointer hover:bg-white/[0.03]")}
+        className={cn("flex min-h-10 min-w-0 items-center gap-2.5 rounded-md px-1 py-2 outline-none focus-visible:ring-1 focus-visible:ring-ring", text && "cursor-pointer hover:bg-hover")}
         role={text ? "button" : undefined}
         tabIndex={text ? 0 : undefined}
         aria-expanded={text ? Boolean(shown) : undefined}
@@ -38,7 +38,7 @@ function DocRow({ projectId, kind, text, can }: { projectId: string; kind: (type
         <Icon className="h-3.5 w-3.5 flex-none text-muted-foreground" strokeWidth={1.75} />
         <span className="flex-none text-[13px]">{kind.title}</span>
         {text === false ? (
-          <span className="min-w-0 flex-1 truncate text-[12px] text-[#ff8a8f]" title={`${kind.file} is there but dhrive can't read it (too big, or another encoding), so it won't write over it`}>Can't be read</span>
+          <span className="min-w-0 flex-1 truncate text-[12px] text-failure" title={`${kind.file} is there but dhrive can't read it (too big, or another encoding), so it won't write over it`}>Can't be read</span>
         ) : text ? (
           <>
             <span className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground">{preview(text)}</span>

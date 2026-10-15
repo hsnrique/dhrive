@@ -13,7 +13,7 @@ import { BrandLogo } from "./BrandLogo";
 
 function Pill({ primary, disabled, onClick, children }: { primary?: boolean; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" disabled={disabled} className={cn("h-8 rounded-md px-4 text-[12.5px] transition-colors disabled:opacity-40", primary ? "bg-primary font-medium text-primary-foreground hover:opacity-90" : "border border-border hover:bg-white/[0.08]")} onClick={onClick}>
+    <button type="button" disabled={disabled} className={cn("h-8 rounded-md px-4 text-[12.5px] transition-colors disabled:opacity-40", primary ? "bg-primary font-medium text-primary-foreground hover:opacity-90" : "border border-border hover:bg-hover")} onClick={onClick}>
       {children}
     </button>
   );
@@ -33,7 +33,7 @@ function SignInButton() {
           Cancel
         </button>
       )}
-      {error && <p className="max-w-[320px] text-center text-[12px] text-diff-remove">{error}</p>}
+      {error && <p className="max-w-[320px] text-center text-[12px] text-failure">{error}</p>}
     </div>
   );
 }
@@ -74,7 +74,7 @@ export function AccountRow() {
   const email = emailOf(status);
   return (
     <div className="border-t border-border px-4 py-2">
-      <button type="button" title="Your account" className="group -mx-2 flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-white/[0.06]" onClick={() => useAccount.getState().setSheetOpen(true)}>
+      <button type="button" title="Your account" className="group -mx-2 flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-hover" onClick={() => useAccount.getState().setSheetOpen(true)}>
         <Avatar email={email} className="h-7 w-7 text-[12px]" />
         <span className="grid min-w-0 flex-1">
           <span className="truncate text-[12.5px] text-foreground/90">{email ?? "Your account"}</span>
@@ -92,7 +92,7 @@ export function AccountBadge() {
   if (!status || !urgent(status)) return null;
   const label = status.state === "trial" ? `${status.daysLeft}d left` : "Trial over";
   return (
-    <button type="button" title="Your dhrive account" className="whitespace-nowrap rounded-md border border-attention/50 px-2 py-0.5 text-[10.5px] text-attention transition-colors hover:bg-white/[0.07]" onClick={() => useAccount.getState().setSheetOpen(true)}>
+    <button type="button" title="Your dhrive account" className="whitespace-nowrap rounded-md border border-attention/50 px-2 py-0.5 text-[10.5px] text-attention transition-colors hover:bg-hover" onClick={() => useAccount.getState().setSheetOpen(true)}>
       {label}
     </button>
   );

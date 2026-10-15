@@ -105,7 +105,7 @@ export function ChoicePicker({ choice, onChoose, label, engines, align = "left",
         aria-haspopup="dialog"
         aria-expanded={open}
         title={summary}
-        className="inline-flex h-7 max-w-full items-center gap-1.5 whitespace-nowrap rounded-md border border-border bg-white/[0.04] pl-2 pr-1.5 text-xs text-foreground transition-colors hover:bg-white/[0.08]"
+        className="inline-flex h-7 max-w-full items-center gap-1.5 whitespace-nowrap rounded-md border border-border bg-white/[0.04] pl-2 pr-1.5 text-xs text-foreground transition-colors hover:bg-hover"
         onClick={toggle}
       >
         <EngineMark engine={choice.engine} />

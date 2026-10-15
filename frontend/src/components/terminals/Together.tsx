@@ -10,7 +10,7 @@ import { useTogether, workPanes } from "@/store/together";
 // Bringing the session's panes together on one branch, and what came of it: what merged, what had
 // nothing new, and what conflicted, with a pane to resolve each conflict in the project folder.
 
-const pill = "inline-flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-3 text-xs transition-colors hover:bg-white/[0.08] disabled:opacity-40";
+const pill = "inline-flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-3 text-xs transition-colors hover:bg-hover disabled:opacity-40";
 const OUTCOME: Record<Together["merges"][number]["outcome"], string> = { merged: "merged", "nothing-new": "nothing new", conflict: "conflicts", "no-copy": "no copy of its own" };
 
 export function TogetherButton({ session, className }: { session: TerminalSession; className: string }) {
@@ -75,11 +75,11 @@ export function TogetherBar({ session }: { session: TerminalSession }) {
             Open pull request
           </button>
         ))}
-        <button type="button" aria-label="Close" className="flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground hover:bg-white/[0.08] hover:text-foreground" onClick={() => useTogether.getState().dismiss(session.id)}>
+        <button type="button" aria-label="Close" className="flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground hover:bg-hover hover:text-foreground" onClick={() => useTogether.getState().dismiss(session.id)}>
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
-      {error && <p className="mt-1.5 select-text whitespace-pre-wrap text-xs text-diff-remove">{error}</p>}
+      {error && <p className="mt-1.5 select-text whitespace-pre-wrap text-xs text-failure">{error}</p>}
       {result && (
         <ul className="mt-1.5 grid gap-0.5 pl-5">
           {result.merges.map((merge) => (

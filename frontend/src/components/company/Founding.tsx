@@ -21,7 +21,7 @@ const STEPS: { phase: Phase | "building"; label: string }[] = [
 ];
 
 const primary = "h-9 flex-none rounded-md bg-foreground px-5 text-[13.5px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40";
-const quiet = "flex h-9 flex-none items-center gap-2 rounded-md px-4 text-[13.5px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground";
+const quiet = "flex h-9 flex-none items-center gap-2 rounded-md px-4 text-[13.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
 
 function Live({ runId }: { runId: string | null }) {
   const phase = useLivePhase(runId) || "Starting";
@@ -62,7 +62,7 @@ function Working() {
           </Step>
         ))}
       </ol>
-      {failed && <p className="text-[13px] text-[#ff8a8f]">{error}</p>}
+      {failed && <p className="text-[13px] text-failure">{error}</p>}
       <div className="flex items-center gap-2">
         {failed ? (
           <>

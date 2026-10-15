@@ -57,10 +57,10 @@ export function TypeToConfirm({ title, detail, word, action, doing, onConfirm, o
           />
         </label>
         <div className="flex justify-end gap-2">
-          <button type="button" disabled={busy} className="h-8 rounded-md px-4 text-[12.5px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground disabled:opacity-40" onClick={onClose}>
+          <button type="button" disabled={busy} className="h-8 rounded-md px-4 text-[12.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40" onClick={onClose}>
             Cancel
           </button>
-          <button type="button" disabled={!ready} className={cn("h-8 rounded-md px-4 text-[12.5px] font-medium transition-colors", ready ? "bg-[#ff8a8f] text-background hover:opacity-90" : "bg-white/[0.06] text-muted-foreground")} onClick={() => void go()}>
+          <button type="button" disabled={!ready} className={cn("h-8 rounded-md px-4 text-[12.5px] font-medium transition-colors", ready ? "bg-failure text-background hover:opacity-90" : "bg-white/[0.06] text-muted-foreground")} onClick={() => void go()}>
             {busy ? doing : action}
           </button>
         </div>

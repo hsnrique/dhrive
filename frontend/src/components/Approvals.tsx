@@ -17,7 +17,7 @@ function Choice({ label, title, onClick, primary }: { label: string; title?: str
     <button
       type="button"
       title={title}
-      className={cn("min-w-0 truncate rounded-lg px-2.5 py-1 text-[12px] transition-colors", primary ? "bg-primary text-primary-foreground hover:opacity-90" : "border border-border hover:bg-white/[0.08]")}
+      className={cn("min-w-0 truncate rounded-lg px-2.5 py-1 text-[12px] transition-colors", primary ? "bg-primary text-primary-foreground hover:opacity-90" : "border border-border hover:bg-hover")}
       onClick={onClick}
     >
       {label}
@@ -77,7 +77,7 @@ export function AllowedRules({ project }: { project: Project }) {
   };
   return (
     <div className="relative">
-      <button type="button" title="What Claude may do here without asking" className="flex h-7 items-center gap-1 rounded-md px-2 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground" onClick={() => setOpen((v) => !v)}>
+      <button type="button" title="What Claude may do here without asking" className="flex h-7 items-center gap-1 rounded-md px-2 text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={() => setOpen((v) => !v)}>
         <ShieldCheck className="h-3.5 w-3.5" />
         {rules.length}
       </button>
@@ -87,7 +87,7 @@ export function AllowedRules({ project }: { project: Project }) {
           <div role="dialog" aria-label="Always allowed" className="pop-in absolute right-0 top-full z-30 mt-2 w-72 rounded-xl border border-border bg-popover shadow-popover p-1.5">
             <p className="px-2 pb-1 pt-1 text-[11px] text-muted-foreground">Always allowed in {project.name}</p>
             {rules.map((rule) => (
-              <div key={rule} className="flex items-center gap-2 rounded-lg px-2 py-1 text-[12px] hover:bg-white/[0.05]" title={rule}>
+              <div key={rule} className="flex items-center gap-2 rounded-lg px-2 py-1 text-[12px] hover:bg-hover" title={rule}>
                 <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] [font-variant-ligatures:none]">{rule}</span>
                 <button type="button" aria-label={`Stop allowing ${rule}`} className="flex-none text-muted-foreground hover:text-foreground" onClick={() => void remove(rule)}>
                   <X className="h-3.5 w-3.5" />

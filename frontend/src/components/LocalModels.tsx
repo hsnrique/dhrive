@@ -51,11 +51,11 @@ function pullLabel(pull: Pull) {
 }
 
 function PullLine({ pull }: { pull: Pull }) {
-  if (pull.error) return <p className="text-[12px] text-[#ff8a8f]">{pull.error}</p>;
+  if (pull.error) return <p className="text-[12px] text-failure">{pull.error}</p>;
   const percent = pull.total ? (pull.completed * 100) / pull.total : 0;
   return (
     <div className="flex items-center gap-3" role="progressbar" aria-valuenow={Math.floor(percent)} aria-valuemin={0} aria-valuemax={100}>
-      <div className="h-[1.5px] flex-1 overflow-hidden rounded-full bg-white/[0.08]">
+      <div className="h-[1.5px] flex-1 overflow-hidden rounded-full bg-selected">
         <div className="h-full bg-foreground/80 transition-[width] duration-300" style={{ width: `${percent}%` }} />
       </div>
       <span className="w-32 text-right font-mono text-[11px] text-muted-foreground">{pullLabel(pull)}</span>

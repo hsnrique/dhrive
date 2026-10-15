@@ -22,7 +22,7 @@ export function AutoMode({ projectId, disabled }: { projectId: string; disabled:
         <span className="node-live h-1.5 w-1.5 rounded-full bg-foreground" />
         <span className="ml-1 text-[12.5px] font-medium">Auto</span>
         <span className="text-[12.5px] text-muted-foreground">· {timeLeft(until, now)}</span>
-        <button type="button" className={cn(pill, "ml-1 bg-white/[0.08] hover:bg-white/[0.14]")} onClick={() => stop(projectId)}>
+        <button type="button" className={cn(pill, "ml-1 bg-selected hover:bg-pressed")} onClick={() => stop(projectId)}>
           <Square className="h-3 w-3 fill-current" />
           Stop
         </button>
@@ -33,18 +33,18 @@ export function AutoMode({ projectId, disabled }: { projectId: string; disabled:
     return (
       <div className="flex items-center gap-1" role="group" aria-label="Work on its own for">
         {HOURS.map((hours) => (
-          <button key={hours} type="button" className={cn(pill, "bg-white/[0.08] font-medium hover:bg-white/[0.16]")} onClick={() => (setPicking(false), start(projectId, hours))}>
+          <button key={hours} type="button" className={cn(pill, "bg-selected font-medium hover:bg-pressed")} onClick={() => (setPicking(false), start(projectId, hours))}>
             {hours}h
           </button>
         ))}
-        <button type="button" aria-label="Cancel" title="Cancel" className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground" onClick={() => setPicking(false)}>
+        <button type="button" aria-label="Cancel" title="Cancel" className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={() => setPicking(false)}>
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
     );
   }
   return (
-    <button type="button" disabled={disabled} title={disabled ? "Write the brief first" : "Let the company work on its own for a few hours"} className={cn(pill, "bg-white/[0.08] hover:bg-white/[0.14]")} onClick={() => setPicking(true)}>
+    <button type="button" disabled={disabled} title={disabled ? "Write the brief first" : "Let the company work on its own for a few hours"} className={cn(pill, "bg-selected hover:bg-pressed")} onClick={() => setPicking(true)}>
       <Loop className="h-3.5 w-3.5" />
       Auto mode
     </button>

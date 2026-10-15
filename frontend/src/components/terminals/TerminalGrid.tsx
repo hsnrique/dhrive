@@ -18,8 +18,8 @@ import { TogetherBar, TogetherButton } from "./Together";
 
 const withScreen = (clis: Cli[]) => clis.filter((cli) => cli.installed && cli.engine !== "ollama");
 
-const headerButton = "flex h-7 items-center gap-1.5 rounded-md px-2 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground disabled:opacity-40";
-const tool = "flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
+const headerButton = "flex h-7 items-center gap-1.5 rounded-md px-2 text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40";
+const tool = "flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
 
 // A marker only when there's something to know: working, the owner's turn, or ended.
 function StatusMarker({ pane }: { pane: string }) {
@@ -82,7 +82,7 @@ function PaneBox({ pane, project, clis }: { pane: Pane; project: Project | undef
     return () => reset(pane.id);
   }, [pane.id, pane.run, reset]);
   return (
-    <section className="flex min-h-0 min-w-0 flex-col rounded-xl border border-border bg-[#050506]">
+    <section className="flex min-h-0 min-w-0 flex-col rounded-xl border border-border bg-terminal">
       {project && <PaneHeader pane={pane} projectId={project.id} clis={clis} branch={branch} />}
       <div className="min-h-0 flex-1 overflow-hidden rounded-b-xl">
         {project && installed ? (
@@ -107,7 +107,7 @@ function Header({ session, project, clis }: { session: TerminalSession; project:
       <span className="ml-auto" />
       <TogetherButton session={session} className={headerButton} />
       {/* With no panes the session is the maestro's, so the toggle only says so. */}
-      <button type="button" aria-pressed={maestro || session.panes.length === 0} title={session.panes.length ? "Show or hide the maestro" : "The maestro"} disabled={clis.length === 0 || session.panes.length === 0} className={cn(headerButton, "disabled:opacity-100", (maestro || session.panes.length === 0) && "bg-white/[0.08] text-foreground")} onClick={() => useMaestro.getState().set(session.id, { open: !maestro })}>
+      <button type="button" aria-pressed={maestro || session.panes.length === 0} title={session.panes.length ? "Show or hide the maestro" : "The maestro"} disabled={clis.length === 0 || session.panes.length === 0} className={cn(headerButton, "disabled:opacity-100", (maestro || session.panes.length === 0) && "bg-selected text-foreground")} onClick={() => useMaestro.getState().set(session.id, { open: !maestro })}>
         Maestro
       </button>
       <button type="button" disabled={session.panes.length >= MAX_PANES || clis.length === 0} className={headerButton} onClick={add}>

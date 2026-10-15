@@ -24,7 +24,7 @@ function StatusNode({ status }: { status: StageStatus }) {
   const base = "relative z-10 flex h-[13px] w-[13px] items-center justify-center rounded-full";
   if (status === "running") return <span className={cn(base, "node-live bg-foreground [--breathe:1.75]")} />;
   if (status === "done") return <span className={cn(base, "bg-foreground/85 text-background")}><Check className="h-2.5 w-2.5" strokeWidth={3.5} /></span>;
-  if (status === "failed") return <span className={cn(base, "bg-destructive text-white")}><X className="h-2.5 w-2.5" strokeWidth={3.5} /></span>;
+  if (status === "failed") return <span className={cn(base, "bg-failure text-background")}><X className="h-2.5 w-2.5" strokeWidth={3.5} /></span>;
   if (status === "stopped" || status === "interrupted") return <span className={cn(base, "border border-foreground/40 bg-background")}><Square className="h-1.5 w-1.5 fill-foreground/60 text-transparent" /></span>;
   return <span className={cn(base, "border bg-background", status === "skipped" ? "border-dashed border-foreground/25" : "border-foreground/35")} />;
 }
@@ -90,13 +90,13 @@ function Body({ step, message, folder }: { step: Step; message: RunMessage; fold
   if (stage.status === "running") return <LiveLog runId={stage.runId} folder={folder} />;
   if (stage.status === "waiting" && (message.chat || step === "code")) return <p className="text-[13px] text-muted-foreground">{message.chat ? "Starting…" : waitingNote(message, autoCode)}</p>;
   if (stage.status === "done") return <Output step={step} stage={stage} folder={folder} open={step === "plan" && message.code.status === "review"} />;
-  if (stage.status === "failed") return <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#ff8a8f]">{stage.error}</p>;
+  if (stage.status === "failed") return <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-failure">{stage.error}</p>;
   return <p className="text-[13px] text-muted-foreground">{NOTES[stage.status]}</p>;
 }
 
 function IconButton({ title, onClick, children }: { title: string; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" title={title} aria-label={title} onClick={onClick} className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground">
+    <button type="button" title={title} aria-label={title} onClick={onClick} className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground">
       {children}
     </button>
   );

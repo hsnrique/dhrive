@@ -14,11 +14,11 @@ import { ToolsMenu } from "./ToolsMenu";
 // here (connectors.rs): its CLI is installed if missing, the owner signs in through the browser, its
 // skills land in the project; from then on every step's prompt names it.
 
-const pill = "flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] @[60rem]:px-3 transition-colors hover:bg-white/[0.07]";
+const pill = "flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] @[60rem]:px-3 transition-colors hover:bg-hover";
 const label = "hidden @[60rem]:inline";
 const primary = "h-7 flex-none rounded-md bg-foreground px-3.5 text-[12px] font-medium text-background transition-opacity hover:opacity-90";
-const quiet = "flex h-7 flex-none items-center gap-1.5 rounded-md px-2.5 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground";
-const iconButton = "flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
+const quiet = "flex h-7 flex-none items-center gap-1.5 rounded-md px-2.5 text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
+const iconButton = "flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
 
 // A connector's setup in its own terminal: the owner answers whatever a sign-in asks right there.
 // Portaled to the body: the toolbar is a size container, which would hold a fixed box inside it.
@@ -54,7 +54,7 @@ function Run({ project, connector, onClose }: { project: Project; connector: Con
         </div>
         {ended && (
           <div className="flex h-12 flex-none items-center gap-3 border-t border-border px-4">
-            <span className={cn("text-[12.5px]", ended === "stopped" && "text-[#ff8a8f]")}>{ended === "connected" ? `${connector.name} is connected. The agents can use it now.` : "It stopped before finishing."}</span>
+            <span className={cn("text-[12.5px]", ended === "stopped" && "text-failure")}>{ended === "connected" ? `${connector.name} is connected. The agents can use it now.` : "It stopped before finishing."}</span>
             <span className="ml-auto" />
             {ended === "stopped" && <button type="button" className={quiet} onClick={() => { setEnded(null); setAttempt((n) => n + 1); }}>Try again</button>}
             <button type="button" className={primary} onClick={onClose}>Done</button>

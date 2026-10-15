@@ -7,7 +7,7 @@ import { useGitHub, useGitHubOf } from "@/store/github";
 // from the changes, then saves. Left empty, the save goes out with dhrive's plain line, as before.
 // Esc or a click outside closes it; ⌘↵ saves from the message.
 
-const quiet = "h-7 rounded-md px-3 text-[12px] text-foreground/80 transition-colors hover:bg-white/[0.07] hover:text-foreground disabled:opacity-40";
+const quiet = "h-7 rounded-md px-3 text-[12px] text-foreground/80 transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40";
 const primary = "h-7 rounded-md bg-foreground px-3.5 text-[12px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40";
 
 export function CommitBox({ projectId, changes, onClose }: { projectId: string; changes: number; onClose: () => void }) {

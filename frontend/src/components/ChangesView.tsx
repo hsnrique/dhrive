@@ -47,7 +47,7 @@ function Diff({ conversationId, changes, path }: { conversationId: string; chang
       current = false;
     };
   }, [conversationId, changes, path]);
-  if (state.error) return <p className="px-2 py-1.5 text-[12px] text-diff-remove">{state.error}</p>;
+  if (state.error) return <p className="px-2 py-1.5 text-[12px] text-failure">{state.error}</p>;
   if (state.diff === null) return <p className="px-2 py-1.5 text-[12px] text-muted-foreground">Loading…</p>;
   const { lines, cut } = diffLines(state.diff);
   return (
@@ -66,7 +66,7 @@ function FileRow({ conversationId, changes, file }: { conversationId: string; ch
   const [open, setOpen] = useState(false);
   return (
     <li className="group relative overflow-hidden">
-      <button type="button" aria-expanded={open} className="flex w-full items-center gap-2 px-2 py-1 text-left text-[12px] transition-colors hover:bg-white/[0.04]" onClick={() => setOpen((v) => !v)}>
+      <button type="button" aria-expanded={open} className="flex w-full items-center gap-2 px-2 py-1 text-left text-[12px] transition-colors hover:bg-hover" onClick={() => setOpen((v) => !v)}>
         <ChevronRight className={cn("h-3 w-3 flex-none text-muted-foreground transition-transform", open && "rotate-90")} />
         <span className="w-3 flex-none font-mono text-[10.5px] text-muted-foreground" title={file.status}>{STATUS_MARK[file.status]}</span>
         <span className={cn("min-w-0 flex-1 truncate font-mono text-[11.5px]", file.status === "deleted" && "text-muted-foreground line-through")} title={file.path}>
@@ -109,10 +109,10 @@ function UndoButton({ conversationId, message }: { conversationId: string; messa
     return (
       <span className="flex items-center gap-1 text-[12px]">
         <span className="text-muted-foreground">{undoing ? "Putting it back…" : `Undo ${count === 1 ? "this file" : `${count} files`}?`}</span>
-        <button type="button" disabled={undoing} className="rounded px-1.5 py-0.5 text-diff-remove hover:bg-white/[0.08] disabled:opacity-40" onClick={() => void undo()}>
+        <button type="button" disabled={undoing} className="rounded px-1.5 py-0.5 text-failure hover:bg-hover disabled:opacity-40" onClick={() => void undo()}>
           Undo
         </button>
-        <button type="button" className="rounded px-1.5 py-0.5 hover:bg-white/[0.08]" onClick={() => setConfirming(false)}>
+        <button type="button" className="rounded px-1.5 py-0.5 hover:bg-hover" onClick={() => setConfirming(false)}>
           Keep
         </button>
       </span>
@@ -123,7 +123,7 @@ function UndoButton({ conversationId, message }: { conversationId: string; messa
       type="button"
       disabled={busy}
       title={busy ? "Wait for the current run to finish" : "Put back what this step changed"}
-      className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground disabled:opacity-40"
+      className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40"
       onClick={() => setConfirming(true)}
     >
       <Undo2 className="h-3.5 w-3.5" />

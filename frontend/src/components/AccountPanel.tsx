@@ -14,19 +14,19 @@ import { standDown } from "@/store/stand-down";
 // every company's work on this Mac until signing back in).
 
 const pill = "flex h-8 items-center gap-1.5 rounded-md px-4 text-[12.5px] transition-colors disabled:opacity-40";
-const quiet = cn(pill, "border border-border hover:bg-white/[0.08]");
+const quiet = cn(pill, "border border-border hover:bg-hover");
 const loud = cn(pill, "bg-primary font-medium text-primary-foreground hover:opacity-90");
 
 const open = (url: string) => void openUrl(url).catch(() => undefined);
 
 export function Avatar({ email, className }: { email: string | null; className?: string }) {
-  return <span className={cn("flex flex-none items-center justify-center rounded-full bg-white/[0.12] font-medium text-foreground", className)}>{initialOf(email)}</span>;
+  return <span className={cn("flex flex-none items-center justify-center rounded-full bg-selected font-medium text-foreground", className)}>{initialOf(email)}</span>;
 }
 
 function TrialBar({ daysLeft }: { daysLeft: number }) {
   const used = Math.min(100, Math.max(0, ((TRIAL_DAYS - daysLeft) / TRIAL_DAYS) * 100));
   return (
-    <div className="h-1 overflow-hidden rounded-full bg-white/[0.08]" role="progressbar" aria-valuemin={0} aria-valuemax={TRIAL_DAYS} aria-valuenow={TRIAL_DAYS - daysLeft} aria-label="Free days used">
+    <div className="h-1 overflow-hidden rounded-full bg-selected" role="progressbar" aria-valuemin={0} aria-valuemax={TRIAL_DAYS} aria-valuenow={TRIAL_DAYS - daysLeft} aria-label="Free days used">
       <div className={cn("h-full rounded-full", daysLeft <= 3 ? "bg-attention" : "bg-foreground/70")} style={{ width: `${used}%` }} />
     </div>
   );
@@ -78,8 +78,8 @@ function SignOut() {
   }
   return (
     <div className="flex items-center gap-2">
-      <span className={cn("text-[12px]", error ? "text-[#ff8a8f]" : "text-muted-foreground")} role={error ? "alert" : undefined}>{error ?? "Companies stop working here."}</span>
-      <button type="button" disabled={leaving} className={cn(pill, "bg-white/[0.12] font-medium hover:bg-white/[0.18] disabled:opacity-40")} onClick={leave}>{leaving ? "Signing out…" : "Sign out"}</button>
+      <span className={cn("text-[12px]", error ? "text-failure" : "text-muted-foreground")} role={error ? "alert" : undefined}>{error ?? "Companies stop working here."}</span>
+      <button type="button" disabled={leaving} className={cn(pill, "bg-selected font-medium hover:bg-pressed disabled:opacity-40")} onClick={leave}>{leaving ? "Signing out…" : "Sign out"}</button>
       <button type="button" className="text-[12px] text-muted-foreground hover:text-foreground" onClick={() => setAsking(false)}>Cancel</button>
     </div>
   );
@@ -102,7 +102,7 @@ export function AccountPanel({ status, onClose }: { status: AccountStatus; onClo
             <p className="truncate text-[14px] font-medium">{email ?? "Your account"}</p>
             <p className="text-[12px] text-muted-foreground">Signed in on this Mac</p>
           </div>
-          <button type="button" aria-label="Close" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground" onClick={onClose}>
+          <button type="button" aria-label="Close" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onClose}>
             <X className="h-4 w-4" />
           </button>
         </div>

@@ -13,7 +13,7 @@ import { CommitBox } from "./CommitBox";
 // repo exists the company lives only on this Mac, which the attention dot says; after, every
 // finished task is backed up on its own (store/github.ts).
 
-const pill = "flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] @[60rem]:px-3 transition-colors hover:bg-white/[0.07] disabled:opacity-50";
+const pill = "flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] @[60rem]:px-3 transition-colors hover:bg-hover disabled:opacity-50";
 const open = (url: string) => void openUrl(url).catch(() => undefined);
 // The toolbar is a container (CompanyView): below this the label gives way to the mark.
 const label = "hidden @[60rem]:inline";
@@ -57,7 +57,7 @@ export function GitHubButton({ projectId }: { projectId: string }) {
   useEffect(() => void load(projectId), [projectId, done, load]);
   if (!state) return null;
   const errorLine = error && (
-    <span className="flex min-w-0 items-center text-[11.5px] text-[#ff8a8f]" title={error} role="alert">
+    <span className="flex min-w-0 items-center text-[11.5px] text-failure" title={error} role="alert">
       <CircleAlert className="h-3.5 w-3.5 flex-none @[52rem]:hidden" aria-label={error} />
       <span className="hidden max-w-[200px] truncate @[52rem]:inline">{error}</span>
     </span>

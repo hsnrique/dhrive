@@ -73,7 +73,7 @@ function Editor({ initial, save }: { initial: string; save: (text: string) => Pr
           change(e.target.value);
         }}
       />
-      <p className={cn("text-[11px] text-muted-foreground", status === "failed" && "text-diff-remove")}>
+      <p className={cn("text-[11px] text-muted-foreground", status === "failed" && "text-failure")}>
         {status === "saving" ? "Saving…" : status === "failed" ? "Couldn't save. Keep typing to try again." : "Saved"} · {text.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
       </p>
     </>
@@ -96,7 +96,7 @@ function ProjectFiles({ folder, onOpen }: { folder: string; onOpen: () => void }
     <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
       Also follows this project's
       {found.map((path) => (
-        <button key={path} type="button" className="flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 font-mono text-[11px] text-foreground/85 transition-colors hover:bg-white/[0.07]" onClick={() => { usePanel.getState().open(folder, path); onOpen(); }}>
+        <button key={path} type="button" className="flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 font-mono text-[11px] text-foreground/85 transition-colors hover:bg-hover" onClick={() => { usePanel.getState().open(folder, path); onOpen(); }}>
           <FileText className="h-3 w-3" />
           {path}
         </button>
@@ -121,14 +121,14 @@ function Dialog({ open, folder, onClose }: { open: Open; folder: string; onClose
         <div className="flex items-center gap-2">
           <ScrollText className="h-4 w-4 text-muted-foreground" />
           <h2 className="text-[14px] font-semibold tracking-tight">Instructions</h2>
-          <button type="button" aria-label="Close" className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground" onClick={onClose}>
+          <button type="button" aria-label="Close" className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onClose}>
             <X className="h-4 w-4" />
           </button>
         </div>
         <div className="flex items-center gap-3">
           <div role="tablist" className="flex rounded-lg border border-border p-0.5">
             {SCOPES.map((s) => (
-              <button key={s.id} type="button" role="tab" aria-selected={scope === s.id} className={cn("rounded-md px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:text-foreground", scope === s.id && "bg-white/[0.09] text-foreground")} onClick={() => setScope(s.id)}>
+              <button key={s.id} type="button" role="tab" aria-selected={scope === s.id} className={cn("rounded-md px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:text-foreground", scope === s.id && "bg-selected text-foreground")} onClick={() => setScope(s.id)}>
                 {s.label}
               </button>
             ))}
@@ -154,7 +154,7 @@ export function InstructionsButton({ open, folder }: { open: Open; folder: strin
   useEffect(() => void useInstructions.getState().load(), []);
   return (
     <>
-      <button type="button" title="Instructions every agent follows" aria-label="Instructions" className={cn("flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground", (everyProject || here) && "text-foreground")} onClick={() => setShown(true)}>
+      <button type="button" title="Instructions every agent follows" aria-label="Instructions" className={cn("flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground", (everyProject || here) && "text-foreground")} onClick={() => setShown(true)}>
         <ScrollText className="h-4 w-4" />
       </button>
       {/* On the body: the glass header's backdrop filter would otherwise hold a fixed overlay inside it. */}

@@ -75,7 +75,7 @@ function Address({ folder, url }: { folder: string; url: string | null }) {
       spellCheck={false}
       placeholder="localhost:3000"
       title={refused ? "Only a page this Mac serves, like localhost:3000" : undefined}
-      className={cn("min-w-0 flex-1 rounded-md border border-transparent bg-white/[0.04] px-2 py-0.5 font-mono text-[11px] text-foreground/85 outline-none focus:border-ring", refused && "border-diff-remove/60")}
+      className={cn("min-w-0 flex-1 rounded-md border border-transparent bg-white/[0.04] px-2 py-0.5 font-mono text-[11px] text-foreground/85 outline-none focus:border-ring", refused && "border-failure/60")}
       onChange={(e) => setText(e.target.value)}
       onKeyDown={(e) => e.key === "Enter" && go()}
       onBlur={() => setRefused(false)}
@@ -86,13 +86,13 @@ function Address({ folder, url }: { folder: string; url: string | null }) {
 function Ports({ folder, ports, url }: { folder: string; ports: number[]; url: string | null }) {
   if (ports.length < 2) return null;
   return ports.map((port) => (
-    <button key={port} type="button" title={`Show ${portUrl(port)}`} className={cn("rounded-md px-1.5 py-0.5 font-mono text-[10.5px] text-muted-foreground hover:bg-white/[0.08] hover:text-foreground", url?.startsWith(portUrl(port)) && "bg-white/[0.08] text-foreground")} onClick={() => usePreview.getState().show(folder, portUrl(port))}>
+    <button key={port} type="button" title={`Show ${portUrl(port)}`} className={cn("rounded-md px-1.5 py-0.5 font-mono text-[10.5px] text-muted-foreground hover:bg-hover hover:text-foreground", url?.startsWith(portUrl(port)) && "bg-selected text-foreground")} onClick={() => usePreview.getState().show(folder, portUrl(port))}>
       :{port}
     </button>
   ));
 }
 
-const tool = "flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground disabled:opacity-40";
+const tool = "flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40";
 
 export function BrowserView({ folder }: { folder: string }) {
   const { url, ports, version } = usePreview((s) => previewOf(s, folder));

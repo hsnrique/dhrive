@@ -30,8 +30,19 @@
   --muted-foreground: rgba(242, 242, 242, 0.55);
   --accent: #1f1f1f;
   --accent-foreground: #f2f2f2;
-  --destructive: #e5484d;
-  --destructive-foreground: #ffffff;
+  /* The one red: what failed, errors, and what can't be taken back. Read on black, so it's soft. */
+  --failure: #ff8a8f;
+  --destructive: var(--failure);
+  --destructive-foreground: #0c0c0c;
+  /* What's up and reachable: a site that's live, a server that's connected, a step that landed. */
+  --live: #3ddc84;
+  /* The three white levels a control moves through: pointed at, chosen (or a soft fill at rest),
+     and pointed at while filled. */
+  --hover: rgba(255, 255, 255, 0.07);
+  --selected: rgba(255, 255, 255, 0.1);
+  --pressed: rgba(255, 255, 255, 0.14);
+  /* A terminal's own black, a shade under the page so its pane reads as a screen. */
+  --terminal: #050506;
   /* Lines a code step added and removed, soft enough to read a long diff on black. */
   --diff-add: #7ee2a8;
   --diff-remove: #ff8a8f;
@@ -53,6 +64,12 @@
   --color-diff-add: var(--diff-add);
   --color-diff-remove: var(--diff-remove);
   --color-attention: var(--attention);
+  --color-failure: var(--failure);
+  --color-live: var(--live);
+  --color-hover: var(--hover);
+  --color-selected: var(--selected);
+  --color-pressed: var(--pressed);
+  --color-terminal: var(--terminal);
   --color-code-keyword: var(--code-keyword);
   --color-code-string: var(--code-string);
   --color-code-number: var(--code-number);

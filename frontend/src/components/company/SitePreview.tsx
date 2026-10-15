@@ -21,7 +21,7 @@ import { Page } from "../BrowserView";
 const PAGE = { width: 1280, height: 800 };
 const open = (url: string) => void openUrl(url).catch(() => undefined);
 const localAt = (port: number) => `http://localhost:${port}`;
-const iconButton = "flex h-7 w-7 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
+const iconButton = "flex h-7 w-7 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
 
 export function SitePreview({ project }: { project: Project }) {
   const { url, at } = usePublishedOf(project.id);
@@ -78,7 +78,7 @@ function NotAnswering({ project }: { project: Project }) {
         <Play className="ml-0.5 h-5 w-5 fill-current" />
       </button>
       {crashed && <pre className="mt-2 max-h-40 w-full max-w-[52ch] overflow-auto whitespace-pre-wrap rounded-lg bg-black/45 p-3 text-left font-mono text-[11px] leading-relaxed text-muted-foreground">{site.log.join("\n")}</pre>}
-      {site.error && <p className="text-[12px] text-[#ff8a8f]">{site.error}</p>}
+      {site.error && <p className="text-[12px] text-failure">{site.error}</p>}
     </Waiting>
   );
 }

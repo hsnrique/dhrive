@@ -55,7 +55,7 @@ function FolderList({ tab, entries }: { tab: Tab; entries: string[] }) {
   const { open, navigate } = usePanel.getState();
   const base = tab.path;
   const up = base.replace(/[^/]+\/$/, "");
-  const row = "flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-[12.5px] transition-colors hover:bg-white/[0.06]";
+  const row = "flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-[12.5px] transition-colors hover:bg-hover";
   return (
     <div className="grid gap-px p-2">
       {base && (
@@ -97,7 +97,7 @@ export function FileBody({ tab, source, version }: { tab: Tab; source: boolean; 
   }, [tab.folder, tab.path, version]);
 
   const { view, error } = state;
-  if (error) return <p className="p-4 text-[12.5px] text-diff-remove">{error}</p>;
+  if (error) return <p className="p-4 text-[12.5px] text-failure">{error}</p>;
   if (!view) return <p className="p-4 text-[12.5px] text-muted-foreground">Loading…</p>;
   if (view.kind === "folder") return <FolderList tab={tab} entries={view.entries} />;
   if (view.kind === "image") return <img src={view.dataUrl} alt={tab.path} className="m-4 max-w-[calc(100%-2rem)] rounded-lg border border-border" />;

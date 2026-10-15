@@ -44,7 +44,7 @@ function DraftBar({ project, brief, runId }: { project: Project; brief: Brief; r
       {runId ? (
         <>
           <Progress runId={runId} />
-          <button type="button" className="flex h-8 flex-none items-center gap-1.5 rounded-md bg-white/[0.08] px-3 text-[12.5px] transition-colors hover:bg-white/[0.12]" onClick={() => stop(project.id)}>
+          <button type="button" className="flex h-8 flex-none items-center gap-1.5 rounded-md bg-selected px-3 text-[12.5px] transition-colors hover:bg-pressed" onClick={() => stop(project.id)}>
             <Square className="h-3 w-3 fill-current" />
             Stop
           </button>
@@ -103,7 +103,7 @@ export function BriefCard({ project, brief }: { project: Project; brief: Brief }
     <section className="@container grid gap-3">
       <SectionHead title="Brief">
         {!isBlank(brief) && !runId && (
-          <button type="button" className={cn("flex h-7 items-center gap-1.5 rounded-md px-3 text-[12.5px] transition-colors", editing ? "bg-foreground text-background hover:opacity-90" : "border border-border text-muted-foreground hover:bg-white/[0.06] hover:text-foreground")} onClick={() => setEditing((v) => !v)}>
+          <button type="button" className={cn("flex h-7 items-center gap-1.5 rounded-md px-3 text-[12.5px] transition-colors", editing ? "bg-foreground text-background hover:opacity-90" : "border border-border text-muted-foreground hover:bg-hover hover:text-foreground")} onClick={() => setEditing((v) => !v)}>
             {editing ? "Done" : <><Pencil className="h-3 w-3" />Edit</>}
           </button>
         )}
@@ -111,7 +111,7 @@ export function BriefCard({ project, brief }: { project: Project; brief: Brief }
       {(runId || error || blanks(brief).length > 0) && writing && (
         <div className="grid gap-2">
           <DraftBar project={project} brief={brief} runId={runId} />
-          {error && <p className="px-1 text-[12.5px] text-[#ff8a8f]">{error}</p>}
+          {error && <p className="px-1 text-[12.5px] text-failure">{error}</p>}
         </div>
       )}
       {writing ? (

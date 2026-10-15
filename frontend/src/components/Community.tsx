@@ -67,9 +67,9 @@ export function FeedbackDialog({ onClose }: { onClose: () => void }) {
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && e.metaKey && void submit()}
             />
-            {error && <p className="text-[12px] text-[#ff8a8f]" role="alert">{error}</p>}
+            {error && <p className="text-[12px] text-failure" role="alert">{error}</p>}
             <div className="flex items-center justify-end gap-2">
-              <button type="button" disabled={state === "sending"} className="h-8 rounded-md px-4 text-[12.5px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground disabled:opacity-40" onClick={onClose}>Cancel</button>
+              <button type="button" disabled={state === "sending"} className="h-8 rounded-md px-4 text-[12.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40" onClick={onClose}>Cancel</button>
               <button type="submit" disabled={!ready} className="h-8 rounded-md bg-foreground px-4 text-[12.5px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40">{state === "sending" ? "Sending…" : "Send"}</button>
             </div>
           </>
@@ -80,7 +80,7 @@ export function FeedbackDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-const link = "flex h-8 flex-1 items-center justify-center gap-2 rounded-md text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground";
+const link = "flex h-8 flex-1 items-center justify-center gap-2 rounded-md text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
 
 export function CommunityRow() {
   const [writing, setWriting] = useState(false);

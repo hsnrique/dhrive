@@ -13,8 +13,8 @@ import { SiteLink, ToolMark } from "./ToolMark";
 // suggest one that isn't there. GitHub heads the code and
 // data, connected through gh the way the GitHub button does.
 
-const connect = "h-7 flex-none rounded-md border border-border px-3 text-[12px] transition-colors hover:bg-white/[0.08]";
-const again = "flex h-7 flex-none items-center gap-1.5 rounded-md px-2 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground";
+const connect = "h-7 flex-none rounded-md border border-border px-3 text-[12px] transition-colors hover:bg-hover";
+const again = "flex h-7 flex-none items-center gap-1.5 rounded-md px-2 text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
 
 const GITHUB = { id: "github", name: "GitHub", what: "Code, commits and backups", group: "Code and data", site: "https://github.com" };
 
@@ -27,7 +27,7 @@ interface Tool {
 
 function Row({ tool, connected, action, onConnect }: { tool: Tool; connected: boolean; action?: string; onConnect: () => void }) {
   return (
-    <li className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/[0.03]">
+    <li className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-hover">
       <ToolMark id={tool.id} />
       <div className="grid min-w-0 flex-1 gap-px">
         <span className="flex min-w-0 items-center gap-1">
@@ -38,7 +38,7 @@ function Row({ tool, connected, action, onConnect }: { tool: Tool; connected: bo
       </div>
       {connected ? (
         <button type="button" className={again} title="Run its setup again" onClick={onConnect}>
-          <span className="h-1.5 w-1.5 rounded-full bg-[#3FCF8E]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-live" />
           Connected
         </button>
       ) : (

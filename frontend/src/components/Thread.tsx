@@ -21,7 +21,7 @@ function QueuedCard({ conversationId, message }: { conversationId: string; messa
     <article className="flex items-center gap-2 rounded-2xl border border-dashed border-border px-4 py-3 text-[13px] text-muted-foreground">
       <Clock className="h-3.5 w-3.5 flex-none" />
       <span className="flex-1">Queued. Starts when the one above ends.</span>
-      <button type="button" title="Take it back" aria-label="Take back this request" className="flex h-6 w-6 items-center justify-center rounded-md transition-colors hover:bg-white/[0.08] hover:text-foreground" onClick={() => cancelQueued(conversationId, message.id)}>
+      <button type="button" title="Take it back" aria-label="Take back this request" className="flex h-6 w-6 items-center justify-center rounded-md transition-colors hover:bg-hover hover:text-foreground" onClick={() => cancelQueued(conversationId, message.id)}>
         <X className="h-3.5 w-3.5" />
       </button>
     </article>
@@ -105,7 +105,7 @@ export function Thread({ conversationId, from }: { conversationId: string | null
       {messages.map((message) =>
         message.role === "user" ? (
           <div key={message.id} className="ml-auto grid max-w-[78%] justify-items-end gap-1.5">
-            <p className="whitespace-pre-wrap rounded-2xl rounded-br-md bg-white/[0.08] px-3.5 py-2 text-[13.5px] leading-relaxed">
+            <p className="whitespace-pre-wrap rounded-2xl rounded-br-md bg-selected px-3.5 py-2 text-[13.5px] leading-relaxed">
               <MessageText text={message.text} folder={folder} index={index} />
             </p>
             <AttachmentChips items={message.attachments ?? []} className="justify-end" />

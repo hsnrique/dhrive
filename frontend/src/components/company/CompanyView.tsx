@@ -85,7 +85,7 @@ function Toolbar({ project, brief, saving, chat }: { project: Project; brief: Br
       <span className="min-w-0 truncate text-[14px] font-semibold tracking-tight">{project.name}</span>
       <span className="hidden flex-none text-[13px] text-muted-foreground @[46rem]:inline">Company</span>
       <span className="ml-auto" />
-      {brief && (saving !== "saved" || !isBlank(brief)) && <span className={cn("hidden flex-none text-[11.5px] text-muted-foreground @[64rem]:inline", saving === "failed" && "inline text-[#ff8a8f]")}>{SAVING[saving]}</span>}
+      {brief && (saving !== "saved" || !isBlank(brief)) && <span className={cn("hidden flex-none text-[11.5px] text-muted-foreground @[64rem]:inline", saving === "failed" && "inline text-failure")}>{SAVING[saving]}</span>}
       <ConnectorsButton project={project} />
       <GitHubButton projectId={project.id} />
       <RunControl project={project} />
@@ -119,7 +119,7 @@ export function CompanyView({ project }: { project: Project }) {
     return () => window.removeEventListener("keydown", close);
   }, [sliding]);
   const chat = !docked && (
-    <button type="button" aria-label="Chat" aria-expanded={sliding} title="Chat" className={cn("flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] transition-colors hover:bg-white/[0.07]", sliding && "bg-white/[0.1]")} onClick={() => setSliding((v) => !v)}>
+    <button type="button" aria-label="Chat" aria-expanded={sliding} title="Chat" className={cn("flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] transition-colors hover:bg-hover", sliding && "bg-selected")} onClick={() => setSliding((v) => !v)}>
       <MessageCircle className="h-3.5 w-3.5" />
       <span className="hidden @[40rem]:inline">Chat</span>
     </button>
@@ -129,9 +129,9 @@ export function CompanyView({ project }: { project: Project }) {
       <Toolbar project={project} brief={brief} saving={saving} chat={chat} />
       <div className="flex min-h-0 flex-1">
         {unreadable && (
-          <div role="alert" className="mx-6 mt-6 flex items-start gap-3 rounded-md border border-[#ff8a8f]/40 px-3 py-2.5">
-            <p className="min-w-0 flex-1 text-[12.5px] text-[#ff8a8f]">{unreadable}</p>
-            <button type="button" className="h-7 flex-none rounded-md bg-white/[0.08] px-3 text-[12px] font-medium transition-colors hover:bg-white/[0.14]" onClick={() => void useCompany.getState().load(project.id)}>Try again</button>
+          <div role="alert" className="mx-6 mt-6 flex items-start gap-3 rounded-md border border-failure/40 px-3 py-2.5">
+            <p className="min-w-0 flex-1 text-[12.5px] text-failure">{unreadable}</p>
+            <button type="button" className="h-7 flex-none rounded-md bg-selected px-3 text-[12px] font-medium transition-colors hover:bg-pressed" onClick={() => void useCompany.getState().load(project.id)}>Try again</button>
           </div>
         )}
         {brief === null ? !unreadable && <p className="flex-1 px-6 pt-8 text-[12.5px] text-muted-foreground">Reading COMPANY.md…</p> : <Sections project={project} brief={brief} />}

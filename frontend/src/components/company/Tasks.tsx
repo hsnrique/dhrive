@@ -23,7 +23,7 @@ import { TaskRow } from "./TaskRow";
 // has done, newest first, the older ones folded away.
 
 const primary = "h-8 flex-none rounded-md bg-foreground px-4 text-[13px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40";
-const quiet = "flex h-8 flex-none items-center gap-1.5 rounded-md bg-white/[0.08] px-3 text-[12.5px] transition-colors hover:bg-white/[0.12] disabled:opacity-40";
+const quiet = "flex h-8 flex-none items-center gap-1.5 rounded-md bg-selected px-3 text-[12.5px] transition-colors hover:bg-pressed disabled:opacity-40";
 
 // What the tasks on this page spent, in one quiet figure; what it's made of is in its tooltip.
 function Spent({ tasks }: { tasks: Task[] }) {
@@ -49,7 +49,7 @@ function Planning() {
     <ul className="grid gap-2" aria-hidden>
       {[0, 1, 2].map((at) => (
         <li key={at} className="ghost-sweep grid gap-2.5 rounded-2xl border border-border bg-card px-4 py-3.5" style={{ animationDelay: `${at * 0.2}s` }}>
-          <span className="h-2.5 w-2/5 rounded-full bg-white/[0.08]" />
+          <span className="h-2.5 w-2/5 rounded-full bg-selected" />
           <span className="ml-[30px] h-2 w-4/5 rounded-full bg-white/[0.05]" />
         </li>
       ))}
@@ -159,7 +159,7 @@ export function Tasks({ project, brief }: { project: Project; brief: Brief }) {
       ) : (
         <>
           <Bar project={project} day={day} engines={engines} blank={isBlank(brief)} />
-          {day.error && <p className="px-1 text-[12.5px] text-[#ff8a8f]">{day.error}</p>}
+          {day.error && <p className="px-1 text-[12.5px] text-failure">{day.error}</p>}
           <Group id={`next:${project.id}`} title="Up next" items={open.map(row)} cap={SHOWN.next}>
             <TaskComposer projectId={project.id} disabled={!companyAgent(project.id)} />
           </Group>

@@ -94,12 +94,12 @@ export function CliPage({ engine }: { engine: Engine }) {
             <Search className="h-3.5 w-3.5 flex-none text-muted-foreground" />
             <input aria-label="Filter" placeholder="Filter servers, skills, plugins…" spellCheck={false} value={query} className="min-w-0 flex-1 bg-transparent text-[12.5px] outline-none placeholder:text-muted-foreground" onChange={(e) => setQuery(e.target.value)} />
           </label>
-          <button type="button" title="Ask again" className="flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground" onClick={refresh}>
+          <button type="button" title="Ask again" className="flex h-8 items-center gap-1.5 rounded-lg border border-border px-2.5 text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={refresh}>
             <RotateCw className={cn("h-3.5 w-3.5", seen?.loading && "motion-safe:animate-spin")} />
             {seen?.loading ? "Asking" : "Ask again"}
           </button>
         </div>
-        {seen?.error && <p className="mt-3 text-[12px] text-diff-remove">Couldn't ask {label}: {seen.error}</p>}
+        {seen?.error && <p className="mt-3 text-[12px] text-failure">Couldn't ask {label}: {seen.error}</p>}
         {seen?.value ? <Everything engine={engine} value={seen.value} query={query} /> : !seen?.error && <p className="mt-8 text-[12.5px] text-muted-foreground">Asking {label} what it has connected. MCP servers take a few seconds to answer.</p>}
       </div>
     </div>

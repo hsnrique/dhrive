@@ -11,7 +11,7 @@ import { EngineMark } from "./EngineMark";
 // How full each CLI session the conversation continues is: a ring in the header, and on a click what
 // fills it and a way to compact it before it gets compacted mid-task.
 
-const STROKE = { ok: "stroke-foreground/70", high: "stroke-attention", full: "stroke-diff-remove" };
+const STROKE = { ok: "stroke-foreground/70", high: "stroke-attention", full: "stroke-failure" };
 
 function Ring({ percent, level }: { percent: number; level: keyof typeof STROKE }) {
   const around = 2 * Math.PI * 5;
@@ -34,8 +34,8 @@ function Details({ session, folder, label, busy }: { session: ThreadSession; fol
         <p className="text-[12.5px] font-medium">{label} session</p>
         <p className="text-[11.5px] text-muted-foreground">{tokens(used)} of {tokens(max)} tokens · {percent}%</p>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
-        <div className={cn("h-full rounded-full", { ok: "bg-foreground/70", high: "bg-attention", full: "bg-diff-remove" }[fullness(percent)])} style={{ width: `${percent}%` }} />
+      <div className="h-1.5 overflow-hidden rounded-full bg-selected">
+        <div className={cn("h-full rounded-full", { ok: "bg-foreground/70", high: "bg-attention", full: "bg-failure" }[fullness(percent)])} style={{ width: `${percent}%` }} />
       </div>
       {parts.length > 0 && (
         <ul className="grid gap-0.5 text-[11.5px]">
@@ -53,7 +53,7 @@ function Details({ session, folder, label, busy }: { session: ThreadSession; fol
           type="button"
           disabled={busy || seen.compacting}
           title={busy ? "Wait for the run to end" : "Summarize the conversation so far to free room"}
-          className="rounded-md border border-border px-3 py-1 text-[12px] transition-colors hover:bg-white/[0.08] disabled:opacity-40"
+          className="rounded-md border border-border px-3 py-1 text-[12px] transition-colors hover:bg-hover disabled:opacity-40"
           onClick={() => void useContextUsage.getState().compact({ ...session, folder })}
         >
           {seen.compacting ? "Compacting…" : "Compact now"}
@@ -79,7 +79,7 @@ function Meter({ conversationId, session, folder }: { conversationId: string; se
   const percent = percentOf(seen.value.used, seen.value.max);
   return (
     <div className="relative">
-      <button type="button" title={`${label} session: ${percent}% of its context used`} className="flex h-7 items-center gap-1.5 rounded-md px-1.5 text-[11.5px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground" onClick={() => setOpen((v) => !v)}>
+      <button type="button" title={`${label} session: ${percent}% of its context used`} className="flex h-7 items-center gap-1.5 rounded-md px-1.5 text-[11.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={() => setOpen((v) => !v)}>
         <EngineMark engine={session.engine} className="h-3 w-3" />
         <Ring percent={percent} level={fullness(percent)} />
         <span className={cn("font-mono tabular-nums", seen.compacting && "motion-safe:animate-pulse")}>{percent}%</span>

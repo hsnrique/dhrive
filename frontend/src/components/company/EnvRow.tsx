@@ -7,8 +7,8 @@ import { useEnv } from "@/store/env";
 // One variable on one line: its name, the last four characters of its value, and what can be done
 // with it. The value itself comes up from the Keychain only while the owner asked to see it.
 
-export const pill = "h-6 flex-none rounded-md bg-white/[0.08] px-2.5 text-[11.5px] font-medium transition-colors hover:bg-white/[0.14] disabled:opacity-40";
-const icon = "flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
+export const pill = "h-6 flex-none rounded-md bg-selected px-2.5 text-[11.5px] font-medium transition-colors hover:bg-pressed disabled:opacity-40";
+const icon = "flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
 export const field = "h-8 min-w-0 rounded-lg border border-border bg-black/30 px-2.5 font-mono text-[12px] outline-none placeholder:font-sans placeholder:text-muted-foreground/70 focus-visible:border-white/30";
 
 // Typed into a password field: what's on screen is dots until it's kept.
