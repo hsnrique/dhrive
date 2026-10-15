@@ -52,7 +52,9 @@ export function ProjectView({ project, open }: { project: Project; open: Open })
   const seen = useRef(0);
   const content = useRef<HTMLDivElement>(null);
   const { conversationId } = open;
-  const messages = useApp((s) => (conversationId ? s.threads[conversationId]?.messages : undefined));
+  // Only how many: what's inside them growing is the size observer's to follow, and re-rendering the
+  // composer and the file panel for every stage update would be waste.
+  const count = useApp((s) => (conversationId ? s.threads[conversationId]?.messages.length : undefined) ?? 0);
   // With the side panel open the header has less room, so the folder's path gives way first.
   const panelOpen = usePanel((s) => s.tabs.some((t) => t.folder === project.folder));
 
@@ -61,12 +63,11 @@ export function ProjectView({ project, open }: { project: Project; open: Open })
 
   useLayoutEffect(() => {
     const el = scroller.current;
-    const count = messages?.length ?? 0;
     // A new request always brings the view down to it, even after scrolling up to read.
     if (count > seen.current) pinned.current = true;
     seen.current = count;
     if (el && pinned.current) el.scrollTop = el.scrollHeight;
-  }, [messages]);
+  }, [count]);
 
   // Following the output by its size, not by watching every run's log: a line streaming in grows the
   // content, and only then does the view move, without the whole conversation re-rendering for it.

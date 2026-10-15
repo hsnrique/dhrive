@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Clock, X } from "lucide-react";
 
 import type { PastSession } from "@/lib/api";
@@ -27,8 +28,8 @@ function QueuedCard({ conversationId, message }: { conversationId: string; messa
   );
 }
 
-function RunCard({ conversationId, message }: { conversationId: string; message: RunMessage }) {
-  const queued = useApp((s) => queuedIds(s.threads[conversationId]).has(message.id));
+// Memoized: a stage update replaces only its own message, so the other cards keep theirs and skip.
+const RunCard = memo(function RunCard({ conversationId, message, queued }: { conversationId: string; message: RunMessage; queued: boolean }) {
   if (queued) return <QueuedCard conversationId={conversationId} message={message} />;
   const handedOff = !["waiting", "skipped", "held", "review", "declined"].includes(message.code.status);
   return (
@@ -37,7 +38,7 @@ function RunCard({ conversationId, message }: { conversationId: string; message:
       <StageView conversationId={conversationId} message={message} step="code" handedOff={null} />
     </article>
   );
-}
+});
 
 // A new conversation opens on the route it will use, so the first request is written knowing who
 // does what. One that carries on a CLI session says which, and when the route doesn't reach that
@@ -92,7 +93,10 @@ function EmptyThread({ from }: { from: PastSession | null }) {
 
 // A conversation: the owner's requests and a relay card for each.
 export function Thread({ conversationId, from }: { conversationId: string | null; from: PastSession | null }) {
-  const messages = useApp((s) => (conversationId ? s.threads[conversationId]?.messages : undefined) ?? NO_MESSAGES);
+  const thread = useApp((s) => (conversationId ? s.threads[conversationId] : undefined));
+  const messages = thread?.messages ?? NO_MESSAGES;
+  // Once per change of the thread, not once per card per store update.
+  const queued = useMemo(() => queuedIds(thread), [thread]);
   const folder = conversationId ? folderOf(conversationId) : undefined;
   const index = useFiles((s) => (folder ? s.byFolder[folder] : undefined));
   if (!conversationId || messages.length === 0) return <EmptyThread from={from} />;
@@ -107,7 +111,7 @@ export function Thread({ conversationId, from }: { conversationId: string | null
             <AttachmentChips items={message.attachments ?? []} className="justify-end" />
           </div>
         ) : (
-          <RunCard key={message.id} conversationId={conversationId} message={message} />
+          <RunCard key={message.id} conversationId={conversationId} message={message} queued={queued.has(message.id)} />
         ),
       )}
     </>

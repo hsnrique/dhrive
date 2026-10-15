@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 
 import { editLines, type LiveEdit } from "@/lib/linediff";
@@ -12,9 +12,12 @@ import { FileMention } from "./Mentions";
 const MAX_SHOWN_LINES = 80;
 
 function EditCard({ edit, folder, open, onToggle }: { edit: LiveEdit; folder: string | undefined; open: boolean; onToggle: () => void }) {
-  const lines = editLines(edit.before, edit.after);
-  const added = lines.filter((l) => l.kind === "add").length;
-  const removed = lines.filter((l) => l.kind === "remove").length;
+  // The diff is quadratic in the file's lines; every new edit re-renders the list, so each card
+  // works out its own once.
+  const { lines, added, removed } = useMemo(() => {
+    const lines = editLines(edit.before, edit.after);
+    return { lines, added: lines.filter((l) => l.kind === "add").length, removed: lines.filter((l) => l.kind === "remove").length };
+  }, [edit.before, edit.after]);
   return (
     <div className="overflow-hidden rounded-lg border border-border">
       <div className="flex items-center gap-2 bg-white/[0.03] px-2 py-1 text-[12px]">
