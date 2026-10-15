@@ -5,17 +5,19 @@ interface SwitchProps {
   label: string;
   title: string;
   onChange: (on: boolean) => void;
+  disabled?: boolean;
 }
 
 // The one on/off control in dhrive: a small track and knob with its label beside it.
-export function Switch({ on, label, title, onChange }: SwitchProps) {
+export function Switch({ on, label, title, onChange, disabled }: SwitchProps) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={on}
       title={title}
-      className="inline-flex h-7 items-center gap-2 rounded-md px-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+      disabled={disabled}
+      className="inline-flex h-7 items-center gap-2 rounded-md px-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-40 disabled:hover:text-muted-foreground"
       onClick={() => onChange(!on)}
     >
       <SwitchTrack on={on} />

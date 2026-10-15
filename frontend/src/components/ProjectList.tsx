@@ -7,7 +7,6 @@ import { foundedByDhrive } from "@/lib/founding";
 import { readSaved, save } from "@/lib/storage";
 import { activeRun, awaitingReview, runningId } from "@/lib/thread";
 import { ago, useNow } from "@/lib/time";
-import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
 import { useConversations } from "@/store/conversations";
 import { useDay } from "@/store/day";
@@ -46,9 +45,9 @@ function ConversationRow({ conversation, active }: { conversation: Conversation;
   if (editing) return <NameInput value={conversation.title} label="Conversation name" onSave={(title) => rename(conversation.id, title)} onDone={() => setEditing(false)} className="ml-[10px] w-[calc(100%-10px)] text-[12.5px]" />;
   return (
     <div className="group relative">
-      <button type="button" title={`${conversation.title}\nDouble-click to rename`} aria-current={active ? "page" : undefined} className={cn(rowClass(active), !running && "group-hover:pr-8")} onClick={() => void show(conversation.id)} onDoubleClick={() => setEditing(true)}>
+      <button type="button" title={`${conversation.title}\nDouble-click to rename`} aria-current={active ? "page" : undefined} className={rowClass(active)} onClick={() => void show(conversation.id)} onDoubleClick={() => setEditing(true)}>
         {chatMark}
-        <span className="min-w-0 flex-1 truncate">{conversation.title}</span>
+        <span className="fade-under min-w-0 flex-1 truncate">{conversation.title}</span>
         <RowPulse needsYou={needsYou} working={running && "Running"} />
       </button>
       {!running && (
@@ -75,12 +74,12 @@ function PastRow({ projectId, session, active }: { projectId: string; session: P
         type="button"
         title={`${session.title}\nFrom ${sessionSource(session)} · ${ago(session.updatedAt, now)} · ${session.messages} messages`}
         aria-current={active ? "page" : undefined}
-        className={cn(rowClass(active), "group-hover:pr-8")}
+        className={rowClass(active)}
         onClick={() => startNew(projectId, session)}
       >
         {chatMark}
         <span className="min-w-0 flex-1 truncate">{session.title}</span>
-        <EngineMark engine={session.engine} className="h-3 w-3 flex-none opacity-60 group-hover:hidden" />
+        <EngineMark engine={session.engine} className="h-3 w-3 flex-none opacity-60 transition-opacity group-hover:opacity-0 group-focus-within:opacity-0" />
       </button>
       <div className="absolute right-1 top-1/2 -translate-y-1/2">
         <HoverAction label="Remove from the list" onClick={() => setConfirming(true)}>

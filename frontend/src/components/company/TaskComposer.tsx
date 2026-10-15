@@ -17,7 +17,7 @@ export function TaskComposer({ projectId, disabled }: { projectId: string; disab
     if (useDay.getState().add(projectId, said, area)) setSaid("");
   };
   return (
-    <li className="grid gap-2 rounded-xl border border-dashed border-border px-3 py-1.5 transition-colors focus-within:border-ring">
+    <li className="group grid gap-2 rounded-xl border border-dashed border-border px-3 py-1.5 transition-colors focus-within:border-ring">
       <div className="flex items-start gap-2.5">
         <Plus className="mt-[5px] h-[18px] w-[18px] flex-none p-0.5 text-muted-foreground" />
         <textarea
@@ -35,8 +35,9 @@ export function TaskComposer({ projectId, disabled }: { projectId: string; disab
           }}
         />
       </div>
-      {said.trim() && (
-        <div className="flex flex-wrap items-center gap-1 pl-[28px]" role="radiogroup" aria-label="Area">
+      {/* Its area opens with the field, not with the first letter typed, so writing never shifts it. */}
+      {!disabled && (
+        <div className={cn("flex flex-wrap items-center gap-1 pl-[28px]", !said.trim() && "hidden group-focus-within:flex")} role="radiogroup" aria-label="Area">
           {AREAS.map((each) => {
             const { label, Icon } = AREA_LOOK[each];
             return (

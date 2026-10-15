@@ -76,7 +76,8 @@ export function GitHubButton({ projectId }: { projectId: string }) {
       </div>
     );
   }
-  if (saving) return <span className="flex h-7 items-center gap-1.5 px-1 text-[12px] text-muted-foreground" title="Saving to GitHub…"><span className="node-live h-1.5 w-1.5 rounded-full bg-foreground" /><span className={label}>Saving to GitHub…</span></span>;
+  // In the button's own shape, so the toolbar keeps its width while it saves.
+  if (saving) return <span role="status" className={cn(pill, "cursor-default text-muted-foreground hover:bg-transparent")} title="Saving to GitHub…"><span className="node-live mx-1 h-1.5 w-1.5 flex-none rounded-full bg-foreground" /><span className={label}>Saving to GitHub…</span></span>;
   if (!state.repo || state.changes > 0) {
     return (
       <div className="relative flex items-center gap-1.5">
