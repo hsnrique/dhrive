@@ -49,6 +49,8 @@ export default function App() {
       listen<string>("dhrive-github-code", (e) => useGitHub.getState().onCode(e.payload)),
     ];
     const shortcut = (e: KeyboardEvent) => {
+      // Under a modal (the sign-in gate, a confirm) the app's shortcuts stand still with the app.
+      if (document.getElementById("root")?.inert) return;
       const key = e.key.toLowerCase();
       if (e.metaKey && key === "k") {
         e.preventDefault();
