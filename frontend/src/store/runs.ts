@@ -202,17 +202,25 @@ export function setKeepContext(conversationId: string, on: boolean) {
 
 // Puts back what a finished code step changed. Nothing else may be running in the conversation, since
 // a run in flight could be editing the same files.
+// Undos in flight, by step: a second click while one runs would restore twice, the second against
+// what the first just put back.
+const undoing = new Set<string>();
+
 export async function undoRun(conversationId: string, messageId: string) {
   const { threads, setThread, reportError } = useApp.getState();
   const thread = threads[conversationId];
-  const changes = stageOf(conversationId, messageId, "code")?.changes;
+  const stage = stageOf(conversationId, messageId, "code");
   const folder = folderOf(conversationId);
-  if (!thread || !changes || !folder || activeRun(thread)) return;
+  if (!thread || !stage?.changes || stage.undone || !folder || activeRun(thread) || undoing.has(messageId)) return;
+  const changes = stage.changes;
+  undoing.add(messageId);
   try {
     const undone = await inFolder(folder, () => undoChanges(folder, changes));
     setThread(conversationId, (t) => updateStage(t, messageId, "code", { undone }));
     void useFiles.getState().load(folder);
   } catch (error) {
     reportError(error);
+  } finally {
+    undoing.delete(messageId);
   }
 }

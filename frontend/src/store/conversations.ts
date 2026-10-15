@@ -32,6 +32,8 @@ interface ConversationsState {
   hidePast: (projectId: string, sessionId: string) => void;
 }
 
+const removing = new Set<string>();
+
 // CLI sessions the owner took off the list. Their records stay with the CLI; dhrive never writes
 // to those, so hiding is all it can do.
 const HIDDEN = "hidden-sessions";
@@ -147,15 +149,19 @@ export const useConversations = create<ConversationsState>((set, get) => ({
       .catch(report);
   },
 
-  // The CLI's own session is untouched, so one this conversation carried on is listed again.
+  // The CLI's own session is untouched, so one this conversation carried on is listed again. Once at
+  // a time: a second click while the first is on its way would fail and say so.
   remove: async (id) => {
     const conversation = get().conversations.find((c) => c.id === id);
-    if (!conversation) return;
+    if (!conversation || removing.has(id)) return;
+    removing.add(id);
     try {
       await removeConversation(id);
     } catch (error) {
       report(error);
       return;
+    } finally {
+      removing.delete(id);
     }
     set((state) => ({
       conversations: state.conversations.filter((c) => c.id !== id),

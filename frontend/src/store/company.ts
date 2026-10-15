@@ -124,8 +124,14 @@ export const useCompany = create<CompanyState>((set, get) => {
         set({ choice });
         return;
       }
+      const before = get().agents[projectId];
       set((s) => ({ agents: { ...s.agents, [projectId]: choice } }));
-      void saveCompanyRecord(projectId, "agent", choice).catch(() => undefined);
+      // Kept in the company's folder; if it can't be, the pick goes back and says so, rather than the
+      // company quietly working on another CLI after the next launch.
+      void saveCompanyRecord(projectId, "agent", choice).catch((error) => {
+        set((s) => ({ agents: before ? { ...s.agents, [projectId]: before } : Object.fromEntries(Object.entries(s.agents).filter(([id]) => id !== projectId)) }));
+        useApp.getState().reportError(`Couldn't keep the company's agent: ${String(error)}`);
+      });
     },
     draft: async (projectId) => {
       const folder = useApp.getState().projects.find((p) => p.id === projectId)?.folder;

@@ -317,9 +317,13 @@ describe("carrying out requests", () => {
     pending.delete(runId);
     coding.resolve({ output: "done", usage: null, sessionId: null, needsAnswers: false });
     await flush();
-    await undoRun("pa", message.id);
+    vi.mocked(undoChanges).mockClear();
+    await Promise.all([undoRun("pa", message.id), undoRun("pa", message.id)]);
+    expect(undoChanges, "a double click undoes once").toHaveBeenCalledTimes(1);
     expect(undoChanges).toHaveBeenCalledWith("/a", changes);
     expect(runsOf("pa")[0].code.undone).toEqual({ restored: ["theme.ts"], kept: [] });
+    await undoRun("pa", message.id);
+    expect(undoChanges, "and an undone step isn't undone again").toHaveBeenCalledTimes(1);
   });
 
   it("stopping the plan skips the code and raises no error", async () => {

@@ -5,6 +5,7 @@ import { failuresAfter, limitReached, MAX_FAILURES } from "@/lib/auto";
 import { stuckOn } from "@/lib/day";
 import { entry } from "@/lib/log";
 import { RECHECK_MS } from "@/lib/logistics";
+import { useApp } from "./app";
 import { companyAgent } from "./company";
 import { NOTHING as NO_SUGGESTIONS, useDay } from "./day";
 import { useLog } from "./log";
@@ -125,7 +126,8 @@ useAuto.subscribe(({ byProject }) => {
   const any = Object.values(byProject).some((a) => a.until !== null);
   if (any === awake) return;
   awake = any;
-  void keepAwake(any).catch(() => {});
+  // A Mac that can't be kept awake may sleep through auto mode: worth saying, once per change.
+  void keepAwake(any).catch((error) => any && useApp.getState().reportError(`Couldn't keep the Mac awake for auto mode: ${String(error)}`));
 });
 
 export const useAutoOf = (projectId: string) => useAuto((s) => s.byProject[projectId] ?? OFF);

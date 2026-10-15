@@ -163,7 +163,8 @@ export function taskRunner({ day, patchTask }: Deps) {
 
   const runTask = async (projectId: string, task: Task, army = false) => {
     const project = projectOf(projectId);
-    if (!project) return;
+    // A company that's gone can't run anything; marked stopped, so no pass keeps picking it up.
+    if (!project) return void patchTask(projectId, task.id, { status: "stopped", runId: null });
     const run = begin(projectId, task, project.folder);
     patchTask(projectId, task.id, { result: "" });
     const prompt = taskPrompt(task, project.name, agentById(armyOf(projectId), task.agentId), army ? handoffs(day(projectId).tasks, armyOf(projectId)) : "", day(projectId).lean);

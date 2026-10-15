@@ -6,6 +6,8 @@ import type { AccountStatus } from "@/lib/api";
 import { ACCOUNT_URL, PORTAL_URL, TRIAL_DAYS, checkoutUrl, emailOf, initialOf, planLine, planName } from "@/lib/account";
 import { cn } from "@/lib/utils";
 import { useAccount } from "@/store/account";
+import { useApp } from "@/store/app";
+import { standDown } from "@/store/stand-down";
 
 // The account, all of it in one place: who's signed in on this Mac, the plan and where it stands,
 // subscribing or managing billing on dhrive.app, and signing out (which asks once, since it stops
@@ -56,8 +58,16 @@ function Plan({ status }: { status: AccountStatus }) {
   );
 }
 
+// "Companies stop working here": signing out stands every company down first, so nothing of theirs
+// keeps starting steps that would each fail for want of an account.
 function SignOut() {
   const [asking, setAsking] = useState(false);
+  const leaving = useAccount((s) => s.signingOut);
+  const error = useAccount((s) => s.error);
+  const leave = () => {
+    for (const project of useApp.getState().projects) standDown(project.id);
+    void useAccount.getState().signOut();
+  };
   if (!asking) {
     return (
       <button type="button" className={quiet} onClick={() => setAsking(true)}>
@@ -68,8 +78,8 @@ function SignOut() {
   }
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[12px] text-muted-foreground">Companies stop working here.</span>
-      <button type="button" className={cn(pill, "bg-white/[0.12] font-medium hover:bg-white/[0.18]")} onClick={() => void useAccount.getState().signOut()}>Sign out</button>
+      <span className={cn("text-[12px]", error ? "text-[#ff8a8f]" : "text-muted-foreground")} role={error ? "alert" : undefined}>{error ?? "Companies stop working here."}</span>
+      <button type="button" disabled={leaving} className={cn(pill, "bg-white/[0.12] font-medium hover:bg-white/[0.18] disabled:opacity-40")} onClick={leave}>{leaving ? "Signing out…" : "Sign out"}</button>
       <button type="button" className="text-[12px] text-muted-foreground hover:text-foreground" onClick={() => setAsking(false)}>Cancel</button>
     </div>
   );
