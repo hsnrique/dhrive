@@ -97,7 +97,7 @@ function Chip({ attachment, preview, onRemove }: { attachment: Attachment; previ
         {attachment.name}
       </button>
       {onRemove && (
-        <button type="button" aria-label={`Remove ${attachment.name}`} className="flex-none rounded text-muted-foreground hover:text-foreground" onClick={onRemove}>
+        <button type="button" aria-label={`Remove ${attachment.name}`} className="-my-0.5 -mr-1 flex h-5 w-5 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onRemove}>
           <X className="h-3.5 w-3.5" />
         </button>
       )}
