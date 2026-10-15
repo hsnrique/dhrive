@@ -90,7 +90,7 @@ export function FilePanel({ folder, projectName }: { folder: string; projectName
               <button type="button" title={tab.path || projectName} className="min-w-0 truncate" onClick={() => open(tab.folder, tab.path)}>
                 {nameOf(tab, projectName)}
               </button>
-              <button type="button" aria-label={`Close ${nameOf(tab, projectName)}`} className={cn("flex-none rounded text-muted-foreground hover:text-foreground", !on && "opacity-0 group-hover:opacity-100")} onClick={() => close(tab)}>
+              <button type="button" aria-label={`Close ${nameOf(tab, projectName)}`} className={cn("-my-1 -mr-1.5 flex h-5 w-5 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground", !on && "opacity-0 focus-visible:opacity-100 group-hover:opacity-100")} onClick={() => close(tab)}>
                 <X className="h-3 w-3" />
               </button>
             </div>

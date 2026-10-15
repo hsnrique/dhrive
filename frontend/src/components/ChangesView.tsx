@@ -67,7 +67,7 @@ function FileRow({ conversationId, changes, file }: { conversationId: string; ch
   const [open, setOpen] = useState(false);
   return (
     <li className="group relative overflow-hidden">
-      <button type="button" aria-expanded={open} className="flex w-full items-center gap-2 px-2 py-1 text-left text-[12px] transition-colors hover:bg-hover" onClick={() => setOpen((v) => !v)}>
+      <button type="button" aria-expanded={open} className="flex w-full items-center gap-2 px-2 py-1 text-left text-[12px] transition-colors hover:bg-hover focus-visible:outline-offset-[-2px]" onClick={() => setOpen((v) => !v)}>
         <ChevronRight className={cn("h-3 w-3 flex-none text-muted-foreground transition-transform", open && "rotate-90")} />
         <span className="w-3 flex-none font-mono text-[10.5px] text-muted-foreground" title={file.status}>{STATUS_MARK[file.status]}</span>
         <span className={cn("min-w-0 flex-1 truncate font-mono text-[11.5px]", file.status === "deleted" && "text-muted-foreground line-through")} title={file.path}>
