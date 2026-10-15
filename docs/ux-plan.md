@@ -143,11 +143,17 @@ full comboboxes (active descendant, arrow keys in radio groups), errors tied to 
 (aria-invalid/describedby), headings and landmarks for the project screen, and a keyboard way to
 resize the file panel.
 
+Phase 5 notes: ⌘O and "open a project you already have" now open the project's company, not its
+latest conversation (the rail and sidebar already did). Not done: per-conversation mode and models
+(still app-wide), one address for the website across its five places, a Back on the CLI pages, and
+a confirm before a pane's model change restarts it. store/day.ts is at 297 lines: split it before
+it grows.
+
 | Phase | PR | State |
 | --- | --- | --- |
-| 1. Reliability | feat/ux-reliability | done: auto mode, unreadable files, Stop, one writer per folder, Suggest, small guards (326 frontend tests, 264 backend) |
-| 2. Performance | feat/ux-performance | done: live store, thread re-renders, edit diffs, log flush, startup, cheap wins (333 frontend tests, 266 backend) |
-| 3. Design system | feat/ux-design-system | done: one hairline, color and title tokens, Button/Field/compose, Dialog and layers, InlineConfirm (334 frontend tests) |
-| 4. Accessibility | feat/ux-accessibility | done: terminals, sign-in gate, live regions, focus and contrast, reachable actions, zoom, names and status (334 frontend tests) |
-| 5. Journeys | | planned |
+| 1. Reliability | merged (#17) | done: auto mode, unreadable files, Stop, one writer per folder, Suggest, small guards (326 frontend tests, 264 backend) |
+| 2. Performance | merged (#18) | done: live store, thread re-renders, edit diffs, log flush, startup, cheap wins (333 frontend tests, 266 backend) |
+| 3. Design system | merged (#19) | done: one hairline, color and title tokens, Button/Field/compose, Dialog and layers, InlineConfirm (334 frontend tests) |
+| 4. Accessibility | merged (#20) | done: terminals, sign-in gate, live regions, focus and contrast, reachable actions, zoom, names and status (334 frontend tests) |
+| 5. Journeys | feat/ux-journeys | done: needs your OK everywhere, needs attention, policy and gentle Auto stop, founding recovery, blocked runs, company reach, confirm tiers (340 frontend tests) |
 | 6. Polish | | planned |
