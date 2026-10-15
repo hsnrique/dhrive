@@ -88,7 +88,7 @@ function PaneBox({ pane, project, clis }: { pane: Pane; project: Project | undef
       <div className="min-h-0 flex-1 overflow-hidden rounded-b-xl">
         {project && installed ? (
           // A new run id each start, so a stopped CLI's last words never reach its replacement.
-          <TerminalView key={pane.run} id={`${pane.id}-${pane.run}`} engine={pane.engine} project={project.id} copy={pane.copy ? pane.id : null} model={pane.model} task={pane.task} onStarted={() => useTerminals.getState().started(pane.id)} onBranch={setBranch} onEvent={(event) => report(pane.id, event, label)} onTitle={(title) => retitle(pane.id, title)} />
+          <TerminalView key={pane.run} label={`${cli?.label ?? pane.engine} terminal`} id={`${pane.id}-${pane.run}`} engine={pane.engine} project={project.id} copy={pane.copy ? pane.id : null} model={pane.model} task={pane.task} onStarted={() => useTerminals.getState().started(pane.id)} onBranch={setBranch} onEvent={(event) => report(pane.id, event, label)} onTitle={(title) => retitle(pane.id, title)} />
         ) : (
           <p className="flex h-full items-center justify-center px-6 text-center text-[12px] text-muted-foreground">{installed ? "This project is no longer in dhrive." : "That CLI isn't installed."}</p>
         )}

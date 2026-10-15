@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 const layers = layerStack();
 let listening = false;
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+export const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 function onEscape(e: KeyboardEvent) {
   // A terminal owns its Escape: the CLI in it may be asking for one.

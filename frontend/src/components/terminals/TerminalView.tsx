@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
@@ -6,6 +6,7 @@ import "@xterm/xterm/css/xterm.css";
 
 import { terminalClose, terminalOpen, terminalResize, terminalWrite, type Engine } from "@/lib/api";
 import type { PaneEvent } from "@/lib/terminal-status";
+import { FOCUSABLE } from "@/components/ui/layer";
 
 // One CLI's own screen in a pseudo-terminal (terminal.rs), drawn by xterm.js. It starts when the
 // pane mounts and ends when it unmounts; xterm draws the CLI's bytes as terminal text, never HTML.
@@ -22,6 +23,17 @@ const REFIT_MS = 80;
 
 const bytesOf = (base64: string) => Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 
+// Every key belongs to the CLI, Tab and Escape too (Claude Code cycles its modes on Shift-Tab), so
+// one combination is dhrive's: Control-Tab moves on past the terminal, with Shift back before it.
+const LEAVE_HINT = "Control-Tab leaves the terminal";
+function leave(from: HTMLElement, back: boolean) {
+  const outside = [...document.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => !from.contains(el) && !el.closest("[inert]") && el.getClientRects().length > 0);
+  const after = outside.filter((el) => from.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
+  const before = outside.filter((el) => from.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING);
+  // Past the last control it comes round to the first, as Tab does.
+  (back ? (before[before.length - 1] ?? outside[outside.length - 1]) : (after[0] ?? outside[0]))?.focus();
+}
+
 interface Props {
   id: string;
   // The CLI the pane runs, unless `start` opens something else in it (a connector's setup).
@@ -37,10 +49,13 @@ interface Props {
   onEvent: (event: PaneEvent) => void;
   onTitle: (title: string) => void;
   onBranch: (branch: string | null) => void;
+  // What the pane is, for a screen reader.
+  label: string;
 }
 
-export function TerminalView({ id, engine, start, project, copy, model, task, onStarted, onEvent, onTitle, onBranch }: Props) {
+export function TerminalView({ id, engine, start, project, copy, model, task, onStarted, onEvent, onTitle, onBranch, label }: Props) {
   const host = useRef<HTMLDivElement>(null);
+  const hint = useId();
   const report = useRef({ onEvent, onTitle, onBranch, onStarted });
   report.current = { onEvent, onTitle, onBranch, onStarted };
   const launch = useRef({ model, task, start });
@@ -65,8 +80,22 @@ export function TerminalView({ id, engine, start, project, copy, model, task, on
     const fonts = document.fonts.load(`12.5px ${FONT}`).catch(() => undefined).then(() => {
       if (ended) return;
       term.open(el);
+      term.textarea?.setAttribute("aria-describedby", hint);
       refit();
     });
+    term.attachCustomKeyEventHandler((e) => {
+      if (e.key !== "Tab" || !e.ctrlKey) return true;
+      if (e.type === "keydown") {
+        e.preventDefault();
+        leave(el, e.shiftKey);
+      }
+      return false;
+    });
+    // Its output reaches a screen reader once someone arrives by keyboard: that tree costs work on
+    // every redraw, so a pane only clicked into never builds it.
+    const arrived = () => {
+      if (term.textarea?.matches(":focus-visible")) term.options.screenReaderMode = true;
+    };
     // Listening starts before the CLI does, so its first screen is never missed.
     const unlisten = listen<TerminalEvent>("dhrive-terminal", ({ payload }) => {
       if (payload.id !== id) return;
@@ -89,7 +118,9 @@ export function TerminalView({ id, engine, start, project, copy, model, task, on
           if (task) report.current.onEvent({ kind: "input", data: "\r" });
         })
         .catch((error) => term.write(`\x1b[31m${String(error)}\x1b[0m\r\n`));
-      term.focus();
+      // Ready to type into, unless the owner is writing somewhere else meanwhile.
+      const writing = document.activeElement?.matches("input, textarea, [contenteditable]") && !el.contains(document.activeElement);
+      if (!writing) term.focus();
     });
     const typed = term.onData((data) => {
       report.current.onEvent({ kind: "input", data });
@@ -99,6 +130,7 @@ export function TerminalView({ id, engine, start, project, copy, model, task, on
     const titled = term.onTitleChange((title) => report.current.onTitle(title));
     const seen = () => report.current.onEvent({ kind: "seen" });
     el.addEventListener("focusin", seen);
+    el.addEventListener("focusin", arrived);
     const resized = term.onResize(({ cols, rows }) => void terminalResize(id, cols, rows).catch(() => undefined));
     // A window or panel drag resizes every frame; the CLI hears one resize when it settles, not dozens
     // that each make it redraw its whole screen.
@@ -113,6 +145,7 @@ export function TerminalView({ id, engine, start, project, copy, model, task, on
       clearTimeout(quiet);
       clearTimeout(settling);
       el.removeEventListener("focusin", seen);
+      el.removeEventListener("focusin", arrived);
       follow.disconnect();
       typed.dispose();
       rang.dispose();
@@ -122,7 +155,17 @@ export function TerminalView({ id, engine, start, project, copy, model, task, on
       void terminalClose(id);
       term.dispose();
     };
-  }, [id, engine, project, copy]);
+  }, [id, engine, project, copy, hint]);
 
-  return <div ref={host} className="h-full w-full overflow-hidden bg-terminal px-2 pt-1.5" />;
+  return (
+    <div role="region" aria-label={label} className="group/term relative h-full w-full">
+      <div ref={host} className="h-full w-full overflow-hidden bg-terminal px-2 pt-1.5" />
+      <kbd className="pointer-events-none absolute bottom-1.5 right-2 font-sans text-[10.5px] text-muted-foreground opacity-0 transition-opacity group-focus-within/term:opacity-100" aria-hidden>
+        ⌃⇥ leaves
+      </kbd>
+      <span id={hint} className="sr-only">
+        {LEAVE_HINT}
+      </span>
+    </div>
+  );
 }
