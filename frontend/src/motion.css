@@ -1,0 +1,125 @@
+/* How things move in dhrive: entrances on one curve (--ease-out, --duration-enter in index.css),
+   the few things that breathe while they work, and nothing at all for whoever asks for less motion. */
+
+/* Smooth entrance for overlays/modals. */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.pop-in {
+  animation: pop-in var(--duration-enter) var(--ease-out);
+}
+
+/* The sidebar opening over the work on a narrow window, and the dim behind it. */
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.slide-in-left {
+  animation: slide-in-left var(--duration-enter) var(--ease-out);
+}
+
+.slide-in-right {
+  animation: slide-in-right var(--duration-enter) var(--ease-out);
+}
+
+.fade-in {
+  animation: fade-in var(--duration-enter) var(--ease-out);
+}
+
+/* A stage node that is running breathes; everything else holds still. */
+/* The ring is its own layer, grown and faded with transform and opacity, so a dozen running dots
+   never repaint the page on every frame the way an animated shadow does. Over the white dot it's
+   invisible at rest; --breathe sets how far it reaches (about 5px past a 6–8px dot). */
+@keyframes node-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(var(--breathe, 2.4));
+    opacity: 0;
+  }
+}
+@layer components {
+  .node-live {
+    position: relative;
+  }
+}
+.node-live::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(242, 242, 242, 0.35);
+  pointer-events: none;
+  animation: node-breathe 1.6s var(--ease-out) infinite;
+}
+
+/* The relay: the line from the plan to the code fills downward the moment the plan hands off. */
+@keyframes relay-fill {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.relay-fill {
+  transform-origin: top;
+  animation: relay-fill 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* A live log fades out at the top, so new lines read as arriving rather than a wall of text. */
+.log-fade {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28px);
+  mask-image: linear-gradient(to bottom, transparent, #000 28px);
+}
+
+/* A card still being written: a soft light passes over it while the maestro reads the project. */
+@keyframes ghost-sweep {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -20% 0;
+  }
+}
+.ghost-sweep {
+  background-image: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.06) 50%, transparent 70%);
+  background-size: 250% 100%;
+  animation: ghost-sweep 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .node-live::after,
+  .ghost-sweep,
+  .relay-fill,
+  .pop-in,
+  .slide-in-left,
+  .slide-in-right,
+  .fade-in {
+    animation: none;
+  }
+}
