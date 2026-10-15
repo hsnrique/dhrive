@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useAuto, useAutoOf } from "@/store/auto";
 import { useDayOf } from "@/store/day";
 import { buttonVariants } from "@/components/ui/button";
+import { BLOCKED_TITLE, useRunsBlocked } from "../RunsBlocked";
 
 // Auto mode beside the Tasks heading: off, one button that opens the hours to hand over; on, the
 // time left and Stop. When it stopped by itself, why, in a line under the heading.
@@ -21,6 +22,7 @@ export function AutoMode({ projectId, disabled }: { projectId: string; disabled:
   const [picking, setPicking] = useState(false);
   const [stopping, setStopping] = useState(false);
   const { start, stop, finish } = useAuto.getState();
+  const blocked = useRunsBlocked();
   if (until !== null) {
     return (
       <div className="flex items-center gap-1 rounded-md border border-white/20 bg-white/[0.06] py-0.5 pl-3 pr-0.5">
@@ -60,7 +62,7 @@ export function AutoMode({ projectId, disabled }: { projectId: string; disabled:
     );
   }
   return (
-    <button type="button" disabled={disabled} title={disabled ? "Write the brief first" : "Let the company work on its own for a few hours"} className={cn(soft, "font-normal")} onClick={() => setPicking(true)}>
+    <button type="button" disabled={disabled || blocked} title={blocked ? BLOCKED_TITLE : disabled ? "Write the brief first" : "Let the company work on its own for a few hours"} className={cn(soft, "font-normal")} onClick={() => setPicking(true)}>
       <Loop className="h-3.5 w-3.5" />
       Auto mode
     </button>

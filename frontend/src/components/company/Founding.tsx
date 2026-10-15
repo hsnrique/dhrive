@@ -7,6 +7,8 @@ import { companyAgent, useCompany } from "@/store/company";
 import { STOPPED, useFounding, type Phase } from "@/store/founding";
 import { useLiveLast, useLivePhase } from "@/store/live";
 import { buttonVariants } from "@/components/ui/button";
+import { ASK_FIRST_OFF, ASK_FIRST_ON } from "./Tasks";
+import { BLOCKED_TITLE, RunsBlocked, useRunsBlocked } from "../RunsBlocked";
 import { Approvals } from "../Approvals";
 import { ChoicePicker } from "../ModelPicker";
 import { Switch } from "../ui/switch";
@@ -99,7 +101,8 @@ function Ask() {
   // Off unless the owner wants each task to wait for them; it stays the company's Ask first after.
   const [ask, setAsk] = useState(false);
   const start = useFounding((s) => s.start);
-  const go = () => idea.trim() && void start(idea, ask);
+  const blocked = useRunsBlocked();
+  const go = () => idea.trim() && !blocked && void start(idea, ask);
   return (
     <div className="grid gap-6">
       <div className="grid gap-4">
@@ -107,6 +110,7 @@ function Ask() {
         <p className="max-w-[48ch] text-[14px] leading-relaxed text-muted-foreground">Say it in a sentence, or let dhrive pick. It creates the company and runs it.</p>
       </div>
       <div className="@container grid gap-2 rounded-2xl border border-border bg-card p-2 focus-within:border-ring">
+        <RunsBlocked />
         <textarea
           autoFocus
           rows={3}
@@ -128,11 +132,11 @@ function Ask() {
         <div className="flex items-center gap-2 pl-1">
           <AgentPicker />
           <div className="ml-auto flex flex-none items-center gap-2">
-            <button type="button" title="Let dhrive surprise you" aria-label="Let dhrive surprise you" className={quiet} onClick={() => void start("", ask)}>
+            <button type="button" title={blocked ? BLOCKED_TITLE : "Let dhrive surprise you"} aria-label="Let dhrive surprise you" disabled={blocked} className={quiet} onClick={() => void start("", ask)}>
               <Dices className="h-4 w-4 flex-none" strokeWidth={1.75} />
               <span className="hidden @[36rem]:inline">Let dhrive surprise you</span>
             </button>
-            <button type="button" disabled={!idea.trim()} className={primary} onClick={go}>
+            <button type="button" disabled={!idea.trim() || blocked} title={blocked ? BLOCKED_TITLE : undefined} className={primary} onClick={go}>
               Start the company
             </button>
           </div>
@@ -140,7 +144,7 @@ function Ask() {
       </div>
       {/* Under the card, not in it: the card's one line is the agent and the two ways to start. */}
       <div className="-mt-4 pl-1">
-        <Switch on={ask} label="Ask first" title={ask ? "Every task waits for your OK" : "It starts working right away"} onChange={setAsk} />
+        <Switch on={ask} label="Ask first" title={ask ? ASK_FIRST_ON : ASK_FIRST_OFF} onChange={setAsk} />
       </div>
     </div>
   );

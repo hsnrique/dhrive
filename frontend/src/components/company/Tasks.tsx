@@ -14,6 +14,7 @@ import { useDay, useDayOf, type Day } from "@/store/day";
 import { useFold } from "@/store/fold";
 import { useLiveLast, useLivePhase } from "@/store/live";
 import { buttonVariants } from "@/components/ui/button";
+import { BLOCKED_TITLE, RunsBlocked, useRunsBlocked } from "../RunsBlocked";
 import { ChoicePicker } from "../ModelPicker";
 import { Switch } from "../ui/switch";
 import { AutoEnded, AutoMode } from "./AutoMode";
@@ -60,6 +61,10 @@ function Planning() {
   );
 }
 
+// What Ask first holds back, said the same way wherever it's switched.
+export const ASK_FIRST_ON = "Suggestions and tool use wait for your OK";
+export const ASK_FIRST_OFF = "Suggestions start right away, and tasks don't ask before using a tool";
+
 // The rules the work runs under, in a few words: while it runs the switches step aside, the rules don't.
 const policy = (day: Day) => [day.ask ? "Asks first" : day.mcp ? "On its own, MCP on" : "On its own", day.lean && "Lean", day.review && "Review"].filter(Boolean).join(" · ");
 
@@ -71,15 +76,16 @@ function Bar({ project, day, engines, blank }: { project: Project; day: Day; eng
   // Changeable whatever the company is doing: what's waiting moves to the new pick.
   const picker = choice && <ChoicePicker choice={choice} onChoose={(next) => setAgent(project.id, next)} label="Agent that works for the company" engines={engines} down tunable />;
   const now = useNow(false);
+  const blocked = useRunsBlocked();
   const running = day.tasks.some((t) => t.status === "running");
   // What Run would start: a task stuck behind a failed one can't, so it isn't counted.
   const waiting = day.tasks.filter((t) => t.status === "planned" && !stuckOn(t, day.tasks).length).length;
   const suggested = day.tasks.filter((t) => t.status === "suggested").length;
   // Wraps rather than overflows when its column is narrow.
   const card = "flex min-h-[48px] flex-wrap items-center gap-x-2.5 gap-y-2 rounded-xl border border-border bg-card px-2.5 py-2";
-  const said = blank ? "Write the brief first" : day.plannedAt ? `Suggested ${ago(day.plannedAt, now)}. Reads the brief and the project, changes nothing.` : "Reads the brief and the project, changes nothing.";
+  const said = blocked ? BLOCKED_TITLE : blank ? "Write the brief first" : day.plannedAt ? `Suggested ${ago(day.plannedAt, now)}. Reads the brief and the project, changes nothing.` : "Reads the brief and the project, changes nothing.";
   const suggest = (
-    <button type="button" disabled={!choice || blank} title={said} className={waiting || running || suggested ? quiet : primary} onClick={() => void plan(project.id)}>
+    <button type="button" disabled={!choice || blank || blocked} title={said} className={waiting || running || suggested ? quiet : primary} onClick={() => void plan(project.id)}>
       {day.plannedAt ? "Suggest more" : "Suggest tasks"}
     </button>
   );
@@ -106,14 +112,14 @@ function Bar({ project, day, engines, blank }: { project: Project; day: Day; eng
   return (
     <div className={card}>
       {picker}
-      <Switch on={day.ask} label="Ask first" title={day.ask ? "Suggestions and tool use wait for your OK" : "Suggestions start right away, and tasks don't ask before using a tool"} onChange={(on) => setAsk(project.id, on)} />
+      <Switch on={day.ask} label="Ask first" title={day.ask ? ASK_FIRST_ON : ASK_FIRST_OFF} onChange={(on) => setAsk(project.id, on)} />
       {!day.ask && <Switch on={day.mcp} label="MCP tools" title={day.mcp ? "MCP tools run without asking too: they can send, post or pay in your name" : "MCP tools are off while tasks run on their own"} onChange={(on) => setMcp(project.id, on)} />}
       <Switch on={day.lean} label="Lean" title={day.lean ? "Agents work without narrating, one line at the end: your plan lasts longer" : "Agents explain as they work"} onChange={(on) => setLean(project.id, on)} />
       <span className="ml-auto" />
       {suggest}
       {/* What waits for the owner's OK comes before asking for more. */}
       {suggested > 0 && <button type="button" className={waiting ? quiet : primary} onClick={() => useDay.getState().accept(project.id)}>Add all · {suggested}</button>}
-      {waiting > 0 && <button type="button" disabled={!choice} className={primary} onClick={() => void run(project.id)}>Run {waiting}</button>}
+      {waiting > 0 && <button type="button" disabled={!choice || blocked} title={blocked ? BLOCKED_TITLE : undefined} className={primary} onClick={() => void run(project.id)}>Run {waiting}</button>}
       {day.held && <p className="w-full truncate font-mono text-[11.5px] text-attention" title={`${day.held}. It looks again in a few minutes, or press Run.`}>waiting: {day.held}</p>}
     </div>
   );
@@ -170,6 +176,7 @@ export function Tasks({ project, brief }: { project: Project; brief: Brief }) {
         <p className="text-[13.5px] text-muted-foreground">Write the brief below, or let its agent draft it, and the company suggests its tasks from it.</p>
       ) : (
         <>
+          <RunsBlocked />
           <Bar project={project} day={day} engines={engines} blank={isBlank(brief)} />
           {day.error && <p className="px-1 text-[12.5px] text-failure">{day.error}</p>}
           <Group id={`next:${project.id}`} title="Up next" items={open.map(row)} cap={SHOWN.next}>
