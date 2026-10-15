@@ -27,7 +27,8 @@ export const useSite = create<SiteStore>((set, get) => {
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
   const watch = (projectId: string) => {
     clearTimeout(timers.get(projectId));
-    if (site(projectId).running) timers.set(projectId, setTimeout(() => void get().refresh(projectId), EVERY_MS));
+    // While the window is hidden nobody reads it: the timer keeps time without asking the backend.
+    if (site(projectId).running) timers.set(projectId, setTimeout(() => (globalThis.document?.hidden ? watch(projectId) : void get().refresh(projectId)), EVERY_MS));
   };
 
   return {

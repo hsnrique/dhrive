@@ -39,18 +39,22 @@ function SignInButton() {
 }
 
 // The whole window until this Mac is signed in.
+// Until it's decided, a plain cover: the app never shows for a moment and then hides behind it.
 export function SignInGate() {
+  const decided = useAccount((s) => s.decided);
   const signedOut = useAccount((s) => s.status?.state === "signedOut");
-  if (!signedOut) return null;
+  if (decided && !signedOut) return null;
   return createPortal(
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
       <div data-tauri-drag-region className="h-[44px] flex-none" />
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 pb-[44px] text-center">
-        <BrandLogo className="h-6 w-6" />
-        <h1 className="font-serif text-[34px] leading-[1.1]">Sign in to start</h1>
-        <p className="text-[13px] text-muted-foreground">14 days free, no card. Your CLIs and their plans stay as they are.</p>
-        <SignInButton />
-      </div>
+      {signedOut && (
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 pb-[44px] text-center">
+          <BrandLogo className="h-6 w-6" />
+          <h1 className="font-serif text-[34px] leading-[1.1]">Sign in to start</h1>
+          <p className="text-[13px] text-muted-foreground">14 days free, no card. Your CLIs and their plans stay as they are.</p>
+          <SignInButton />
+        </div>
+      )}
     </div>,
     document.body,
   );

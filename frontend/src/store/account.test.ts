@@ -13,6 +13,7 @@ const call = (kind: Call["kind"]) => () => new Promise<AccountStatus>((resolve, 
 
 vi.mock("@/lib/api", () => ({
   accountStatus: vi.fn(call("check")),
+  signedOutHere: vi.fn(async () => backend.state === "signedOut"),
   signIn: vi.fn(call("signIn")),
   signOut: vi.fn(call("signOut")),
   cancelSignIn: vi.fn(async () => {
@@ -39,7 +40,7 @@ describe("the account in the app", () => {
       const random = prng(seed);
       pending.length = 0;
       backend = { state: "signedOut" };
-      useAccount.setState({ status: null, signingIn: false, signingOut: false, error: null });
+      useAccount.setState({ status: null, decided: false, signingIn: false, signingOut: false, error: null });
       // Which account every answer since the last sign-in or sign-out may show.
       let settled: AccountStatus | null = null;
       for (let step = 0; step < 40; step++) {
@@ -60,6 +61,21 @@ describe("the account in the app", () => {
     // 3,200 macrotask flushes: well under a second here, past the 5 s default on a busy CI runner,
     // where the timed-out loop then keeps running into the next test.
   }, 30_000);
+
+  it("knows at once when no one is signed in on this Mac, before the full check answers", async () => {
+    pending.length = 0;
+    for (const [here, shown] of [[{ state: "signedOut" }, { state: "signedOut" }], [TRIAL, null]] as const) {
+      backend = here;
+      useAccount.setState({ status: null, decided: false });
+      void useAccount.getState().load();
+      await flush();
+      expect(useAccount.getState(), "the full check is still out").toMatchObject({ decided: true, status: shown });
+      expect(pending.map((c) => c.kind)).toEqual(["check"]);
+      settle(pending.pop()!);
+      await flush();
+      expect(useAccount.getState().status).toEqual(here);
+    }
+  });
 
   it("says why signing in failed, but not when the owner cancelled it", async () => {
     pending.length = 0;

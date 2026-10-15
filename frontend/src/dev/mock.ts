@@ -275,6 +275,8 @@ mockIPC(
         return fakeRun(payload.request as StepRequest);
       case "account_status":
         return account;
+      case "signed_out_here":
+        return account.state === "signedOut";
       case "sign_in":
         await new Promise((resolve, reject) => {
           const timer = setTimeout(resolve, 1500);

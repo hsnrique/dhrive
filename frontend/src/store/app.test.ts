@@ -55,3 +55,20 @@ describe("modelName", () => {
     expect(modelName("", options)).toBe("Default");
   });
 });
+
+describe("startup", () => {
+  it("fills the sidebar once the projects are read, without waiting for every CLI to answer", async () => {
+    const { listClis, listProjects } = await import("@/lib/api");
+    const project = { id: "p1", name: "Acme", folder: "/acme" } as Awaited<ReturnType<typeof listProjects>>[number];
+    vi.mocked(listProjects).mockResolvedValueOnce([project]);
+    let answer: (clis: Cli[]) => void = () => {};
+    vi.mocked(listClis).mockReturnValueOnce(new Promise((resolve) => (answer = resolve)));
+    useApp.setState({ booted: false, projects: [], projectsRead: false });
+    const booting = useApp.getState().boot();
+    await settle();
+    expect(useApp.getState()).toMatchObject({ projects: [project], projectsRead: true, booted: false });
+    answer([]);
+    await booting;
+    expect(useApp.getState().booted).toBe(true);
+  });
+});

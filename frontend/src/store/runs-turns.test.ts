@@ -21,6 +21,7 @@ vi.stubGlobal("document", { hasFocus: () => true });
 const { useApp } = await import("./app");
 const { useConversations } = await import("./conversations");
 const { send, stop } = await import("./runs");
+const { setPhase, useLive } = await import("./live");
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 const steps = () => [...pending.values()].map((call) => `${call.request.folder} ${call.request.step}`).sort();
@@ -53,15 +54,17 @@ describe("code steps in the same project", () => {
     void send("b1", "add search");
     await flush();
     expect(steps()).toEqual(["/a code", "/b code"]);
-    expect(useApp.getState().live[codeOf("a2").runId!]?.phase).toMatch(/Waiting for other work in this project/);
+    expect(useLive.getState().runs[codeOf("a2").runId!]?.phase).toMatch(/Waiting for other work in this project/);
     useApp.setState({ mode: "chat", choices: { plan: { engine: "claude-code", model: "" }, code: { engine: "codex", model: "" } } });
     void send("a3", "why is checkout slow?");
     await flush();
     expect(steps(), "a chat only reads, so it never waits").toEqual(["/a chat", "/a code", "/b code"]);
     const [runId, call] = [...pending].find(([, c]) => c.request.task === "add dark mode")!;
     pending.delete(runId);
+    setPhase(runId, "Editing");
     call.resolve({ output: "done", usage: null, sessionId: null, needsAnswers: false });
     await flush();
+    expect(useLive.getState().runs[runId], "a settled step leaves nothing live behind").toBeUndefined();
     expect([...pending.values()].map((c) => c.request.task).sort()).toEqual(["add search", "fix the footer", "why is checkout slow?"]);
   });
 

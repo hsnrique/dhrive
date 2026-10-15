@@ -1,21 +1,23 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 
 import { editLines, type LiveEdit } from "@/lib/linediff";
 import { cn } from "@/lib/utils";
-import { useApp } from "@/store/app";
+import { useLiveEdits } from "@/store/live";
 import { FileMention } from "./Mentions";
 
 // The edits a running step makes, as it makes them: each file and its change, the newest open. The
 // full picture of what changed comes after, in the step's list of changed files.
 
-const NO_EDITS: LiveEdit[] = [];
 const MAX_SHOWN_LINES = 80;
 
 function EditCard({ edit, folder, open, onToggle }: { edit: LiveEdit; folder: string | undefined; open: boolean; onToggle: () => void }) {
-  const lines = editLines(edit.before, edit.after);
-  const added = lines.filter((l) => l.kind === "add").length;
-  const removed = lines.filter((l) => l.kind === "remove").length;
+  // The diff is quadratic in the file's lines; every new edit re-renders the list, so each card
+  // works out its own once.
+  const { lines, added, removed } = useMemo(() => {
+    const lines = editLines(edit.before, edit.after);
+    return { lines, added: lines.filter((l) => l.kind === "add").length, removed: lines.filter((l) => l.kind === "remove").length };
+  }, [edit.before, edit.after]);
   return (
     <div className="overflow-hidden rounded-lg border border-border">
       <div className="flex items-center gap-2 bg-white/[0.03] px-2 py-1 text-[12px]">
@@ -43,7 +45,7 @@ function EditCard({ edit, folder, open, onToggle }: { edit: LiveEdit; folder: st
 }
 
 export function LiveEdits({ runId, folder }: { runId: string | null; folder: string | undefined }) {
-  const edits = useApp((s) => (runId ? s.live[runId]?.edits : undefined) ?? NO_EDITS);
+  const edits = useLiveEdits(runId);
   // Which ones the owner opened or closed; by default only the newest is open.
   const [toggled, setToggled] = useState<Record<number, boolean>>({});
   if (edits.length === 0) return null;

@@ -8,6 +8,7 @@ import { useApp } from "@/store/app";
 import { companyAgent, useAgentOf, useCompany, useCompanyOf } from "@/store/company";
 import { useDay } from "@/store/day";
 import { useFold } from "@/store/fold";
+import { useLiveLast, useLivePhase } from "@/store/live";
 import { Markdown } from "../Markdown";
 import { ChoicePicker } from "../ModelPicker";
 import { BriefSection } from "./BriefSection";
@@ -18,8 +19,8 @@ import { SectionHead } from "./SectionHead";
 // fills only what's empty and never rewrites what the owner wrote.
 
 function Progress({ runId }: { runId: string }) {
-  const phase = useApp((s) => s.live[runId]?.phase) || "Starting";
-  const doing = useApp((s) => s.live[runId]?.log[s.live[runId].log.length - 1]);
+  const phase = useLivePhase(runId) || "Starting";
+  const doing = useLiveLast(runId);
   const said = doing ? `${phase} · ${doing}` : phase;
   return (
     <p className="min-w-0 flex-1 truncate text-[12.5px] text-muted-foreground" title={said}>

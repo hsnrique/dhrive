@@ -52,6 +52,7 @@ vi.mock("@/lib/api", () => ({
 const { useApp } = await import("./app");
 const { useArmy } = await import("./army");
 const { useUsage } = await import("./usage");
+const { setPhase, useLive } = await import("./live");
 const { newAgent } = await import("@/lib/army");
 const { useCompany } = await import("./company");
 const { EMPTY_DAY, useDay } = await import("./day");
@@ -364,15 +365,18 @@ describe("a company's day", () => {
     await settle();
     useDay.getState().accept(P, day().tasks[0].id);
     const first = last();
+    setPhase(first.request.runId, "Editing");
     pending.delete(first.request.runId);
     first.resolve({ output: "Wrote the ads", usage: null, sessionId: "3f48b81e-5a2c", needsAnswers: false, blocked: [] });
     await settle();
     expect(last().request).toMatchObject({ step: "code", resume: "3f48b81e-5a2c" });
+    setPhase(last().request.runId, "Fixing");
     expect(last().request.task).toContain("## test\n\nexpected 2, got 3");
     expect(day().tasks[0].status).toBe("running");
     reply("Fixed the test");
     await settle();
     expect(day().tasks[0]).toMatchObject({ status: "done", result: "Fixed the test\n\nChecks passed after 1 fix: lint, test." });
+    expect(useLive.getState().runs, "each run's live state goes as the next starts, the last once it's done").toEqual({});
   });
 
   it("keeps the tokens each run spent on its task, by what it was doing, and a silent CLI adds nothing", async () => {

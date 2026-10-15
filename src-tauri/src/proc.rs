@@ -137,19 +137,11 @@ fn drain<R: Read + Send + 'static>(
     log_line: LineMap,
 ) {
     thread::spawn(move || {
-        let mut batch = String::new();
-        let mut last_flush = Instant::now();
+        let (shown_tx, shown_rx) = mpsc::channel::<String>();
+        let batcher = thread::spawn(move || send_in_batches(&shown_rx, |batch| reporter.log(batch)));
         for line in BufReader::new(reader).lines().map_while(Result::ok) {
             if let Some(shown) = log_line(&line) {
-                if !batch.is_empty() {
-                    batch.push('\n');
-                }
-                batch.push_str(&shown);
-                if batch.len() >= LOG_BATCH_BYTES || last_flush.elapsed() >= LOG_FLUSH_INTERVAL {
-                    reporter.log(batch.as_str());
-                    batch.clear();
-                    last_flush = Instant::now();
-                }
+                let _ = shown_tx.send(shown);
             }
             // The raw line is always kept for parsing, even when hidden from the live log.
             if let Ok(mut buffer) = buffer.lock() {
@@ -157,11 +149,45 @@ fn drain<R: Read + Send + 'static>(
                 buffer.push('\n');
             }
         }
-        if !batch.is_empty() {
-            reporter.log(batch.as_str());
-        }
+        drop(shown_tx);
+        let _ = batcher.join();
         let _ = done.send(());
     });
+}
+
+// Lines go out together, once LOG_BATCH_BYTES gather or the oldest has waited LOG_FLUSH_INTERVAL.
+// The wait is timed on its own, not by the next line: a CLI that prints what it's doing and then
+// thinks quietly for minutes would otherwise leave that line unshown the whole time.
+fn send_in_batches(lines: &mpsc::Receiver<String>, mut send: impl FnMut(&str)) {
+    let mut batch = String::new();
+    let mut oldest = Instant::now();
+    loop {
+        let next = if batch.is_empty() {
+            lines.recv().map_err(|_| mpsc::RecvTimeoutError::Disconnected)
+        } else {
+            lines.recv_timeout(LOG_FLUSH_INTERVAL.saturating_sub(oldest.elapsed()))
+        };
+        match next {
+            Ok(line) => {
+                if batch.is_empty() {
+                    oldest = Instant::now();
+                } else {
+                    batch.push('\n');
+                }
+                batch.push_str(&line);
+                if batch.len() < LOG_BATCH_BYTES && oldest.elapsed() < LOG_FLUSH_INTERVAL {
+                    continue;
+                }
+            }
+            Err(mpsc::RecvTimeoutError::Timeout) => {}
+            Err(mpsc::RecvTimeoutError::Disconnected) => break,
+        }
+        send(&batch);
+        batch.clear();
+    }
+    if !batch.is_empty() {
+        send(&batch);
+    }
 }
 
 fn clone_string(buffer: &Arc<Mutex<String>>) -> String {
@@ -201,6 +227,23 @@ mod tests {
         // Both lines reach the live log (coalesced into one or more batched events).
         let shown = shown.lock().unwrap();
         assert!(shown.contains("alpha") && shown.contains("beta"));
+    }
+
+    #[test]
+    fn a_line_shows_while_the_cli_is_quiet_after_it() {
+        let shown = Arc::new(Mutex::new(String::new()));
+        let sink = shown.clone();
+        let reporter = Arc::new(Reporter::new("test-quiet", move |progress| {
+            if let crate::progress::Progress::Log(line) = progress {
+                sink.lock().unwrap().push_str(&line);
+            }
+        }));
+        let mut command = Command::new("sh");
+        command.args(["-c", "echo thinking; sleep 2"]);
+        let run = thread::spawn(move || run_streaming(command, reporter, passthrough(), None));
+        thread::sleep(Duration::from_millis(600));
+        assert_eq!(shown.lock().unwrap().as_str(), "thinking", "shown before the CLI speaks again");
+        assert!(run.join().unwrap().unwrap().success);
     }
 
     #[test]

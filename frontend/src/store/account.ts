@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { accountStatus, cancelSignIn, signIn, signOut, type AccountStatus } from "@/lib/api";
+import { accountStatus, cancelSignIn, signIn, signOut, signedOutHere, type AccountStatus } from "@/lib/api";
 
 // This Mac's account as the backend decides it: not signed in, the free days, subscribed, or ended.
 // The backend also refuses to start a run without an account in good standing, so this only mirrors it.
@@ -9,6 +9,8 @@ const CANCELLED = "Sign-in cancelled.";
 
 interface AccountState {
   status: AccountStatus | null;
+  // Whether the gate knows to show; the app stays covered until then, so it never shows and then hides.
+  decided: boolean;
   signingIn: boolean;
   signingOut: boolean;
   error: string | null;
@@ -27,6 +29,7 @@ let turn = 0;
 
 export const useAccount = create<AccountState>((set, get) => ({
   status: null,
+  decided: false,
   signingIn: false,
   signingOut: false,
   error: null,
@@ -34,6 +37,12 @@ export const useAccount = create<AccountState>((set, get) => ({
   setSheetOpen: (sheetOpen) => set({ sheetOpen }),
 
   load: async () => {
+    // Signed out is known on this Mac at once; the full answer may wait on dhrive.app. No answer
+    // opens the app: the backend still refuses a run without an account.
+    if (!get().decided) {
+      const out = await signedOutHere().catch(() => false);
+      set((s) => ({ decided: true, status: out && !s.status ? { state: "signedOut" } : s.status }));
+    }
     const mine = ++turn;
     try {
       const status = await accountStatus();

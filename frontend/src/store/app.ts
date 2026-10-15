@@ -17,34 +17,28 @@ import {
 } from "@/lib/api";
 import { asking, readQuestion } from "@/lib/approvals";
 import { readChanges } from "@/lib/changes";
-import { appendLog, restoreChoice, restoreMode, type Choice, type Mode } from "@/lib/flow";
-import { readEdit, type LiveEdit } from "@/lib/linediff";
+import { restoreChoice, restoreMode, type Choice, type Mode } from "@/lib/flow";
+import { readEdit } from "@/lib/linediff";
 import { modelName } from "@/lib/names";
 import { readSaved, save } from "@/lib/storage";
 import { emptyThread, withRunChanges, withRunSession, type Thread } from "@/lib/thread";
+import { pushLive } from "./live";
 
-export interface Live {
-  phase: string;
-  log: string[];
-  // The file edits the run made so far, newest last.
-  edits?: LiveEdit[];
-}
-
-const MAX_LIVE_EDITS = 40;
 
 export interface AppState {
   clis: Cli[];
   // What each CLI reported it can run; missing until it has answered once.
   models: Partial<Record<Engine, ModelOption[]>>;
+  // The CLIs answered (installed or not); until then nothing says none is installed.
   booted: boolean;
   projects: Project[];
+  // The projects were read; until then the sidebar shows no "start a company" for a list still loading.
+  projectsRead: boolean;
   // A CLI's own screen (Local models for Ollama; plan and connections for Claude Code and Codex)
   // replaces the project view until a conversation (or Home) is picked.
   // A CLI's own screen, Terminals mode, or a project's company; null is the conversations.
   page: Engine | "terminals" | "company" | null;
   threads: Record<string, Thread>;
-  // Live activity per run id; never saved, a finished run keeps only its result.
-  live: Record<string, Live>;
   choices: Record<Step, Choice | null>;
   mode: Mode;
   // In Plan mode the code waits for the owner's OK on each plan, unless they chose to skip that.
@@ -76,9 +70,9 @@ export const useApp = create<AppState>((set, get) => ({
   models: {},
   booted: false,
   projects: [],
+  projectsRead: false,
   page: null,
   threads: {},
-  live: {},
   choices: { plan: null, code: null },
   mode: restoreMode(readSaved("mode"), readSaved("planFirst")),
   autoCode: readSaved("autoCode") === true,
@@ -86,16 +80,26 @@ export const useApp = create<AppState>((set, get) => ({
   error: null,
   updateReady: null,
 
+  // The projects are a file read and the CLIs a probe of each one, which takes far longer: the
+  // sidebar fills as soon as the projects are in, and only what needs a CLI waits for the probe.
   boot: async () => {
+    const projects = listProjects().then(
+      (projects) => set({ projects, projectsRead: true }),
+      (error) => {
+        set({ projectsRead: true });
+        get().reportError(error);
+      },
+    );
     try {
-      const [clis, projects] = await Promise.all([listClis(), listProjects()]);
+      const clis = await listClis();
       const choices = { plan: restoreChoice(readSaved("choice.plan"), "plan", clis), code: restoreChoice(readSaved("choice.code"), "code", clis) };
-      set({ clis, projects, choices, booted: true });
+      set({ clis, choices, booted: true });
       clis.filter((cli) => cli.installed).forEach((cli) => void get().loadModels(cli.engine));
     } catch (error) {
       set({ booted: true });
       get().reportError(error);
     }
+    await projects;
   },
 
   // A CLI that updated while dhrive was open is asked for its models again: a new version is how
@@ -176,21 +180,13 @@ export const useApp = create<AppState>((set, get) => ({
       if (typeof document !== "undefined" && !document.hasFocus()) notify("dhrive needs your OK", `Claude ${asking(question)} ${question.detail}`.trim()).catch(() => undefined);
       return;
     }
+    // What a run is doing right now goes to its own store, gathered into one update per beat (live.ts).
     if (event.kind === "edit") {
       const edit = readEdit(event.value);
-      if (edit) {
-        set((state) => {
-          const live = state.live[event.runId] ?? { phase: "", log: [] };
-          return { live: { ...state.live, [event.runId]: { ...live, edits: [...(live.edits ?? []), edit].slice(-MAX_LIVE_EDITS) } } };
-        });
-      }
+      if (edit) pushLive({ runId: event.runId, kind: "edit", edit });
       return;
     }
-    set((state) => {
-      const live = state.live[event.runId] ?? { phase: "", log: [] };
-      const next = event.kind === "phase" ? { ...live, phase: event.value } : { ...live, log: appendLog(live.log, event.value) };
-      return { live: { ...state.live, [event.runId]: next } };
-    });
+    pushLive({ runId: event.runId, kind: event.kind === "phase" ? "phase" : "log", value: event.value });
   },
 
   reportError: (error) => set({ error: message(error) }),

@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useApp, useModelName } from "@/store/app";
 import { folderOf, projectOf } from "@/store/conversations";
 import { retry, stop } from "@/store/runs";
+import { useLiveRun } from "@/store/live";
 import { Approvals } from "./Approvals";
 import { ChangesView } from "./ChangesView";
 import { EngineMark } from "./EngineMark";
@@ -21,7 +22,7 @@ const PLAN_PREVIEW_LINES = 14;
 
 function StatusNode({ status }: { status: StageStatus }) {
   const base = "relative z-10 flex h-[13px] w-[13px] items-center justify-center rounded-full";
-  if (status === "running") return <span className={cn(base, "node-live bg-foreground")} />;
+  if (status === "running") return <span className={cn(base, "node-live bg-foreground [--breathe:1.75]")} />;
   if (status === "done") return <span className={cn(base, "bg-foreground/85 text-background")}><Check className="h-2.5 w-2.5" strokeWidth={3.5} /></span>;
   if (status === "failed") return <span className={cn(base, "bg-destructive text-white")}><X className="h-2.5 w-2.5" strokeWidth={3.5} /></span>;
   if (status === "stopped" || status === "interrupted") return <span className={cn(base, "border border-foreground/40 bg-background")}><Square className="h-1.5 w-1.5 fill-foreground/60 text-transparent" /></span>;
@@ -29,7 +30,7 @@ function StatusNode({ status }: { status: StageStatus }) {
 }
 
 function LiveLog({ runId, folder }: { runId: string | null; folder: string | undefined }) {
-  const live = useApp((s) => (runId ? s.live[runId] : undefined));
+  const live = useLiveRun(runId);
   const asking = useApp((s) => (runId ? (s.approvals[runId]?.length ?? 0) > 0 : false));
   const box = useRef<HTMLPreElement>(null);
   useEffect(() => {

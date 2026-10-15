@@ -76,6 +76,7 @@ function LocalRow({ cli }: { cli: Cli }) {
 // showing its plan usage on hover and opening its own screen on a click.
 function FullSidebar({ onFold }: { onFold: () => void }) {
   const projects = useApp((s) => s.projects);
+  const projectsRead = useApp((s) => s.projectsRead);
   const clis = useApp((s) => s.clis);
   const page = useApp((s) => s.page);
   const openPage = useApp((s) => s.openPage);
@@ -116,7 +117,7 @@ function FullSidebar({ onFold }: { onFold: () => void }) {
       </div>
       <p className="px-4 pb-1.5 text-[11px] text-muted-foreground">Companies</p>
       <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-2 pb-3">
-        {projects.length === 0 ? (
+        {!projectsRead ? null : projects.length === 0 ? (
           <button type="button" className="rounded-lg border border-dashed border-border px-3 py-3 text-left text-[12px] leading-relaxed text-muted-foreground transition-colors hover:text-foreground" onClick={close}>
             Start a company from a sentence, or open a folder you already have.
           </button>

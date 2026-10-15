@@ -8,6 +8,7 @@ import { outside, parseReview, reviewFixPrompt, reviewPrompt, territoryPrompt } 
 import { useApp } from "./app";
 import { useArmy } from "./army";
 import { inFolder } from "./editing";
+import { dropLive } from "./live";
 import { companyAgent } from "./company";
 import type { Day } from "./day";
 import { useGitHub } from "./github";
@@ -52,6 +53,7 @@ export function taskRunner({ day, patchTask }: Deps) {
       const current = now();
       const live = runId ? current?.runId === runId : current?.status === "planned" || current?.status === "running";
       if (!live) throw new Stopped("Stopped.");
+      if (runId) dropLive(runId);
       runId = crypto.randomUUID();
       patchTask(projectId, task.id, { status: "running", runId });
       return runId;
@@ -77,7 +79,8 @@ export function taskRunner({ day, patchTask }: Deps) {
         result = await code("fix", fixPrompt(report, task.title), result.sessionId, copy);
       }
     };
-    return { projectId, task, fresh, ours, spend, code, checked };
+    const settle = () => runId && dropLive(runId);
+    return { projectId, task, fresh, ours, spend, code, checked, settle };
   };
   type Run = ReturnType<typeof begin>;
 
@@ -174,6 +177,8 @@ export function taskRunner({ day, patchTask }: Deps) {
       if (error instanceof Stopped || !run.ours()) return;
       if (army) await armyDiscard(projectId, task.id, task.title).catch(() => undefined);
       finish(projectId, task, "failed", String(error));
+    } finally {
+      run.settle();
     }
   };
 

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
 import { companyAgent, useCompany } from "@/store/company";
 import { useFounding, type Phase } from "@/store/founding";
+import { useLiveLast, useLivePhase } from "@/store/live";
 import { Approvals } from "../Approvals";
 import { ChoicePicker } from "../ModelPicker";
 import { Switch } from "../ui/switch";
@@ -23,8 +24,8 @@ const primary = "h-9 flex-none rounded-md bg-foreground px-5 text-[13.5px] font-
 const quiet = "flex h-9 flex-none items-center gap-2 rounded-md px-4 text-[13.5px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground";
 
 function Live({ runId }: { runId: string | null }) {
-  const phase = useApp((s) => (runId ? s.live[runId]?.phase : undefined)) || "Starting";
-  const doing = useApp((s) => (runId ? s.live[runId]?.log[s.live[runId].log.length - 1] : undefined));
+  const phase = useLivePhase(runId) || "Starting";
+  const doing = useLiveLast(runId);
   const said = doing ? `${phase} · ${doing}` : phase;
   return <p className="truncate text-[12.5px] text-muted-foreground" title={said}>{said}</p>;
 }

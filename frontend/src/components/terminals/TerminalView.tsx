@@ -18,6 +18,7 @@ const THEME = { background: "#050506", foreground: "#e8e8ea", cursor: "#e8e8ea",
 // How long a CLI stays silent before it counts as done with its turn. Claude's spinner redraws
 // several times a second, so a working CLI never goes this long without printing.
 const QUIET_MS = 1800;
+const REFIT_MS = 80;
 
 const bytesOf = (base64: string) => Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 
@@ -99,11 +100,18 @@ export function TerminalView({ id, engine, start, project, copy, model, task, on
     const seen = () => report.current.onEvent({ kind: "seen" });
     el.addEventListener("focusin", seen);
     const resized = term.onResize(({ cols, rows }) => void terminalResize(id, cols, rows).catch(() => undefined));
-    const follow = new ResizeObserver(refit);
+    // A window or panel drag resizes every frame; the CLI hears one resize when it settles, not dozens
+    // that each make it redraw its whole screen.
+    let settling: ReturnType<typeof setTimeout> | undefined;
+    const follow = new ResizeObserver(() => {
+      clearTimeout(settling);
+      settling = setTimeout(refit, REFIT_MS);
+    });
     follow.observe(el);
     return () => {
       ended = true;
       clearTimeout(quiet);
+      clearTimeout(settling);
       el.removeEventListener("focusin", seen);
       follow.disconnect();
       typed.dispose();

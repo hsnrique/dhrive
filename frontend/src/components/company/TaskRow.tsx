@@ -5,10 +5,10 @@ import { stuckOn, taskSummary, waitingOn, type Area, type Task, type TaskStatus 
 import { spendDetail, spendLine } from "@/lib/spend";
 import { cn } from "@/lib/utils";
 import { agentById } from "@/lib/army";
-import { useApp } from "@/store/app";
 import { useArmyOf } from "@/store/army";
 import { useDay } from "@/store/day";
 import { useFold } from "@/store/fold";
+import { useLiveLast, useLivePhase } from "@/store/live";
 import { Approvals } from "../Approvals";
 import { Markdown } from "../Markdown";
 import { ChoicePicker } from "../ModelPicker";
@@ -39,8 +39,8 @@ function Mark({ status }: { status: TaskStatus }) {
 }
 
 function Progress({ runId }: { runId: string }) {
-  const phase = useApp((s) => s.live[runId]?.phase) || "Starting";
-  const doing = useApp((s) => s.live[runId]?.log[s.live[runId].log.length - 1]);
+  const phase = useLivePhase(runId) || "Starting";
+  const doing = useLiveLast(runId);
   const said = doing ? `${phase} · ${doing}` : phase;
   return <p className="truncate text-[12.5px] text-muted-foreground" title={said}>{said}</p>;
 }
