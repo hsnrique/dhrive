@@ -8,6 +8,7 @@ import { totalDetail, totalLine, type Tokens } from "@/lib/spend";
 import { cn } from "@/lib/utils";
 import { useArmy } from "@/store/army";
 import { useDay } from "@/store/day";
+import { InlineConfirm } from "@/components/ui/inline-confirm";
 import { buttonVariants } from "@/components/ui/button";
 import { fieldVariants } from "@/components/ui/field";
 import { ChoicePicker } from "../ModelPicker";
@@ -70,10 +71,7 @@ export function AgentRow({ projectId, agent, engines, spent }: { projectId: stri
       )}
       <div className={leaving ? "flex items-center gap-1.5" : "hidden items-center gap-1.5 group-hover:flex group-focus-within:flex"}>
         {leaving ? (
-          <>
-            <button type="button" className="h-6 rounded-md border border-failure/50 px-2.5 text-[11.5px] text-failure transition-colors hover:bg-failure/10" onClick={leave}>Dismiss {agent.name}</button>
-            <button type="button" className={quiet} onClick={() => setLeaving(false)}>Keep</button>
-          </>
+          <InlineConfirm question={`Dismiss ${agent.name}?`} action="Dismiss" onYes={leave} onNo={() => setLeaving(false)} className="min-w-0 flex-1" />
         ) : (
           <>
             <button type="button" className={quiet} onClick={() => setEditing(true)}><Pencil className="h-3 w-3" />Edit</button>

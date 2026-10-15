@@ -10,10 +10,6 @@ import { cn } from "@/lib/utils";
 
 const layers = layerStack();
 let listening = false;
-// What had focus before the latest move: a layer whose field takes focus on mount (autoFocus) has
-// already moved it by the time the layer starts, so this is where it returns to.
-let lastLeft: HTMLElement | null = null;
-if (typeof document !== "undefined") document.addEventListener("focusin", (e) => (lastLeft = e.relatedTarget instanceof HTMLElement ? e.relatedTarget : lastLeft));
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -24,6 +20,37 @@ function onEscape(e: KeyboardEvent) {
   if (!top) return;
   e.preventDefault();
   top.close();
+}
+
+// Where an element sits, as child positions from the body: a row that swapped its trigger for a
+// question puts a new trigger back in the same place, and focus finds it there.
+const pathOf = (el: Element) => {
+  const path: number[] = [];
+  for (let at: Element | null = el; at?.parentElement && at !== document.body; at = at.parentElement) path.unshift(Array.prototype.indexOf.call(at.parentElement.children, at));
+  return path;
+};
+const atPath = (path: number[]) => path.reduce<Element | null>((at, i) => at?.children[i] ?? null, document.body);
+
+// The last two things that had focus, each with where it sat while it was there: by the time a layer
+// starts, a field inside it may have taken focus (autoFocus), or the trigger may be gone already (a
+// row that swapped it for a question), and focus goes back to what came before either.
+type Spot = { el: HTMLElement; path: number[] };
+let current: Spot | null = null;
+let previous: Spot | null = null;
+if (typeof document !== "undefined") {
+  document.addEventListener("focusin", (e) => {
+    if (!(e.target instanceof HTMLElement)) return;
+    previous = current;
+    current = { el: e.target, path: pathOf(e.target) };
+  });
+}
+
+function giveBack({ el, path }: Spot) {
+  if (el.isConnected) return el.focus();
+  requestAnimationFrame(() => {
+    const again = atPath(path);
+    if (document.activeElement === document.body && again instanceof HTMLElement && again.matches(FOCUSABLE)) again.focus();
+  });
 }
 
 function syncInert() {
@@ -44,8 +71,8 @@ export function useLayer(ref: RefObject<HTMLElement | null>, onClose: () => void
     if (!listening) window.addEventListener("keydown", onEscape);
     listening = true;
     const el = ref.current;
-    const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const before = focused && el?.contains(focused) ? lastLeft : focused;
+    const focused = document.activeElement;
+    const before = !focused || focused === document.body ? current : el?.contains(focused) ? previous : focused instanceof HTMLElement ? { el: focused, path: pathOf(focused) } : null;
     const pop = layers.push({ el, modal, close: () => close.current() });
     if (modal) syncInert();
     // An autoFocus field inside has focus already; otherwise the first thing to use, or the layer itself.
@@ -55,7 +82,7 @@ export function useLayer(ref: RefObject<HTMLElement | null>, onClose: () => void
       if (modal) syncInert();
       const now = document.activeElement;
       // Back where the owner was, unless they've moved on to something else meanwhile.
-      if (focus && before?.isConnected && (!now || now === document.body || el?.contains(now))) before.focus();
+      if (focus && before && (!now || now === document.body || el?.contains(now))) giveBack(before);
     };
   }, [ref, modal, focus, active]);
 }

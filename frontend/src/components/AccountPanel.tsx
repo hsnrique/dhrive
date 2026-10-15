@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useAccount } from "@/store/account";
 import { useApp } from "@/store/app";
 import { standDown } from "@/store/stand-down";
+import { InlineConfirm } from "@/components/ui/inline-confirm";
 import { Dialog } from "@/components/ui/layer";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -17,7 +18,6 @@ import { buttonVariants } from "@/components/ui/button";
 
 const quiet = cn(buttonVariants({ variant: "outline", size: "md" }), "px-4");
 const loud = cn(buttonVariants({ variant: "primary", size: "md" }), "px-4");
-const soft = cn(buttonVariants({ variant: "soft", size: "md" }), "px-4");
 
 const open = (url: string) => void openUrl(url).catch(() => undefined);
 
@@ -79,10 +79,9 @@ function SignOut() {
     );
   }
   return (
-    <div className="flex items-center gap-2">
-      <span className={cn("text-[12px]", error ? "text-failure" : "text-muted-foreground")} role={error ? "alert" : undefined}>{error ?? "Companies stop working here."}</span>
-      <button type="button" disabled={leaving} className={soft} onClick={leave}>{leaving ? "Signing out…" : "Sign out"}</button>
-      <button type="button" className="text-[12px] text-muted-foreground hover:text-foreground" onClick={() => setAsking(false)}>Cancel</button>
+    <div className="grid gap-1.5">
+      <InlineConfirm question={leaving ? "Signing out…" : "Companies stop working here."} action="Sign out" busy={leaving} onYes={leave} onNo={() => setAsking(false)} />
+      {error && <p className="text-[12px] text-failure" role="alert">{error}</p>}
     </div>
   );
 }

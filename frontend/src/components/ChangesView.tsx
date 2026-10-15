@@ -9,6 +9,7 @@ import { useApp } from "@/store/app";
 import { folderOf } from "@/store/conversations";
 import { usePanel } from "@/store/panel";
 import { undoRun } from "@/store/runs";
+import { InlineConfirm } from "@/components/ui/inline-confirm";
 import { CommitBar } from "./CommitBar";
 
 // What a code step changed: a line of totals, the files with their counts, one file's diff on click,
@@ -107,15 +108,7 @@ function UndoButton({ conversationId, message }: { conversationId: string; messa
   };
   if (confirming) {
     return (
-      <span className="flex items-center gap-1 text-[12px]">
-        <span className="text-muted-foreground">{undoing ? "Putting it back…" : `Undo ${count === 1 ? "this file" : `${count} files`}?`}</span>
-        <button type="button" disabled={undoing} className="rounded px-1.5 py-0.5 text-failure hover:bg-hover disabled:opacity-40" onClick={() => void undo()}>
-          Undo
-        </button>
-        <button type="button" className="rounded px-1.5 py-0.5 hover:bg-hover" onClick={() => setConfirming(false)}>
-          Keep
-        </button>
-      </span>
+      <InlineConfirm question={undoing ? "Putting it back…" : `Undo ${count === 1 ? "this file" : `${count} files`}?`} action="Undo" busy={undoing} onYes={() => void undo()} onNo={() => setConfirming(false)} />
     );
   }
   return (
