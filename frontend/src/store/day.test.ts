@@ -150,6 +150,25 @@ describe("a company's day", () => {
     expect(day().tasks.map((t) => t.status), "standing down stops every one of them").toEqual(["stopped", "stopped", "done", "stopped"]);
   });
 
+  it("a stop while an army's copies are being made holds: no task comes back to running, no CLI starts", async () => {
+    const { armyPrepare, runStep } = await import("@/lib/api");
+    const made: (() => void)[] = [];
+    vi.mocked(armyPrepare).mockImplementation((_project: string, task: string) => new Promise((done) => made.push(() => done(`/planilha/.dhrive/${task}`))));
+    useArmy.setState({ byProject: { [P]: [newAgent("Back", "", { engine: "claude-code", model: "opus" })!] } });
+    useDay.setState({ byProject: { [P]: { ...EMPTY_DAY } } });
+    void useDay.getState().plan(P);
+    reply(JSON.stringify(["One", "Two"].map((title) => ({ title, area: "code", prompt: `Do ${title}` }))));
+    await settle();
+    await settle();
+    vi.mocked(runStep).mockClear();
+    useDay.getState().stop(P);
+    made.forEach((done) => done());
+    await windDown();
+    expect(day().tasks.map((t) => t.status)).toEqual(["stopped", "stopped"]);
+    expect(runStep, "the copies were made after the stop, and nothing ran in them").not.toHaveBeenCalled();
+    vi.mocked(armyPrepare).mockImplementation(async (_project: string, task: string) => `/planilha/.dhrive/${task}`);
+  });
+
   it("the General's order holds: a task waiting for another starts only once that one has landed", async () => {
     useArmy.setState({ byProject: { [P]: [newAgent("Back", "", { engine: "claude-code", model: "opus" })!] } });
     useDay.setState({ byProject: { [P]: { ...EMPTY_DAY } } });
@@ -291,6 +310,22 @@ describe("a company's day", () => {
     await windDown();
   });
 
+  it("a task in the company's folder waits while another writer holds it, such as a conversation's code step", async () => {
+    const { editing } = await import("./editing");
+    const release = await editing.take("/planilha");
+    void useDay.getState().plan(P);
+    reply(PLAN);
+    await settle();
+    useDay.getState().accept(P, day().tasks[0].id);
+    await settle();
+    expect([...pending.values()].filter((p) => p.request.step === "code"), "the folder is taken").toHaveLength(0);
+    release();
+    await settle();
+    expect(last().request).toMatchObject({ step: "code", folder: "/planilha" });
+    reply("Wrote the ads");
+    await windDown();
+  });
+
   it("runs as soon as it's planned, which is how a new day starts", async () => {
     useDay.setState({ byProject: {} });
     expect(day().ask).toBe(false);
@@ -415,7 +450,19 @@ describe("a company's day", () => {
     useDay.getState().stop(P);
   });
 
-  it("keeps what's done, tells the agent about it, and replaces only waiting suggestions", async () => {
+  it("suggesting more on a first day keeps it a first day, so its delivery still ends on the web", async () => {
+    void useDay.getState().plan(P, "Plan the first delivery.");
+    reply(PLAN);
+    await settle();
+    expect(day()).toMatchObject({ first: true });
+    void useDay.getState().plan(P);
+    reply(JSON.stringify([{ title: "Blog", area: "marketing", prompt: "Draft a post" }]));
+    await settle();
+    expect(day().first, "Suggest more doesn't turn the first delivery into an ordinary day").toBe(true);
+    expect(day().tasks.map((t) => t.title)).toEqual(["Ads", "Form", "Blog"]);
+  });
+
+  it("keeps what's done and what waits for an OK, and tells the agent about both", async () => {
     void useDay.getState().plan(P);
     reply(PLAN);
     await settle();
@@ -425,9 +472,10 @@ describe("a company's day", () => {
     await settle();
     void useDay.getState().plan(P);
     expect(last().request.task).toContain("Already done:\n- Ads");
+    expect(last().request.task).toContain("Already suggested, waiting for the owner's OK:\n- Form");
     reply(JSON.stringify([{ title: "Blog", area: "marketing", prompt: "Draft a post" }]));
     await settle();
-    expect(day().tasks.map((t) => [t.title, t.status])).toEqual([["Ads", "done"], ["Blog", "suggested"]]);
+    expect(day().tasks.map((t) => [t.title, t.status])).toEqual([["Ads", "done"], ["Form", "suggested"], ["Blog", "suggested"]]);
   });
 
   it("starts the owner's own tasks and retries right away", async () => {

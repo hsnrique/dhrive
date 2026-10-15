@@ -12,6 +12,7 @@ import { useApp } from "@/store/app";
 import { useConversations } from "@/store/conversations";
 import { useDay } from "@/store/day";
 import { startSession } from "@/store/open-terminals";
+import { standDown } from "@/store/stand-down";
 import { useTerminals, type TerminalSession } from "@/store/terminals";
 import { EngineMark } from "./EngineMark";
 import { NameInput } from "./InlineEdit";
@@ -134,7 +135,7 @@ function ProjectGroup({ project, collapsed, onToggle }: { project: Project; coll
           word={project.name}
           action="Delete"
           doing="Deleting…"
-          onConfirm={() => deleteProject(project.id)}
+          onConfirm={() => (standDown(project.id), deleteProject(project.id))}
           onClose={() => setConfirming(false)}
         />
       )}

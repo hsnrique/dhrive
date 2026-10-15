@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 import { connectors as listConnectors, readCompanyRecord, saveCompanyRecord, type Connector } from "@/lib/api";
+import { useApp } from "./app";
 
 // The tools each company has connected (connectors.rs runs their setups), kept in its folder
 // (.company/connectors.json) so the record goes with the company, and so its agents are told to use
@@ -41,8 +42,10 @@ export const useConnectors = create<ConnectorsState>((set, get) => {
         const next = { ...connectedIn(await readCompanyRecord(projectId, "connectors")), ...mark };
         await saveCompanyRecord(projectId, "connectors", next);
         put(projectId, next);
-      } catch {
-        // Shown as connected here; the folder's record stays as it was.
+      } catch (error) {
+        // Connected all the same (the tool's own CLI holds the sign-in); only dhrive's note of it is
+        // missing, so it would show as not connected next time. Said, not swallowed.
+        useApp.getState().reportError(`Connected, but dhrive couldn't note it in the company's folder: ${String(error)}`);
       }
     },
   };

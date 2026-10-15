@@ -95,7 +95,7 @@ function Toolbar({ project, brief, saving, chat }: { project: Project; brief: Br
 }
 
 export function CompanyView({ project }: { project: Project }) {
-  const { brief, saving } = useCompanyOf(project.id);
+  const { brief, saving, unreadable } = useCompanyOf(project.id);
   const root = useRef<HTMLDivElement>(null);
   const docked = useWidth(root) >= CHAT_DOCKS_AT;
   const [sliding, setSliding] = useState(false);
@@ -128,7 +128,13 @@ export function CompanyView({ project }: { project: Project }) {
     <div ref={root} className="relative flex h-full flex-col">
       <Toolbar project={project} brief={brief} saving={saving} chat={chat} />
       <div className="flex min-h-0 flex-1">
-        {brief === null ? <p className="flex-1 px-6 pt-8 text-[12.5px] text-muted-foreground">Reading COMPANY.md…</p> : <Sections project={project} brief={brief} />}
+        {unreadable && (
+          <div role="alert" className="mx-6 mt-6 flex items-start gap-3 rounded-md border border-[#ff8a8f]/40 px-3 py-2.5">
+            <p className="min-w-0 flex-1 text-[12.5px] text-[#ff8a8f]">{unreadable}</p>
+            <button type="button" className="h-7 flex-none rounded-md bg-white/[0.08] px-3 text-[12px] font-medium transition-colors hover:bg-white/[0.14]" onClick={() => void useCompany.getState().load(project.id)}>Try again</button>
+          </div>
+        )}
+        {brief === null ? !unreadable && <p className="flex-1 px-6 pt-8 text-[12.5px] text-muted-foreground">Reading COMPANY.md…</p> : <Sections project={project} brief={brief} />}
         {docked && <SidePane project={project} className="flex w-[clamp(340px,28%,440px)] flex-none" />}
       </div>
       {sliding && (

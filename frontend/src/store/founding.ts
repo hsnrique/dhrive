@@ -39,6 +39,8 @@ export const useFounding = create<FoundingState>((set, get) => {
   // A stop (or a new start) makes every step still in flight stale.
   let attempt = 0;
   const step = async (mine: number, request: Parameters<typeof runStep>[0]) => {
+    // Stopped while the folder was being made: the CLI never starts.
+    if (mine !== attempt) throw new Error("stopped");
     set({ runId: request.runId });
     const result = await runStep(request);
     if (mine !== attempt) throw new Error("stopped");
@@ -67,8 +69,11 @@ export const useFounding = create<FoundingState>((set, get) => {
       set({ ...IDLE, phase: "naming", idea, ask });
       try {
         const project = await name(mine, idea);
+        // Each await is a moment the owner may have pressed Stop; past one, nothing more starts.
+        if (mine !== attempt) return;
         set({ phase: "planning", runId: null });
         await useCompany.getState().load(project.id);
+        if (mine !== attempt) return;
         useDay.getState().setAsk(project.id, ask);
         await useDay.getState().plan(project.id, FIRST_DELIVERY);
         if (mine !== attempt) return;

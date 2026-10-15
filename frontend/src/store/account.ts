@@ -10,6 +10,7 @@ const CANCELLED = "Sign-in cancelled.";
 interface AccountState {
   status: AccountStatus | null;
   signingIn: boolean;
+  signingOut: boolean;
   error: string | null;
   sheetOpen: boolean;
   setSheetOpen: (open: boolean) => void;
@@ -24,9 +25,10 @@ interface AccountState {
 // takes its turn when it starts; signing in or out takes the newest turn when it finishes.
 let turn = 0;
 
-export const useAccount = create<AccountState>((set) => ({
+export const useAccount = create<AccountState>((set, get) => ({
   status: null,
   signingIn: false,
+  signingOut: false,
   error: null,
   sheetOpen: false,
   setSheetOpen: (sheetOpen) => set({ sheetOpen }),
@@ -56,10 +58,19 @@ export const useAccount = create<AccountState>((set) => ({
 
   cancelSignIn: () => void cancelSignIn(),
 
+  // Once at a time; a failure says so where the owner asked, instead of vanishing into the console.
   signOut: async () => {
-    const status = await signOut();
-    turn++;
-    set({ status, sheetOpen: false });
+    if (get().signingOut) return;
+    set({ signingOut: true, error: null });
+    try {
+      const status = await signOut();
+      turn++;
+      set({ status, sheetOpen: false });
+    } catch (e) {
+      set({ error: String(e) });
+    } finally {
+      set({ signingOut: false });
+    }
   },
 }));
 

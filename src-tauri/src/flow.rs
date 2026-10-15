@@ -162,7 +162,7 @@ pub async fn run_step(app: tauri::AppHandle, request: StepRequest) -> Result<Ste
 
 fn run_blocking(app: &tauri::AppHandle, folder: &Path, attachments: &[PathBuf], request: StepRequest) -> Result<StepResult, String> {
     let reporter = crate::events::make_reporter(app, request.run_id.clone());
-    crate::cancel::begin(&request.run_id);
+    crate::cancel::start(&request.run_id)?;
     let watch = watch_of(&request);
     let agent = Agent::new(request.engine, request.model).with_effort(request.effort);
     reporter.phase(format!("{} is {}", request.engine.label(), request.step.doing()));

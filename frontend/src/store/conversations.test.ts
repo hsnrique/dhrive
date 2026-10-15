@@ -126,7 +126,10 @@ describe("conversations", () => {
   it("deleting the open conversation goes back to a new one, and the session it carried on is listed again", async () => {
     store().startNew("pa", APP_SESSION);
     const id = store().begin("oi")!;
-    await store().remove(id);
+    const { removeConversation } = await import("@/lib/api");
+    vi.mocked(removeConversation).mockClear();
+    await Promise.all([store().remove(id), store().remove(id)]);
+    expect(removeConversation, "a double click deletes once").toHaveBeenCalledTimes(1);
     expect(store().open).toEqual({ projectId: "pa", conversationId: null, from: null });
     expect(useApp.getState().threads[id]).toBeUndefined();
     expect(listed("pa").map((item) => item.kind === "past" && item.session.id)).toEqual([APP_SESSION.id, TERMINAL.id]);

@@ -36,18 +36,26 @@ pub fn combined(every_project: &str, this_conversation: &str) -> Option<String> 
     (!parts.is_empty()).then(|| parts.join("\n\n"))
 }
 
-fn read(dir: &Path) -> String {
-    std::fs::read_to_string(dir.join(FILE)).ok().and_then(|text| checked(&text).ok()).unwrap_or_default()
+// The owner's instructions, or "" while there are none. A file that is there but can't be read, or
+// that grew past the limit outside dhrive, is an error for the editor: shown empty, its autosave
+// would write over it. A run does without it rather than fail.
+fn read(dir: &Path) -> Result<String, String> {
+    let text = match std::fs::read_to_string(dir.join(FILE)) {
+        Ok(text) => text,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(String::new()),
+        Err(error) => return Err(format!("Your instructions file can't be read ({error}), so dhrive won't write over it.")),
+    };
+    checked(&text)
 }
 
 pub fn for_run(app: &tauri::AppHandle, this_conversation: &str) -> Option<String> {
-    let every_project = data_dir(app).map(|dir| read(&dir)).unwrap_or_default();
+    let every_project = data_dir(app).ok().and_then(|dir| read(&dir).ok()).unwrap_or_default();
     combined(&every_project, this_conversation)
 }
 
 #[tauri::command]
 pub fn read_instructions(app: tauri::AppHandle) -> Result<String, String> {
-    Ok(read(&data_dir(&app)?))
+    read(&data_dir(&app)?)
 }
 
 #[tauri::command]
@@ -73,6 +81,18 @@ mod tests {
     }
 
     #[test]
+    fn instructions_that_cant_be_read_are_an_error_for_the_editor_not_an_empty_page() {
+        let dir = std::env::temp_dir().join(format!("dhrive-instructions-odd-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        assert_eq!(read(&dir).unwrap(), "", "none yet");
+        std::fs::write(dir.join(FILE), "x".repeat(MAX_INSTRUCTIONS + 1)).unwrap();
+        assert!(read(&dir).is_err(), "grown past the limit outside dhrive");
+        std::fs::write(dir.join(FILE), b"Responda em portugu\xeas").unwrap();
+        assert!(read(&dir).unwrap_err().contains("won't write over it"));
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
     fn control_characters_and_oversized_text_are_refused_or_dropped() {
         assert_eq!(checked("a\u{7f}b\u{0}\n\tc  ").unwrap(), "ab\n\tc");
         assert!(checked(&"x".repeat(MAX_INSTRUCTIONS + 1)).is_err());
@@ -82,9 +102,9 @@ mod tests {
     fn the_file_is_read_back_checked() {
         let dir = std::env::temp_dir().join(format!("dhrive-instructions-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        assert_eq!(read(&dir), "", "missing file");
+        assert_eq!(read(&dir).unwrap(), "", "missing file");
         std::fs::write(dir.join(FILE), "Use pnpm.\u{7}\n").unwrap();
-        assert_eq!(read(&dir), "Use pnpm.");
+        assert_eq!(read(&dir).unwrap(), "Use pnpm.");
         std::fs::remove_dir_all(dir).unwrap();
     }
 }

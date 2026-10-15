@@ -5,7 +5,7 @@ import { PARALLEL, rosterNote, type Agent } from "@/lib/army";
 import { RECHECK_MS } from "@/lib/logistics";
 import { isBlank, toMarkdown } from "@/lib/company";
 import { alreadyNote, ownTask, parseDay, ready, savedTasks, trimmed, type Area, type Task } from "@/lib/day";
-import { documentPrompt, missing } from "@/lib/documents";
+import { documentPrompt, missing, writtenOf } from "@/lib/documents";
 import type { Choice } from "@/lib/flow";
 import { readSaved } from "@/lib/storage";
 import { useApp } from "./app";
@@ -162,7 +162,8 @@ export const useDay = create<DayState>((set, get) => {
     for (;;) {
       while (running.size < PARALLEL && !halted.has(projectId)) {
         const next = await nextToStart(projectId, { day, patchTask, setHeld });
-        if (!next) break;
+        // Reading the plans takes a moment; a stop pressed meanwhile starts nothing.
+        if (!next || halted.has(projectId)) break;
         // Marked before it starts, so the next pick never takes it again.
         patchTask(projectId, next.id, { status: "running" });
         const run: Promise<void> = runTask(projectId, next, true).finally(() => running.delete(run));
@@ -184,8 +185,10 @@ export const useDay = create<DayState>((set, get) => {
     if (!first || halted.has(projectId) || !tasks.length || !tasks.every((t) => t.status === "done")) return;
     patch(projectId, () => ({ first: false }));
     await usePublish.getState().publish(projectId);
-    const written = await readDocuments(projectId).catch(() => []);
-    for (const kind of missing(Object.fromEntries(written.map((d) => [d.id, d.text])))) get().add(projectId, documentPrompt(kind), kind.area);
+    // A folder that can't be read at all writes nothing: missing is only what is known to be absent.
+    const written = await readDocuments(projectId).catch(() => null);
+    if (!written) return;
+    for (const kind of missing(writtenOf(written))) get().add(projectId, documentPrompt(kind), kind.area);
   };
 
   return {
@@ -196,8 +199,10 @@ export const useDay = create<DayState>((set, get) => {
       const choice = companyAgent(projectId);
       if (!project || !brief || isBlank(brief) || !choice || day(projectId).planRunId) return;
       const planRunId = crypto.randomUUID();
-      // Fresh suggestions replace the ones still waiting.
-      patch(projectId, (d) => ({ planRunId, tasks: d.tasks.filter((t) => t.status !== "suggested"), first: also !== undefined, error: null }));
+      // Suggestions add to what waits: the ones still waiting for an OK stay (the planner hears them,
+      // so it doesn't repeat them), and a first day stays one, so its delivery still ends on the web.
+      // Replacing them here once threw away a first delivery the owner was asked to look over.
+      patch(projectId, (d) => ({ planRunId, first: also !== undefined || d.first, error: null }));
       try {
         const army = armyOf(projectId);
         const task = [toMarkdown(brief, project.name), rosterNote(army), alreadyNote(day(projectId).tasks), also].filter(Boolean).join("\n\n");

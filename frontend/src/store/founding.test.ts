@@ -101,6 +101,22 @@ describe("founding a company", () => {
     expect(foundCompany).not.toHaveBeenCalled();
   });
 
+  it("a stop between steps holds: once the company exists and its brief is being read, nothing gets planned", async () => {
+    const api = await import("@/lib/api");
+    let read: (text: string) => void = () => {};
+    vi.mocked(api.readCompany).mockImplementationOnce(() => new Promise((done) => (read = done)));
+    void useFounding.getState().start("", false);
+    await settle();
+    reply(FOUNDED);
+    await settle();
+    useFounding.getState().stop();
+    read("# Lapse\n\n## Goals\n\nA waitlist");
+    await settle();
+    await settle();
+    expect(pending.size, "no first delivery was planned after the stop").toBe(0);
+    expect(useFounding.getState().phase).toBe("failed");
+  });
+
   it("a stop ends the step in flight and goes no further", async () => {
     void useFounding.getState().start("", false);
     await settle();

@@ -49,8 +49,14 @@ export const taskTitle = (kind: DocumentKind) => `Write the ${kind.title.toLower
 
 export const documentPrompt = (kind: DocumentKind) => `${taskTitle(kind)}\n\nWrite ${kind.file}: ${kind.ask}. Base it on COMPANY.md and the project. Plain Markdown, concrete and short, no filler.`;
 
+// What a company's docs/ holds, by document: its text, null when it isn't written yet, false when it's
+// there but can't be read. One that can't be read is never missing: writing it would replace it.
+export type Written = Record<string, string | null | false>;
+export const writtenOf = (docs: { id: string; text: string | null; unreadable?: boolean }[]): Written =>
+  Object.fromEntries(docs.map((d) => [d.id, d.unreadable ? false : d.text]));
+
 // The documents not written yet, in the order they're listed.
-export const missing = (written: Record<string, string | null>) => DOCUMENTS.filter((kind) => !written[kind.id]);
+export const missing = (written: Written) => DOCUMENTS.filter((kind) => written[kind.id] === null || written[kind.id] === undefined);
 
 // A line to know a document by: its first line of prose, without Markdown's marks.
 export function preview(text: string): string {

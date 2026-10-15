@@ -39,7 +39,7 @@ describe("the account in the app", () => {
       const random = prng(seed);
       pending.length = 0;
       backend = { state: "signedOut" };
-      useAccount.setState({ status: null, signingIn: false, error: null });
+      useAccount.setState({ status: null, signingIn: false, signingOut: false, error: null });
       // Which account every answer since the last sign-in or sign-out may show.
       let settled: AccountStatus | null = null;
       for (let step = 0; step < 40; step++) {
@@ -72,6 +72,22 @@ describe("the account in the app", () => {
     pending.splice(0, 1)[0].reject("Couldn't reach dhrive.app.");
     await flush();
     expect(useAccount.getState().error).toContain("Couldn't reach dhrive.app.");
+  });
+
+  it("signs out once however often it's clicked, and says why when it fails", async () => {
+    const api = await import("@/lib/api");
+    pending.length = 0;
+    useAccount.setState({ signingOut: false, error: null });
+    vi.mocked(api.signOut).mockClear();
+    void useAccount.getState().signOut();
+    void useAccount.getState().signOut();
+    expect(api.signOut).toHaveBeenCalledTimes(1);
+    pending.splice(0, 1)[0].reject("Couldn't reach dhrive.app.");
+    await flush();
+    expect(useAccount.getState().error).toContain("Couldn't reach dhrive.app.");
+    void useAccount.getState().signOut();
+    expect(api.signOut, "a failed one can be tried again").toHaveBeenCalledTimes(2);
+    pending.length = 0;
   });
 
   it("blocks runs when signed out or ended, never during the free days or a subscription", () => {

@@ -1,13 +1,11 @@
 import { create } from "zustand";
 
 import { readDocuments } from "@/lib/api";
-import { DOCUMENTS, documentPrompt, taskTitle, type DocumentId } from "@/lib/documents";
+import { DOCUMENTS, documentPrompt, taskTitle, writtenOf, type DocumentId, type Written } from "@/lib/documents";
 import { useDay } from "./day";
 
 // What each company's documents say, read from its docs/ when its page opens and again as tasks
 // finish. Writing one is queueing a task for the company's agent, unless one is already queued.
-
-type Written = Record<string, string | null>;
 
 interface DocumentsState {
   byProject: Record<string, Written>;
@@ -26,14 +24,15 @@ export const useDocuments = create<DocumentsState>((set, get) => ({
   load: async (projectId) => {
     try {
       const docs = await readDocuments(projectId);
-      set({ byProject: { ...get().byProject, [projectId]: Object.fromEntries(docs.map((d) => [d.id, d.text])) } });
+      set({ byProject: { ...get().byProject, [projectId]: writtenOf(docs) } });
     } catch {
       // A folder that went away reads as nothing written; the page says so.
       set({ byProject: { ...get().byProject, [projectId]: {} } });
     }
   },
   write: (projectId, ids) => {
-    for (const kind of DOCUMENTS.filter((k) => ids.includes(k.id) && !writing(projectId, k.id))) {
+    const written = get().byProject[projectId] ?? {};
+    for (const kind of DOCUMENTS.filter((k) => ids.includes(k.id) && !writing(projectId, k.id) && written[k.id] !== false)) {
       useDay.getState().add(projectId, documentPrompt(kind), kind.area);
     }
   },

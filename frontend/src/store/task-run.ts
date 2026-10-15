@@ -7,6 +7,7 @@ import { entry } from "@/lib/log";
 import { outside, parseReview, reviewFixPrompt, reviewPrompt, territoryPrompt } from "@/lib/review";
 import { useApp } from "./app";
 import { useArmy } from "./army";
+import { inFolder } from "./editing";
 import { companyAgent } from "./company";
 import type { Day } from "./day";
 import { useGitHub } from "./github";
@@ -24,6 +25,12 @@ interface Deps {
 }
 
 const projectOf = (projectId: string) => useApp.getState().projects.find((p) => p.id === projectId);
+
+// The company's own folder (an army task's copy lives inside it).
+const copyOwner = (projectId: string) => projectOf(projectId)?.folder ?? projectId;
+
+// Thrown when a step would start for a run the owner stopped (or retried) during the await before it.
+class Stopped extends Error {}
 const armyOf = (projectId: string) => useArmy.getState().byProject[projectId] ?? [];
 
 export function taskRunner({ day, patchTask }: Deps) {
@@ -36,12 +43,19 @@ export function taskRunner({ day, patchTask }: Deps) {
   // retry, which change the task's, end it; `ours` says whether this run is still the task's.
   const begin = (projectId: string, task: Task, folder: string) => {
     let runId = "";
+    const now = () => day(projectId).tasks.find((t) => t.id === task.id);
+    const ours = () => now()?.runId === runId;
+    // Every step starts here, so this is where a stop pressed during any await (an army's copy being
+    // made, its changes being read, a sync) takes hold: a stopped task never starts its next step and
+    // never comes back to "running". Before its first step it must still be up next, or picked.
     const fresh = () => {
+      const current = now();
+      const live = runId ? current?.runId === runId : current?.status === "planned" || current?.status === "running";
+      if (!live) throw new Stopped("Stopped.");
       runId = crypto.randomUUID();
       patchTask(projectId, task.id, { status: "running", runId });
       return runId;
     };
-    const ours = () => day(projectId).tasks.find((t) => t.id === task.id)?.runId === runId;
     // Every run's tokens go on the task, by what it was doing, even when the run was stopped meanwhile:
     // they were spent all the same.
     const spend = (on: SpentOn, result: StepResult) => {
@@ -122,7 +136,8 @@ export function taskRunner({ day, patchTask }: Deps) {
       const report = await runChecks(run.projectId, run.fresh(), run.task.id);
       if (!run.ours()) return;
       if (!passed(report)) return void (await fail(run, failure(report)));
-      await armyLand(run.projectId, run.task.id, run.task.title);
+      // Merging back writes the company's folder, so it takes the folder like any writer.
+      await inFolder(copyOwner(run.projectId), () => armyLand(run.projectId, run.task.id, run.task.title));
       finish(run.projectId, run.task, "done", result.output);
       await useGitHub.getState().backup(run.projectId);
     });
@@ -139,22 +154,24 @@ export function taskRunner({ day, patchTask }: Deps) {
     if (reviewed) await land(run, copy, reviewed);
   };
 
-  // A task on its own: in the company's folder, done once its checks pass.
+  // A task on its own: in the company's folder, done once its checks pass. It holds the folder from
+  // its first edit to its last check, so a conversation's code step never runs in the middle of it.
   const alone = async (run: Run, prompt: string) => {
-    const done = await run.checked(await run.code("task", prompt, null));
+    const done = await inFolder(copyOwner(run.projectId), async () => run.checked(await run.code("task", prompt, null)));
     if (done) finish(run.projectId, run.task, passed(done.report) ? "done" : "failed", passed(done.report) ? done.result.output : failure(done.report));
   };
 
   const runTask = async (projectId: string, task: Task, army = false) => {
     const project = projectOf(projectId);
-    if (!project) return;
+    // A company that's gone can't run anything; marked stopped, so no pass keeps picking it up.
+    if (!project) return void patchTask(projectId, task.id, { status: "stopped", runId: null });
     const run = begin(projectId, task, project.folder);
     patchTask(projectId, task.id, { result: "" });
     const prompt = taskPrompt(task, project.name, agentById(armyOf(projectId), task.agentId), army ? handoffs(day(projectId).tasks, armyOf(projectId)) : "", day(projectId).lean);
     try {
       await (army ? asArmy(run, prompt) : alone(run, prompt));
     } catch (error) {
-      if (!run.ours()) return;
+      if (error instanceof Stopped || !run.ours()) return;
       if (army) await armyDiscard(projectId, task.id, task.title).catch(() => undefined);
       finish(projectId, task, "failed", String(error));
     }

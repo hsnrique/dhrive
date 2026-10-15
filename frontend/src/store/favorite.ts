@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { readCompanyRecord, saveCompanyRecord } from "@/lib/api";
 import { favoriteAddress } from "@/lib/domains";
 import { readSaved } from "@/lib/storage";
+import { useApp } from "./app";
 import { useDomainsOf } from "./domains";
 import { usePublishedOf } from "./publish";
 
@@ -47,8 +48,13 @@ export const useFavorite = create<FavoriteState>((set, get) => {
       }
     },
     pick: (projectId, host) => {
+      const before = get().byProject[projectId];
       keep(projectId, host);
-      void saveCompanyRecord(projectId, "site", { favorite: host }).catch(() => undefined);
+      void saveCompanyRecord(projectId, "site", { favorite: host }).catch((error) => {
+        if (before) keep(projectId, before);
+        else set({ byProject: Object.fromEntries(Object.entries(get().byProject).filter(([id]) => id !== projectId)) });
+        useApp.getState().reportError(`Couldn't keep the starred address: ${String(error)}`);
+      });
     },
   };
 });

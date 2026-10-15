@@ -2,11 +2,11 @@ import { allowInProject, answerApproval, notify, runStep, stopRun, undoChanges, 
 import { stagesFor } from "@/lib/flow";
 import { reportsDetails } from "@/lib/names";
 import { outcome } from "@/lib/outcome";
-import { turns } from "@/lib/turns";
 import { activeRun, approved, newRequest, nextUp, queuedIds, sessionFor, toReview, updateStage, withoutRequest, withSession, type RunMessage } from "@/lib/thread";
 import { useApp } from "./app";
 import { compactionOf, useContextUsage } from "./context";
 import { folderOf, useConversations } from "./conversations";
+import { editing, inFolder } from "./editing";
 import { useFiles } from "./files";
 import { usePreview } from "./preview";
 
@@ -17,13 +17,18 @@ import { usePreview } from "./preview";
 // what the tree looks like after it against before, which would mix the two.
 
 const newId = () => crypto.randomUUID();
-const editing = turns();
-const WAITING = "Waiting for another conversation to finish editing this project";
+const WAITING = "Waiting for other work in this project to finish";
 
 
 function stageOf(conversationId: string, messageId: string, step: Step) {
   const message = useApp.getState().threads[conversationId]?.messages.find((m): m is RunMessage => m.id === messageId && m.role === "run");
   return message?.[step] ?? null;
+}
+
+// Whether the stage still runs as this run: not stopped, not retried under another id meanwhile.
+function stillOurs(conversationId: string, messageId: string, step: Step, runId: string) {
+  const now = stageOf(conversationId, messageId, step);
+  return now?.status === "running" && now.runId === runId;
 }
 
 async function runStage(conversationId: string, message: RunMessage, step: Step): Promise<StepResult | null> {
@@ -45,9 +50,14 @@ async function runStage(conversationId: string, message: RunMessage, step: Step)
     }
     // A compaction the owner started on this session ends first; both at once would fight over it.
     if (resume) await compactionOf(stage.engine, resume);
+    // Stopped while it waited for the compaction: it never starts.
+    if (!stillOurs(conversationId, message.id, step, runId)) return null;
     const wire = message.chat ? "chat" : step;
     const instructions = threads[conversationId]?.instructions;
     const result = await runStep({ runId, folder, step: wire, engine: stage.engine, model: stage.model, effort: stage.effort, task: message.task, plan, resume, attachments: message.attachments, instructions });
+    // A result that lands after the owner stopped the stage (or retried it) is dropped: "stopped"
+    // never turns into "done", and nothing carries on from it.
+    if (!stillOurs(conversationId, message.id, step, runId)) return null;
     setThread(conversationId, (t) =>
       withSession(updateStage(t, message.id, step, { status: "done", output: result.output, usage: result.usage, blocked: result.blocked?.length ? result.blocked : undefined, endedAt: Date.now() }), stage.engine, result.sessionId),
     );
@@ -192,17 +202,25 @@ export function setKeepContext(conversationId: string, on: boolean) {
 
 // Puts back what a finished code step changed. Nothing else may be running in the conversation, since
 // a run in flight could be editing the same files.
+// Undos in flight, by step: a second click while one runs would restore twice, the second against
+// what the first just put back.
+const undoing = new Set<string>();
+
 export async function undoRun(conversationId: string, messageId: string) {
   const { threads, setThread, reportError } = useApp.getState();
   const thread = threads[conversationId];
-  const changes = stageOf(conversationId, messageId, "code")?.changes;
+  const stage = stageOf(conversationId, messageId, "code");
   const folder = folderOf(conversationId);
-  if (!thread || !changes || !folder || activeRun(thread)) return;
+  if (!thread || !stage?.changes || stage.undone || !folder || activeRun(thread) || undoing.has(messageId)) return;
+  const changes = stage.changes;
+  undoing.add(messageId);
   try {
-    const undone = await undoChanges(folder, changes);
+    const undone = await inFolder(folder, () => undoChanges(folder, changes));
     setThread(conversationId, (t) => updateStage(t, messageId, "code", { undone }));
     void useFiles.getState().load(folder);
   } catch (error) {
     reportError(error);
+  } finally {
+    undoing.delete(messageId);
   }
 }

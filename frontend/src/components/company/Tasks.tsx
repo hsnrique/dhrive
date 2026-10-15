@@ -3,7 +3,7 @@ import { Square } from "lucide-react";
 
 import type { Engine, Project } from "@/lib/api";
 import { isBlank, type Brief } from "@/lib/company";
-import type { Task } from "@/lib/day";
+import { stuckOn, type Task } from "@/lib/day";
 import { totalDetail, totalLine, totalOf } from "@/lib/spend";
 import { ago, useNow } from "@/lib/time";
 import { useApp } from "@/store/app";
@@ -65,12 +65,14 @@ function Bar({ project, day, engines, blank }: { project: Project; day: Day; eng
   const picker = choice && <ChoicePicker choice={choice} onChoose={(next) => setAgent(project.id, next)} label="Agent that works for the company" engines={engines} down tunable />;
   const now = useNow(false);
   const running = day.tasks.some((t) => t.status === "running");
-  const waiting = day.tasks.filter((t) => t.status === "planned").length;
+  // What Run would start: a task stuck behind a failed one can't, so it isn't counted.
+  const waiting = day.tasks.filter((t) => t.status === "planned" && !stuckOn(t, day.tasks).length).length;
+  const suggested = day.tasks.filter((t) => t.status === "suggested").length;
   // Wraps rather than overflows when its column is narrow.
   const card = "flex min-h-[48px] flex-wrap items-center gap-x-2.5 gap-y-2 rounded-xl border border-border bg-card px-2.5 py-2";
   const said = blank ? "Write the brief first" : day.plannedAt ? `Suggested ${ago(day.plannedAt, now)}. Reads the brief and the project, changes nothing.` : "Reads the brief and the project, changes nothing.";
   const suggest = (
-    <button type="button" disabled={!choice || blank} title={said} className={waiting || running ? quiet : primary} onClick={() => void plan(project.id)}>
+    <button type="button" disabled={!choice || blank} title={said} className={waiting || running || suggested ? quiet : primary} onClick={() => void plan(project.id)}>
       {day.plannedAt ? "Suggest more" : "Suggest tasks"}
     </button>
   );
@@ -101,6 +103,8 @@ function Bar({ project, day, engines, blank }: { project: Project; day: Day; eng
       <Switch on={day.lean} label="Lean" title={day.lean ? "Agents work without narrating, one line at the end: your plan lasts longer" : "Agents explain as they work"} onChange={(on) => setLean(project.id, on)} />
       <span className="ml-auto" />
       {suggest}
+      {/* What waits for the owner's OK comes before asking for more. */}
+      {suggested > 0 && <button type="button" className={waiting ? quiet : primary} onClick={() => useDay.getState().accept(project.id)}>Add all · {suggested}</button>}
       {waiting > 0 && <button type="button" disabled={!choice} className={primary} onClick={() => void run(project.id)}>Run {waiting}</button>}
       {day.held && <p className="w-full truncate font-mono text-[11.5px] text-attention" title={`${day.held}. It looks again in a few minutes, or press Run.`}>waiting: {day.held}</p>}
     </div>

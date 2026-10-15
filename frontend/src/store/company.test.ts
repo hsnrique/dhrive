@@ -5,12 +5,16 @@ import type { StepRequest } from "@/lib/api";
 // Each draft stays pending until the test settles it, so a stop can land before the reply.
 const pending = new Map<string, { request: StepRequest; resolve: (value: unknown) => void; reject: (error: Error) => void }>();
 let file = "";
+let unreadable: string | null = null;
 const saveCompany = vi.fn(async (_project: string, text: string) => void (file = text));
 let record: unknown = null;
 const saveCompanyRecord = vi.fn(async () => undefined);
 
 vi.mock("@/lib/api", () => ({
-  readCompany: vi.fn(async () => file),
+  readCompany: vi.fn(async () => {
+    if (unreadable) throw new Error(unreadable);
+    return file;
+  }),
   saveCompany,
   readCompanyRecord: vi.fn(async () => record),
   saveCompanyRecord,
@@ -37,6 +41,23 @@ describe("a project's company", () => {
     useApp.setState({ projects: [{ id: P, name: "planilha.", folder: "/planilha", createdAt: 0 }], page: null, choices: { plan: { engine: "claude-code", model: "opus" }, code: null } });
     useCompany.setState({ openId: null, byProject: {}, choice: null, agents: {} });
     record = null;
+    unreadable = null;
+  });
+
+  it("never writes over a COMPANY.md it couldn't read: no keystroke, no draft saves until a read works", async () => {
+    unreadable = "COMPANY.md is there but can't be read";
+    await useCompany.getState().load(P);
+    expect(company()).toMatchObject({ brief: null, unreadable: "Error: COMPANY.md is there but can't be read" });
+    vi.useFakeTimers();
+    useCompany.getState().change(P, "product", "Typed over it");
+    await useCompany.getState().draft(P);
+    await vi.runAllTimersAsync();
+    vi.useRealTimers();
+    expect(saveCompany).not.toHaveBeenCalled();
+    expect(pending.size, "no draft either").toBe(0);
+    unreadable = null;
+    await useCompany.getState().load(P);
+    expect(company()).toMatchObject({ unreadable: null, brief: { voice: "Plain." } });
   });
 
   it("opens as a page of its own, with the brief read from COMPANY.md", async () => {
@@ -90,6 +111,17 @@ describe("a project's company", () => {
     expect(companyAgent(P)).toEqual({ engine: "codex", model: "gpt-5.5" });
     expect(companyAgent("p2")).toEqual({ engine: "claude-code", model: "sonnet" });
     expect(saveCompanyRecord).toHaveBeenLastCalledWith(P, "agent", { engine: "codex", model: "gpt-5.5" });
+  });
+
+  it("a pick that can't be kept in the company's folder goes back to the one before, and says so", async () => {
+    useApp.setState({ clis: [{ engine: "claude-code", installed: true }, { engine: "codex", installed: true }] as never, error: null });
+    useCompany.getState().choose({ engine: "claude-code", model: "opus" }, P);
+    await settle();
+    saveCompanyRecord.mockRejectedValueOnce(new Error("disk full") as never);
+    useCompany.getState().choose({ engine: "codex", model: "gpt-5.5" }, P);
+    await settle();
+    expect(companyAgent(P)).toEqual({ engine: "claude-code", model: "opus" });
+    expect(String(useApp.getState().error)).toContain("Couldn't keep the company's agent");
   });
 
   it("reads a company's agent from its record when it opens, and a CLI gone falls back", async () => {

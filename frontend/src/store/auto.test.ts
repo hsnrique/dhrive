@@ -87,6 +87,18 @@ describe("auto mode", () => {
     expect(auto().ended).toBe("2 tasks failed in a row");
   });
 
+  it("a task stuck behind a failed one isn't retried round after round: auto mode suggests more and ends", async () => {
+    useAuto.getState().start(P, 1);
+    await settle();
+    await reply(JSON.stringify([{ title: "A", prompt: "a" }, { title: "B", prompt: "b", after: ["A"] }, { title: "C", prompt: "c", after: ["B"] }]));
+    await fail();
+    expect(last().request.step, "B and C can't start, so the next round asks for more").toBe("day");
+    await reply("[]");
+    expect(tasks().map((t) => [t.title, t.status])).toEqual([["A", "failed"], ["B", "planned"], ["C", "planned"]]);
+    expect(auto().ended).toBe("Nothing worth doing right now");
+    expect(pending.size).toBe(0);
+  });
+
   it("won't start a round near the plan's limit", async () => {
     percent = 95;
     useAuto.getState().start(P, 1);

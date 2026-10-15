@@ -98,12 +98,18 @@ function FileRow({ conversationId, changes, file }: { conversationId: string; ch
 function UndoButton({ conversationId, message }: { conversationId: string; message: RunMessage }) {
   const busy = useApp((s) => activeRun(s.threads[conversationId]) !== null);
   const [confirming, setConfirming] = useState(false);
+  const [undoing, setUndoing] = useState(false);
   const count = message.code.changes?.files.length ?? 0;
+  const undo = async () => {
+    setUndoing(true);
+    await undoRun(conversationId, message.id);
+    setUndoing(false);
+  };
   if (confirming) {
     return (
       <span className="flex items-center gap-1 text-[12px]">
-        <span className="text-muted-foreground">Undo {count === 1 ? "this file" : `${count} files`}?</span>
-        <button type="button" className="rounded px-1.5 py-0.5 text-diff-remove hover:bg-white/[0.08]" onClick={() => void undoRun(conversationId, message.id)}>
+        <span className="text-muted-foreground">{undoing ? "Putting it back…" : `Undo ${count === 1 ? "this file" : `${count} files`}?`}</span>
+        <button type="button" disabled={undoing} className="rounded px-1.5 py-0.5 text-diff-remove hover:bg-white/[0.08] disabled:opacity-40" onClick={() => void undo()}>
           Undo
         </button>
         <button type="button" className="rounded px-1.5 py-0.5 hover:bg-white/[0.08]" onClick={() => setConfirming(false)}>

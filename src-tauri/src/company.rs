@@ -19,8 +19,14 @@ fn checked(text: &str) -> Result<String, String> {
     Ok(format!("{}\n", clean.trim()))
 }
 
-fn read(folder: &Path) -> String {
-    std::fs::read_to_string(folder.join(FILE)).unwrap_or_default()
+// The brief, or "" while there is none. A file that is there but can't be read (another encoding, no
+// permission) is an error: read as empty, the next save would write over the owner's own file.
+fn read(folder: &Path) -> Result<String, String> {
+    match std::fs::read_to_string(folder.join(FILE)) {
+        Ok(text) => Ok(text),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(String::new()),
+        Err(error) => Err(format!("COMPANY.md is there but can't be read ({error}), so dhrive won't write over it. Fix the file, then try again.")),
+    }
 }
 
 pub(crate) fn save(folder: &Path, text: &str) -> Result<(), String> {
@@ -29,7 +35,7 @@ pub(crate) fn save(folder: &Path, text: &str) -> Result<(), String> {
 
 #[tauri::command]
 pub fn read_company(app: tauri::AppHandle, project: String) -> Result<String, String> {
-    Ok(read(&crate::terminal::project_folder(&app, &project)?))
+    read(&crate::terminal::project_folder(&app, &project)?)
 }
 
 #[tauri::command]
@@ -45,10 +51,19 @@ mod tests {
     fn the_brief_round_trips_through_company_md_cleaned() {
         let dir = std::env::temp_dir().join(format!("dhrive-company-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        assert_eq!(read(&dir), "", "no brief yet");
+        assert_eq!(read(&dir).unwrap(), "", "no brief yet");
         save(&dir, "  ## Product\u{7}\nA budget app.\u{0}  \n").unwrap();
         assert_eq!(std::fs::read_to_string(dir.join(FILE)).unwrap(), "## Product\nA budget app.\n");
         assert!(save(&dir, &"x".repeat(MAX_BRIEF + 1)).is_err());
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn a_brief_that_cant_be_read_is_an_error_not_an_empty_brief() {
+        let dir = std::env::temp_dir().join(format!("dhrive-company-latin1-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join(FILE), b"## Produto\nCaf\xe9 para todos\n").unwrap();
+        assert!(read(&dir).unwrap_err().contains("won't write over it"));
         std::fs::remove_dir_all(dir).unwrap();
     }
 }
