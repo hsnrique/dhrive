@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 
 import { AccountSheet, SignInGate } from "@/components/Account";
+import { Announcer } from "@/components/ui/announcer";
 import { ErrorToast } from "@/components/ErrorToast";
 import { Home } from "@/components/Home";
 import { CliPage } from "@/components/CliPage";
@@ -103,6 +104,7 @@ export default function App() {
       <SearchPalette />
       <AccountSheet />
       <SignInGate />
+      <Announcer />
     </div>
   );
 }

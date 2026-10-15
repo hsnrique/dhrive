@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { ShieldCheck, ShieldQuestion, X } from "lucide-react";
 
 import { disallowInProject, type Project, type Question } from "@/lib/api";
@@ -29,9 +29,10 @@ function Choice({ label, title, onClick, primary }: { label: string; title?: str
 
 function Card({ projectId, runId, question }: { projectId: string | undefined; runId: string; question: Question }) {
   const reply = (choice: Answer) => void answer(projectId, runId, question, choice);
+  const ask = useId();
   return (
-    <div className="mt-3 grid gap-2 rounded-xl border border-border bg-white/[0.04] p-3">
-      <p className="flex items-center gap-1.5 text-[12.5px]">
+    <div role="group" aria-labelledby={ask} className="mt-3 grid gap-2 rounded-xl border border-border bg-white/[0.04] p-3">
+      <p id={ask} className="flex items-center gap-1.5 text-[12.5px]">
         <ShieldQuestion className="h-3.5 w-3.5 flex-none text-muted-foreground" />
         Claude {asking(question)}
       </p>

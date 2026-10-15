@@ -33,6 +33,7 @@ const { useApp } = await import("./app");
 const { useConversations } = await import("./conversations");
 const { send, stop, retry, undoRun, cancelQueued, answer, approvePlan } = await import("./runs");
 const { queuedIds } = await import("@/lib/thread");
+const { useAnnounce } = await import("./announce");
 
 const PROJECTS = [
   { id: "pa", name: "a", folder: "/a", createdAt: 0 },
@@ -426,6 +427,7 @@ describe("carrying out requests", () => {
     const question = { id: "q1", tool: "Bash", detail: "npm test", description: "Run the tests", rule: "Bash(npm test:*)" };
     useApp.getState().onProgress({ runId, kind: "approval", value: JSON.stringify(question) });
     expect(useApp.getState().approvals[runId]).toEqual([question]);
+    expect(useAnnounce.getState().assertive?.text, "a screen reader hears it at once").toBe("Needs your OK: Claude wants to run npm test");
 
     await answer("pa", runId, question, "always");
     expect(answerApproval).toHaveBeenCalledWith("q1", true, true);
@@ -469,6 +471,7 @@ describe("carrying out requests", () => {
     await flush();
     const failed = runsOf("pb")[0];
     expect(failed).toMatchObject({ plan: { status: "failed", error: "Error: Overloaded" }, code: { status: "skipped" } });
+    expect(useAnnounce.getState().polite?.text).toBe("Plan failed in b");
 
     void retry("pb", failed.id, "plan");
     await flush();

@@ -53,6 +53,7 @@ const { useApp } = await import("./app");
 const { useArmy } = await import("./army");
 const { useUsage } = await import("./usage");
 const { setPhase, useLive } = await import("./live");
+const { useAnnounce } = await import("./announce");
 const { newAgent } = await import("@/lib/army");
 const { useCompany } = await import("./company");
 const { EMPTY_DAY, useDay } = await import("./day");
@@ -377,6 +378,7 @@ describe("a company's day", () => {
     await settle();
     expect(day().tasks[0]).toMatchObject({ status: "done", result: "Fixed the test\n\nChecks passed after 1 fix: lint, test." });
     expect(useLive.getState().runs, "each run's live state goes as the next starts, the last once it's done").toEqual({});
+    expect(useAnnounce.getState().polite?.text).toBe(`Done: ${day().tasks[0].title}`);
   });
 
   it("keeps the tokens each run spent on its task, by what it was doing, and a silent CLI adds nothing", async () => {

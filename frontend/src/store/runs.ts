@@ -5,7 +5,8 @@ import { outcome } from "@/lib/outcome";
 import { activeRun, approved, newRequest, nextUp, queuedIds, sessionFor, toReview, updateStage, withoutRequest, withSession, type RunMessage } from "@/lib/thread";
 import { useApp } from "./app";
 import { compactionOf, useContextUsage } from "./context";
-import { folderOf, useConversations } from "./conversations";
+import { announce } from "./announce";
+import { folderOf, projectOf, useConversations } from "./conversations";
 import { editing, inFolder } from "./editing";
 import { useFiles } from "./files";
 import { dropLive, setPhase } from "./live";
@@ -62,10 +63,12 @@ async function runStage(conversationId: string, message: RunMessage, step: Step)
     setThread(conversationId, (t) =>
       withSession(updateStage(t, message.id, step, { status: "done", output: result.output, usage: result.usage, blocked: result.blocked?.length ? result.blocked : undefined, endedAt: Date.now() }), stage.engine, result.sessionId),
     );
+    tellEnded(conversationId, step, message.chat, "done");
     return result;
   } catch (error) {
     if (stageOf(conversationId, message.id, step)?.status === "stopped") return null;
     setThread(conversationId, (t) => updateStage(t, message.id, step, { status: "failed", error: String(error), endedAt: Date.now() }));
+    tellEnded(conversationId, step, message.chat, "failed");
     return null;
   } finally {
     release();
@@ -80,6 +83,13 @@ async function runStage(conversationId: string, message: RunMessage, step: Step)
     if (session && reportsDetails(stage.engine)) void useContextUsage.getState().read({ engine: stage.engine, session, folder, model: stage.model });
     useApp.setState((state) => ({ approvals: Object.fromEntries(Object.entries(state.approvals).filter(([id]) => id !== runId)) }));
   }
+}
+
+// For a screen reader: which step ended, and in which project.
+function tellEnded(conversationId: string, step: Step, chat: boolean | undefined, how: "done" | "failed") {
+  const name = useApp.getState().projects.find((p) => p.id === projectOf(conversationId))?.name;
+  const what = chat ? "Reply" : step === "plan" ? "Plan" : "Code";
+  announce(`${what} ${how === "failed" ? "failed" : chat ? "ready" : "done"}${name ? ` in ${name}` : ""}`);
 }
 
 // A plan that is really questions holds the code: the owner's reply is the next request, and it

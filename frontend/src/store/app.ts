@@ -22,6 +22,7 @@ import { readEdit } from "@/lib/linediff";
 import { modelName } from "@/lib/names";
 import { readSaved, save } from "@/lib/storage";
 import { emptyThread, withRunChanges, withRunSession, type Thread } from "@/lib/thread";
+import { announce } from "./announce";
 import { pushLive } from "./live";
 
 
@@ -177,6 +178,7 @@ export const useApp = create<AppState>((set, get) => ({
       const question = readQuestion(event.value);
       if (!question) return;
       set((state) => ({ approvals: { ...state.approvals, [event.runId]: [...(state.approvals[event.runId] ?? []), question] } }));
+      announce(`Needs your OK: Claude ${asking(question)} ${question.detail}`.trim(), "assertive");
       if (typeof document !== "undefined" && !document.hasFocus()) notify("dhrive needs your OK", `Claude ${asking(question)} ${question.detail}`.trim()).catch(() => undefined);
       return;
     }

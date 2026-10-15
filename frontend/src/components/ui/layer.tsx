@@ -56,7 +56,7 @@ function giveBack({ el, path }: Spot) {
 function syncInert() {
   const reachable = layers.reachable();
   for (const child of Array.from(document.body.children)) {
-    if (child instanceof HTMLElement) child.inert = reachable ? !reachable.some((el) => child.contains(el)) : false;
+    if (child instanceof HTMLElement && !("announcer" in child.dataset)) child.inert = reachable ? !reachable.some((el) => child.contains(el)) : false;
   }
 }
 
