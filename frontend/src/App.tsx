@@ -39,7 +39,8 @@ export default function App() {
   useEffect(() => {
     const { boot, onProgress, setUpdateReady } = useApp.getState();
     const conversations = useConversations.getState;
-    void boot().then(() => conversations().load());
+    void boot();
+    void conversations().load();
     void useAccount.getState().load();
     const listeners = [
       listen<ProgressEvent>("dhrive-progress", (e) => onProgress(e.payload)),

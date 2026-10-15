@@ -144,6 +144,13 @@ pub async fn account_status(app: tauri::AppHandle) -> Result<Status, String> {
     status(&app).await
 }
 
+// Whether no one is signed in on this Mac, from what's on it alone: the sign-in gate decides on it
+// before the app shows, while the full status (which may wait on dhrive.app) follows.
+#[tauri::command]
+pub fn signed_out_here() -> bool {
+    server().is_some() && store::read_token().is_none()
+}
+
 // Opens dhrive.app in the browser and waits there for the owner to sign in (or sign up).
 #[tauri::command]
 pub async fn sign_in(app: tauri::AppHandle) -> Result<Status, String> {

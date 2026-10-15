@@ -10,6 +10,7 @@ export const restartApp = () => invoke<void>("restart_app");
 export const listClis = () => invoke<Cli[]>("list_clis");
 export const listModels = (engine: Engine) => invoke<ModelOption[]>("list_models", { engine });
 export const accountStatus = () => invoke<AccountStatus>("account_status");
+export const signedOutHere = () => invoke<boolean>("signed_out_here");
 // Opens dhrive.app in the browser and resolves once the owner has signed in there.
 export const signIn = () => invoke<AccountStatus>("sign_in");
 export const cancelSignIn = () => invoke<void>("cancel_sign_in");

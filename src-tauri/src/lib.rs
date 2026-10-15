@@ -96,6 +96,7 @@ pub fn run() {
             models::list_models,
             usage::plan_usage,
             account::account_status,
+            account::signed_out_here,
             account::sign_in,
             account::cancel_sign_in,
             account::sign_out,

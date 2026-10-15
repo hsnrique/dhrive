@@ -29,8 +29,11 @@ export interface AppState {
   clis: Cli[];
   // What each CLI reported it can run; missing until it has answered once.
   models: Partial<Record<Engine, ModelOption[]>>;
+  // The CLIs answered (installed or not); until then nothing says none is installed.
   booted: boolean;
   projects: Project[];
+  // The projects were read; until then the sidebar shows no "start a company" for a list still loading.
+  projectsRead: boolean;
   // A CLI's own screen (Local models for Ollama; plan and connections for Claude Code and Codex)
   // replaces the project view until a conversation (or Home) is picked.
   // A CLI's own screen, Terminals mode, or a project's company; null is the conversations.
@@ -67,6 +70,7 @@ export const useApp = create<AppState>((set, get) => ({
   models: {},
   booted: false,
   projects: [],
+  projectsRead: false,
   page: null,
   threads: {},
   choices: { plan: null, code: null },
@@ -76,16 +80,26 @@ export const useApp = create<AppState>((set, get) => ({
   error: null,
   updateReady: null,
 
+  // The projects are a file read and the CLIs a probe of each one, which takes far longer: the
+  // sidebar fills as soon as the projects are in, and only what needs a CLI waits for the probe.
   boot: async () => {
+    const projects = listProjects().then(
+      (projects) => set({ projects, projectsRead: true }),
+      (error) => {
+        set({ projectsRead: true });
+        get().reportError(error);
+      },
+    );
     try {
-      const [clis, projects] = await Promise.all([listClis(), listProjects()]);
+      const clis = await listClis();
       const choices = { plan: restoreChoice(readSaved("choice.plan"), "plan", clis), code: restoreChoice(readSaved("choice.code"), "code", clis) };
-      set({ clis, projects, choices, booted: true });
+      set({ clis, choices, booted: true });
       clis.filter((cli) => cli.installed).forEach((cli) => void get().loadModels(cli.engine));
     } catch (error) {
       set({ booted: true });
       get().reportError(error);
     }
+    await projects;
   },
 
   // A CLI that updated while dhrive was open is asked for its models again: a new version is how
