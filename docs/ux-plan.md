@@ -123,10 +123,17 @@ wrong there); build and publish still run beside a code step in the same folder 
 and write their own output), which the folder lock could take later if a build ever catches a step
 halfway.
 
+Phase 2 notes: live events land once per 50 ms beat on a timer, not per animation frame (a hidden
+window would pile them up). The render-count proof needs a DOM test library the app doesn't have;
+instead no component above a run's own row or log reads live state, and the store tests hold the
+batching, the freeing and the cap. Runs outside conversations and company tasks (founding, chat,
+the planner, briefs) rely on the 32-run cap rather than an explicit drop. The panel's width drag
+was measured as one small storage write per frame and left alone.
+
 | Phase | PR | State |
 | --- | --- | --- |
 | 1. Reliability | feat/ux-reliability | done: auto mode, unreadable files, Stop, one writer per folder, Suggest, small guards (326 frontend tests, 264 backend) |
-| 2. Performance | | planned |
+| 2. Performance | feat/ux-performance | done: live store, thread re-renders, edit diffs, log flush, startup, cheap wins (333 frontend tests, 266 backend) |
 | 3. Design system | | planned |
 | 4. Accessibility | | planned |
 | 5. Journeys | | planned |
