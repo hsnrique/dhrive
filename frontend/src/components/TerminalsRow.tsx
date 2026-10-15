@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SquareTerminal, Trash2 } from "lucide-react";
+import { SquareTerminal, X } from "lucide-react";
 
 import { removePaneCopy } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -53,7 +53,7 @@ export function TerminalsRow({ session }: { session: TerminalSession }) {
       </button>
       <div className="absolute right-1 top-1/2 -translate-y-1/2">
         <HoverAction label="Close these terminals" onClick={() => setConfirming(true)}>
-          <Trash2 className="h-3.5 w-3.5" />
+          <X className="h-3.5 w-3.5" />
         </HoverAction>
       </div>
     </div>
