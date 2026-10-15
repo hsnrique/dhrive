@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 
 import { AccountSheet, SignInGate } from "@/components/Account";
+import { Announcer } from "@/components/ui/announcer";
 import { ErrorToast } from "@/components/ErrorToast";
 import { Home } from "@/components/Home";
 import { CliPage } from "@/components/CliPage";
@@ -49,6 +50,8 @@ export default function App() {
       listen<string>("dhrive-github-code", (e) => useGitHub.getState().onCode(e.payload)),
     ];
     const shortcut = (e: KeyboardEvent) => {
+      // Under a modal (the sign-in gate, a confirm) the app's shortcuts stand still with the app.
+      if (document.getElementById("root")?.inert) return;
       const key = e.key.toLowerCase();
       if (e.metaKey && key === "k") {
         e.preventDefault();
@@ -101,6 +104,7 @@ export default function App() {
       <SearchPalette />
       <AccountSheet />
       <SignInGate />
+      <Announcer />
     </div>
   );
 }

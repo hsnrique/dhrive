@@ -53,7 +53,7 @@ export function EnvRow({ projectId, name, hint, isPublic }: { projectId: string;
         <span className="min-w-0 truncate font-mono text-[12.5px]">{name}</span>
         {isPublic && <span className="flex-none text-[11px] text-muted-foreground" title="Built into the website, so anyone visiting it can read it">public</span>}
         <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-muted-foreground">{hint ? `••••${hint}` : "••••"}</span>
-        <span className="flex flex-none items-center opacity-60 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+        <span className="flex flex-none items-center">
           <button type="button" title={shown === null ? "Show the value" : "Hide it"} aria-label={shown === null ? `Show ${name}` : `Hide ${name}`} className={icon} onClick={() => void reveal()}>
             {shown === null ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
           </button>

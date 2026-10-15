@@ -8,6 +8,7 @@ import { outside, parseReview, reviewFixPrompt, reviewPrompt, territoryPrompt } 
 import { useApp } from "./app";
 import { useArmy } from "./army";
 import { inFolder } from "./editing";
+import { announce } from "./announce";
 import { dropLive } from "./live";
 import { companyAgent } from "./company";
 import type { Day } from "./day";
@@ -38,6 +39,7 @@ export function taskRunner({ day, patchTask }: Deps) {
   const finish = (projectId: string, task: Task, status: "done" | "failed", text: string) => {
     patchTask(projectId, task.id, { status, runId: null, result: clipped(text) });
     useLog.getState().add(projectId, entry(status, task.title, { taskId: task.id }));
+    announce(`${status === "done" ? "Done" : "Failed"}: ${task.title}`);
   };
 
   // One run of a task: a fresh id for every step (the task, the checks, a fix), so a stop or a

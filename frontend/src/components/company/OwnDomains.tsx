@@ -133,7 +133,7 @@ export function OwnDomains({ projectId }: { projectId: string }) {
           </li>
         ))}
         {(domains?.length ?? 0) < MAX && (
-          <li className="flex items-center gap-2 rounded-xl border border-dashed border-border px-3 py-1 focus-within:border-white/25">
+          <li className="flex items-center gap-2 rounded-xl border border-dashed border-border px-3 py-1 focus-within:border-ring">
             <input
               value={typed}
               aria-label="Your domain"

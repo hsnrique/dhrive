@@ -43,7 +43,7 @@ function Overview({ project, brief }: { project: Project; brief: Brief }) {
           <span className={cn("h-1.5 w-1.5 flex-none rounded-full", now.live ? "node-live bg-foreground" : "bg-white/30")} />
           <span className="min-w-0 truncate">
             {live.busy ? "Publishing its website…" : now.text}
-            {live.url && !live.busy && <span className="text-muted-foreground/70"> · live at {live.url.replace(/^https:\/\//, "")}</span>}
+            {live.url && !live.busy && <span className="text-muted-foreground"> · live at {live.url.replace(/^https:\/\//, "")}</span>}
           </span>
         </p>
       )}

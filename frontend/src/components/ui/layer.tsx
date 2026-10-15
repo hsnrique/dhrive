@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 const layers = layerStack();
 let listening = false;
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+export const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 function onEscape(e: KeyboardEvent) {
   // A terminal owns its Escape: the CLI in it may be asking for one.
@@ -56,7 +56,7 @@ function giveBack({ el, path }: Spot) {
 function syncInert() {
   const reachable = layers.reachable();
   for (const child of Array.from(document.body.children)) {
-    if (child instanceof HTMLElement) child.inert = reachable ? !reachable.some((el) => child.contains(el)) : false;
+    if (child instanceof HTMLElement && !("announcer" in child.dataset)) child.inert = reachable ? !reachable.some((el) => child.contains(el)) : false;
   }
 }
 

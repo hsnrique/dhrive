@@ -125,7 +125,7 @@ export function Composer({ open, projectName, folder }: { open: Open; projectNam
   };
 
   return (
-    <div className={cn("relative rounded-2xl border border-border bg-card p-2 transition-colors", files.dragging && "border-ring bg-white/[0.06]")}>
+    <div className={cn("relative rounded-2xl border border-border bg-card p-2 transition-colors focus-within:border-ring", files.dragging && "border-ring bg-white/[0.06]")}>
       {blocked && (
         <div className="mb-1.5 flex items-center gap-2 rounded-xl bg-white/[0.05] px-3 py-2 text-[12.5px]">
           <span className="flex-1 text-muted-foreground">Your free days are over. Subscribe to keep sending.</span>

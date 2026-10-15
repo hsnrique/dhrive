@@ -12,6 +12,14 @@ export const rowClass = (active: boolean) =>
     active ? "bg-selected text-foreground" : "text-muted-foreground hover:bg-hover hover:text-foreground",
   );
 
+// What a row is doing, in shape as well as color (an amber diamond waits for the owner, a white dot
+// breathes while it works), and in words inside the row for a screen reader.
+export function RowPulse({ needsYou, working }: { needsYou?: string | false | null; working?: string | false | null }) {
+  if (needsYou) return <span className="mx-px h-[5px] w-[5px] flex-none rotate-45 rounded-[1px] bg-attention" title={needsYou}><span className="sr-only">{needsYou}</span></span>;
+  if (working) return <span className="node-live h-1.5 w-1.5 flex-none rounded-full bg-foreground" title={working}><span className="sr-only">{working}</span></span>;
+  return null;
+}
+
 // A row's question, in the row's own place and shape.
 export function Confirm({ question, action, onYes, onNo }: { question: string; action: string; onYes: () => void; onNo: () => void }) {
   return <InlineConfirm question={question} action={action} onYes={onYes} onNo={onNo} className="rounded-md bg-white/[0.06] py-0.5 pl-2.5 pr-0.5" />;

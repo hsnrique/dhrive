@@ -153,6 +153,7 @@ function useSidebarKeys(wide: boolean) {
   useEffect(() => useSidebar.getState().fold(), [page, companyId, conversation]);
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
+      if (document.getElementById("root")?.inert) return;
       if (e.metaKey && e.key.toLowerCase() === "b") {
         e.preventDefault();
         useSidebar.getState().toggle(wide);

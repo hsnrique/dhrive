@@ -11,6 +11,7 @@ import { useDay } from "@/store/day";
 import { InlineConfirm } from "@/components/ui/inline-confirm";
 import { buttonVariants } from "@/components/ui/button";
 import { fieldVariants } from "@/components/ui/field";
+import { revealed } from "@/components/ui/reveal";
 import { ChoicePicker } from "../ModelPicker";
 import { saveButton } from "./EnvRow";
 
@@ -54,7 +55,7 @@ export function AgentRow({ projectId, agent, engines, spent }: { projectId: stri
   };
   if (editing) return <li><AgentForm initial={agent} onSave={(name, role, owns) => edit(projectId, agent.id, { name, role, owns })} onDone={() => setEditing(false)} /></li>;
   return (
-    <li className="group grid gap-1 border-b border-border py-2.5 pl-1">
+    <li className="group relative grid gap-1 border-b border-border py-2.5 pl-1">
       <div className="flex min-w-0 items-center gap-2">
         <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{agent.name}</span>
         {spent && spent.input + spent.output > 0 && <span className="flex-none font-mono text-[11px] text-muted-foreground" title={`What ${agent.name}'s tasks spent: ${totalDetail(spent)}`}>{totalLine(spent)}</span>}
@@ -69,7 +70,8 @@ export function AgentRow({ projectId, agent, engines, spent }: { projectId: stri
           <button type="button" className={quiet} title="No backup: it waits for its plan to reset" onClick={() => edit(projectId, agent.id, { fallback: undefined })}><X className="h-3 w-3" /></button>
         </div>
       )}
-      <div className={leaving ? "flex items-center gap-1.5" : "hidden items-center gap-1.5 group-hover:flex group-focus-within:flex"}>
+      {/* It sits on the page itself, so what it lays over is the page's black. */}
+      <div className={leaving || !(agent.role || agent.owns) ? "flex items-center gap-1.5" : revealed("bg-black")}>
         {leaving ? (
           <InlineConfirm question={`Dismiss ${agent.name}?`} action="Dismiss" onYes={leave} onNo={() => setLeaving(false)} className="min-w-0 flex-1" />
         ) : (

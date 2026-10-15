@@ -65,13 +65,13 @@ export function GitHubButton({ projectId }: { projectId: string }) {
     </span>
   );
   if (!state.gh) {
-    return <button type="button" className={pill} aria-label="Not backed up: get GitHub CLI" title="Not backed up. dhrive backs up to GitHub through GitHub's own command line tool" onClick={() => open("https://cli.github.com")}><NotBackedUp /><Mark /><span className={label}>Get GitHub CLI</span></button>;
+    return <button type="button" className={pill} aria-label="Get GitHub CLI, not backed up" title="Not backed up. dhrive backs up to GitHub through GitHub's own command line tool" onClick={() => open("https://cli.github.com")}><NotBackedUp /><Mark /><span className={label}>Get GitHub CLI</span></button>;
   }
   if (!state.account) {
     return (
       <div className="relative flex items-center gap-1.5">
         {errorLine}
-        <button type="button" disabled={signingIn} className={pill} aria-label="Not backed up: connect GitHub" title="Not backed up. Connect GitHub to keep a copy off this Mac" onClick={() => void signIn(projectId)}><NotBackedUp /><Mark /><span className={label}>{signingIn ? "Connecting…" : "Connect GitHub"}</span></button>
+        <button type="button" disabled={signingIn} className={pill} aria-label={signingIn ? "Connecting to GitHub" : "Connect GitHub, not backed up"} title="Not backed up. Connect GitHub to keep a copy off this Mac" onClick={() => void signIn(projectId)}><NotBackedUp /><Mark /><span className={label}>{signingIn ? "Connecting…" : "Connect GitHub"}</span></button>
         {signingIn && code && <Code code={code} />}
       </div>
     );
@@ -81,7 +81,7 @@ export function GitHubButton({ projectId }: { projectId: string }) {
     return (
       <div className="relative flex items-center gap-1.5">
         {errorLine}
-        <button type="button" aria-expanded={state.repo ? writing : undefined} className={pill} aria-label={state.repo ? `Save ${state.changes} changes to GitHub` : "Not backed up: put on GitHub"} title={state.repo ? "Commit what changed and push it" : `Not backed up. A private repo on ${state.account}'s GitHub, saved after every task`} onClick={() => (state.repo ? setWriting((open) => !open) : void save(projectId))}>
+        <button type="button" aria-expanded={state.repo ? writing : undefined} className={pill} aria-label={state.repo ? `Save to GitHub, ${state.changes} ${state.changes === 1 ? "change" : "changes"}` : "Put on GitHub, not backed up"} title={state.repo ? "Commit what changed and push it" : `Not backed up. A private repo on ${state.account}'s GitHub, saved after every task`} onClick={() => (state.repo ? setWriting((open) => !open) : void save(projectId))}>
           {!state.repo && <NotBackedUp />}
           <Mark />
           {state.repo ? <><span className={label}>Save to GitHub · </span>{state.changes}</> : <span className={label}>Put on GitHub</span>}

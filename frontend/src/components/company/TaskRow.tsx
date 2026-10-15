@@ -10,6 +10,7 @@ import { useDay } from "@/store/day";
 import { useFold } from "@/store/fold";
 import { useLiveLast, useLivePhase } from "@/store/live";
 import { buttonVariants } from "@/components/ui/button";
+import { revealed } from "@/components/ui/reveal";
 import { Approvals } from "../Approvals";
 import { Markdown } from "../Markdown";
 import { ChoicePicker } from "../ModelPicker";
@@ -61,10 +62,13 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
   const summary = taskSummary(task);
   const more = editable ? task.prompt !== task.title : Boolean(task.result);
   const toggle = () => more && setOpen((v) => !v);
+  const running = task.status === "running" && task.runId;
+  // A card with a second line shows its actions over it; one with nothing more to say keeps them there.
+  const line = running || (task.note && task.status === "planned") || waits.length > 0 || (!open && summary);
   // The card's own buttons act without folding or unfolding it.
   const own = (e: React.MouseEvent) => e.stopPropagation();
   return (
-    <li className={cn("group grid gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 transition-colors", more && "cursor-pointer hover:border-white/20", task.status === "running" && "border-white/20")} onClick={toggle}>
+    <li className={cn("group relative grid gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 transition-colors", more && "cursor-pointer hover:border-white/20", task.status === "running" && "border-white/20")} onClick={toggle}>
       <div
         className="flex min-w-0 items-center gap-2.5 rounded-md outline-none focus-visible:ring-1 focus-visible:ring-ring"
         role={more ? "button" : undefined}
@@ -83,9 +87,9 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
         ) : !editable && <span className="flex-none text-[11px] text-muted-foreground">{STATUS[task.status]}</span>}
       </div>
       <div className="grid min-w-0 gap-2 pl-[28px]">
-        {task.status === "running" && task.runId ? (
+        {running ? (
           <div className="grid gap-2" onClick={own}>
-            <Progress runId={task.runId} />
+            <Progress runId={running} />
             <Approvals projectId={projectId} runId={task.runId} />
           </div>
         ) : task.note && task.status === "planned" ? (
@@ -98,7 +102,7 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
         ) : !open && summary && (
           <div className="flex min-w-0 items-baseline gap-2">
             <p className={cn("min-w-0 flex-1 truncate text-[12px]", task.status === "failed" ? "text-failure" : "text-muted-foreground")}>{summary}</p>
-            {task.spent && <span className="flex-none font-mono text-[11px] text-muted-foreground/70" title={spendDetail(task.spent)}>{spendLine(task.spent)}</span>}
+            {task.spent && <span className="flex-none font-mono text-[11px] text-muted-foreground" title={spendDetail(task.spent)}>{spendLine(task.spent)}</span>}
           </div>
         )}
         {open && (editable ? (
@@ -109,7 +113,7 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
           <div className="min-w-0 [&_p]:text-[12.5px]"><Markdown source={task.result} /></div>
         ))}
         {(editable || again) && (
-          <div className={cn("flex flex-wrap items-center gap-1.5", !open && "hidden group-hover:flex group-focus-within:flex")} onClick={own}>
+          <div className={open || !line ? "flex flex-wrap items-center gap-1.5" : revealed("bg-card")} onClick={own}>
             {editable && <ChoicePicker choice={{ engine: task.engine, model: task.model, effort: task.effort }} onChoose={(choice) => edit(projectId, task.id, choice)} label={`CLI for ${task.title}`} engines={engines} align="right" down tunable />}
             {editable && (
               <button type="button" className={action} onClick={() => drop(projectId, task.id)}>

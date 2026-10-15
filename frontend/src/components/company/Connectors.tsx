@@ -44,7 +44,7 @@ function Run({ project, connector, onClose }: { project: Project; connector: Con
         <button type="button" title="Close" aria-label="Close" className={iconButton} onClick={onClose}><X className="h-3.5 w-3.5" /></button>
       </div>
       <div className="min-h-0 flex-1">
-        <TerminalView key={id} id={id} start={start} project={project.id} copy={null} model="" task={null} onStarted={() => undefined} onEvent={onEvent} onTitle={() => undefined} onBranch={() => undefined} />
+        <TerminalView key={id} label={`${connector.name} setup`} id={id} start={start} project={project.id} copy={null} model="" task={null} onStarted={() => undefined} onEvent={onEvent} onTitle={() => undefined} onBranch={() => undefined} />
       </div>
       {ended && (
         <div className="flex h-12 flex-none items-center gap-3 border-t border-border px-4">

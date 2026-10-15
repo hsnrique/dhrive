@@ -10,7 +10,7 @@ import { usePaneStatus } from "@/store/pane-status";
 import { useTerminals, type TerminalSession } from "@/store/terminals";
 import { useTogether } from "@/store/together";
 import { NameInput } from "./InlineEdit";
-import { Confirm, HoverAction, rowClass } from "./SidebarRow";
+import { Confirm, HoverAction, RowPulse, rowClass } from "./SidebarRow";
 
 // A Terminals session among a project's conversations, marked as one, with a dot when its maestro
 // or one of its panes works, or a pane waits for the owner.
@@ -46,10 +46,10 @@ export function TerminalsRow({ session }: { session: TerminalSession }) {
   if (editing) return <NameInput value={session.title} label="Terminals name" onSave={(title) => useTerminals.getState().rename(session.id, title)} onDone={() => setEditing(false)} className="ml-[10px] w-[calc(100%-10px)] text-[12.5px]" />;
   return (
     <div className="group relative">
-      <button type="button" title={`${session.title} · Terminals\nDouble-click to rename`} className={cn(rowClass(active), "group-hover:pr-8")} onClick={() => openSession(session.id)} onDoubleClick={() => setEditing(true)}>
+      <button type="button" title={`${session.title} · Terminals\nDouble-click to rename`} aria-current={active ? "page" : undefined} className={cn(rowClass(active), "group-hover:pr-8")} onClick={() => openSession(session.id)} onDoubleClick={() => setEditing(true)}>
         <SquareTerminal className="h-[13px] w-[13px] flex-none opacity-70" strokeWidth={1.75} aria-label="Terminals" />
         <span className="min-w-0 flex-1 truncate">{session.title}</span>
-        {status === "needs-you" ? <span className="h-1.5 w-1.5 flex-none rounded-full bg-attention" title="A pane is waiting for you" /> : status === "working" && <span className="node-live h-1.5 w-1.5 flex-none rounded-full bg-foreground" title="Working" />}
+        <RowPulse needsYou={status === "needs-you" && "A pane is waiting for you"} working={status === "working" && "Working"} />
       </button>
       <div className="absolute right-1 top-1/2 -translate-y-1/2">
         <HoverAction label="Close these terminals" onClick={() => setConfirming(true)}>

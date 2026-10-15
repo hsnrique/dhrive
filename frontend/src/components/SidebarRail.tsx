@@ -28,7 +28,16 @@ const tool = buttonVariants({ variant: "ghost", size: "icon" });
 function Tip({ label, children }: { label: string; children: ReactNode }) {
   const [at, setAt] = useState<DOMRect | null>(null);
   return (
-    <div className="flex" onMouseEnter={(e) => setAt(e.currentTarget.getBoundingClientRect())} onMouseLeave={() => setAt(null)} onClick={() => setAt(null)}>
+    // On keyboard focus too, and Escape puts it away without moving focus.
+    <div
+      className="flex"
+      onMouseEnter={(e) => setAt(e.currentTarget.getBoundingClientRect())}
+      onMouseLeave={() => setAt(null)}
+      onFocus={(e) => e.target.matches(":focus-visible") && setAt(e.currentTarget.getBoundingClientRect())}
+      onBlur={() => setAt(null)}
+      onKeyDown={(e) => e.key === "Escape" && at && (e.preventDefault(), setAt(null))}
+      onClick={() => setAt(null)}
+    >
       {children}
       {at &&
         createPortal(
@@ -51,13 +60,13 @@ function CompanyChip({ project }: { project: Project }) {
     <Tip label={needsYou ? `${project.name} · needs your OK` : working ? `${project.name} · working` : project.name}>
       <button
         type="button"
-        aria-label={project.name}
+        aria-label={needsYou ? `${project.name}, needs your OK` : working ? `${project.name}, working` : project.name}
         aria-current={active ? "page" : undefined}
         className={cn("relative flex h-10 w-10 items-center justify-center rounded-xl text-[12.5px] font-medium transition-colors", active ? "bg-foreground text-background" : "bg-white/[0.06] text-foreground/80 hover:bg-pressed hover:text-foreground")}
         onClick={() => useCompany.getState().open(project.id)}
       >
         {initialsOf(project.name)}
-        {(needsYou || working) && <span className={cn("absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-card", needsYou ? "bg-attention" : "node-live bg-foreground [--breathe:2]")} />}
+        {(needsYou || working) && <span className={cn("absolute -right-0.5 -top-0.5 ring-2 ring-card", needsYou ? "h-2 w-2 rotate-45 rounded-[2px] bg-attention" : "node-live h-2.5 w-2.5 rounded-full bg-foreground [--breathe:2]")} />}
       </button>
     </Tip>
   );

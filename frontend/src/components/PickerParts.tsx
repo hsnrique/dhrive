@@ -35,7 +35,7 @@ export function CliTabs({ choice, engines, onPick, onSetUp }: { choice: Choice; 
           >
             <EngineMark engine={cli.engine} className={cn("h-3.5 w-3.5 flex-none", !cli.installed && "opacity-40")} />
             <span className="truncate">{cli.label}</span>
-            {!cli.installed && <span className="flex-none text-[10.5px] opacity-70">{cli.engine === "ollama" ? "Set up" : "Get"}</span>}
+            {!cli.installed && <span className="flex-none text-[10.5px]">{cli.engine === "ollama" ? "Set up" : "Get"}</span>}
           </button>
         );
       })}

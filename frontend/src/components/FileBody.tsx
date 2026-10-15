@@ -34,7 +34,7 @@ function Code({ text, path }: { text: string; path: string }) {
         <tbody>
           {shown.map((line, i) => (
             <tr key={i}>
-              <td className="select-none px-3 text-right align-top text-muted-foreground/45 tabular-nums">{i + 1}</td>
+              <td className="select-none px-3 text-right align-top text-muted-foreground tabular-nums">{i + 1}</td>
               <td className="whitespace-pre pr-6 text-foreground/85">
                 {line.map((token, j) => (
                   <span key={j} className={TOKEN_CLASS[token.kind]}>

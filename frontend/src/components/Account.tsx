@@ -1,3 +1,4 @@
+import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ChevronRight } from "lucide-react";
 
@@ -5,6 +6,7 @@ import { emailOf, standing, urgent } from "@/lib/account";
 import { cn } from "@/lib/utils";
 import { useAccount } from "@/store/account";
 import { buttonVariants } from "@/components/ui/button";
+import { useLayer } from "@/components/ui/layer";
 import { AccountPanel, Avatar } from "./AccountPanel";
 import { BrandLogo } from "./BrandLogo";
 
@@ -45,13 +47,26 @@ export function SignInGate() {
   const decided = useAccount((s) => s.decided);
   const signedOut = useAccount((s) => s.status?.state === "signedOut");
   if (decided && !signedOut) return null;
+  return <Gate signedOut={signedOut} />;
+}
+
+// A modal nothing dismisses: the app behind it is inert, so neither focus nor typing ends up in a
+// field nobody can see, and focus starts on signing in.
+function Gate({ signedOut }: { signedOut: boolean }) {
+  const cover = useRef<HTMLDivElement>(null);
+  const title = useId();
+  useLayer(cover, () => undefined, { modal: true });
+  // The cover opens before the answer does; signing in is what focus starts on once it's asked for.
+  useEffect(() => {
+    if (signedOut) cover.current?.querySelector<HTMLElement>("button")?.focus();
+  }, [signedOut]);
   return createPortal(
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+    <div ref={cover} role="dialog" aria-modal="true" aria-labelledby={signedOut ? title : undefined} aria-label={signedOut ? undefined : "dhrive"} tabIndex={-1} className="fixed inset-0 z-50 flex flex-col bg-background outline-none">
       <div data-tauri-drag-region className="h-[44px] flex-none" />
       {signedOut && (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 pb-[44px] text-center">
           <BrandLogo className="h-6 w-6" />
-          <h1 className="display-title">Sign in to start</h1>
+          <h1 id={title} className="display-title">Sign in to start</h1>
           <p className="text-[13px] text-muted-foreground">14 days free, no card. Your CLIs and their plans stay as they are.</p>
           <SignInButton />
         </div>

@@ -27,7 +27,7 @@ export const hostOf = (site: string) => site.replace(/^https:\/\/(www\.)?/, "").
 
 export function SiteLink({ site, className }: { site: string; className?: string }) {
   return (
-    <button type="button" title={hostOf(site)} aria-label={`Open ${hostOf(site)}`} className={cn("flex h-5 w-5 flex-none items-center justify-center rounded-md text-muted-foreground/60 transition-colors hover:bg-hover hover:text-foreground", className)} onClick={() => void openUrl(site).catch(() => undefined)}>
+    <button type="button" title={hostOf(site)} aria-label={`Open ${hostOf(site)}`} className={cn("flex h-5 w-5 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground", className)} onClick={() => void openUrl(site).catch(() => undefined)}>
       <ArrowUpRight className="h-3 w-3" />
     </button>
   );
