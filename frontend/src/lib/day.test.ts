@@ -125,7 +125,7 @@ describe("the company's backlog", () => {
   });
 
   it("tells the agent what's done and queued so it suggests something new", () => {
-    expect(alreadyNote([one("done", "Ads"), one("planned", "Form"), one("suggested", "Blog")])).toBe("Already done:\n- Ads\n\nAlready queued:\n- Form");
+    expect(alreadyNote([one("done", "Ads"), one("planned", "Form"), one("suggested", "Blog")])).toBe("Already done:\n- Ads\n\nAlready queued:\n- Form\n\nAlready suggested, waiting for the owner's OK:\n- Blog");
     expect(alreadyNote([])).toBe("");
   });
 });

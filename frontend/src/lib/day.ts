@@ -100,7 +100,8 @@ export function alreadyNote(tasks: Task[]): string {
   const list = (status: (t: Task) => boolean) => tasks.filter(status).slice(-20).map((t) => `- ${t.title}`).join("\n");
   const done = list((t) => t.status === "done");
   const queued = list((t) => t.status === "planned" || t.status === "running");
-  return [done && `Already done:\n${done}`, queued && `Already queued:\n${queued}`].filter(Boolean).join("\n\n");
+  const waiting = list((t) => t.status === "suggested");
+  return [done && `Already done:\n${done}`, queued && `Already queued:\n${queued}`, waiting && `Already suggested, waiting for the owner's OK:\n${waiting}`].filter(Boolean).join("\n\n");
 }
 
 // The planner names what a task waits for by the other tasks' titles in the same reply; they become

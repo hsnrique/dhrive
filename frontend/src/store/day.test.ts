@@ -415,7 +415,19 @@ describe("a company's day", () => {
     useDay.getState().stop(P);
   });
 
-  it("keeps what's done, tells the agent about it, and replaces only waiting suggestions", async () => {
+  it("suggesting more on a first day keeps it a first day, so its delivery still ends on the web", async () => {
+    void useDay.getState().plan(P, "Plan the first delivery.");
+    reply(PLAN);
+    await settle();
+    expect(day()).toMatchObject({ first: true });
+    void useDay.getState().plan(P);
+    reply(JSON.stringify([{ title: "Blog", area: "marketing", prompt: "Draft a post" }]));
+    await settle();
+    expect(day().first, "Suggest more doesn't turn the first delivery into an ordinary day").toBe(true);
+    expect(day().tasks.map((t) => t.title)).toEqual(["Ads", "Form", "Blog"]);
+  });
+
+  it("keeps what's done and what waits for an OK, and tells the agent about both", async () => {
     void useDay.getState().plan(P);
     reply(PLAN);
     await settle();
@@ -425,9 +437,10 @@ describe("a company's day", () => {
     await settle();
     void useDay.getState().plan(P);
     expect(last().request.task).toContain("Already done:\n- Ads");
+    expect(last().request.task).toContain("Already suggested, waiting for the owner's OK:\n- Form");
     reply(JSON.stringify([{ title: "Blog", area: "marketing", prompt: "Draft a post" }]));
     await settle();
-    expect(day().tasks.map((t) => [t.title, t.status])).toEqual([["Ads", "done"], ["Blog", "suggested"]]);
+    expect(day().tasks.map((t) => [t.title, t.status])).toEqual([["Ads", "done"], ["Form", "suggested"], ["Blog", "suggested"]]);
   });
 
   it("starts the owner's own tasks and retries right away", async () => {

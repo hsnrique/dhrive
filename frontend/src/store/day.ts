@@ -198,8 +198,10 @@ export const useDay = create<DayState>((set, get) => {
       const choice = companyAgent(projectId);
       if (!project || !brief || isBlank(brief) || !choice || day(projectId).planRunId) return;
       const planRunId = crypto.randomUUID();
-      // Fresh suggestions replace the ones still waiting.
-      patch(projectId, (d) => ({ planRunId, tasks: d.tasks.filter((t) => t.status !== "suggested"), first: also !== undefined, error: null }));
+      // Suggestions add to what waits: the ones still waiting for an OK stay (the planner hears them,
+      // so it doesn't repeat them), and a first day stays one, so its delivery still ends on the web.
+      // Replacing them here once threw away a first delivery the owner was asked to look over.
+      patch(projectId, (d) => ({ planRunId, first: also !== undefined || d.first, error: null }));
       try {
         const army = armyOf(projectId);
         const task = [toMarkdown(brief, project.name), rosterNote(army), alreadyNote(day(projectId).tasks), also].filter(Boolean).join("\n\n");
