@@ -22,7 +22,7 @@ const PLAN_PREVIEW_LINES = 14;
 
 function StatusNode({ status }: { status: StageStatus }) {
   const base = "relative z-10 flex h-[13px] w-[13px] items-center justify-center rounded-full";
-  if (status === "running") return <span className={cn(base, "node-live bg-foreground")} />;
+  if (status === "running") return <span className={cn(base, "node-live bg-foreground [--breathe:1.75]")} />;
   if (status === "done") return <span className={cn(base, "bg-foreground/85 text-background")}><Check className="h-2.5 w-2.5" strokeWidth={3.5} /></span>;
   if (status === "failed") return <span className={cn(base, "bg-destructive text-white")}><X className="h-2.5 w-2.5" strokeWidth={3.5} /></span>;
   if (status === "stopped" || status === "interrupted") return <span className={cn(base, "border border-foreground/40 bg-background")}><Square className="h-1.5 w-1.5 fill-foreground/60 text-transparent" /></span>;

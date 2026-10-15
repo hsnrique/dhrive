@@ -23,8 +23,11 @@ const TOKEN_CLASS: Record<TokenKind, string> = {
 export const isMarkdown = (path: string) => /\.(md|mdx|markdown)$/i.test(path);
 
 function Code({ text, path }: { text: string; path: string }) {
-  const lines = useMemo(() => highlight(text, languageOf(path)), [text, path]);
-  const shown = lines.slice(0, MAX_LINES);
+  // Cut before highlighting: a long file costs only the lines that are shown.
+  const { shown, total } = useMemo(() => {
+    const all = text.split("\n");
+    return { shown: highlight(all.slice(0, MAX_LINES).join("\n"), languageOf(path)), total: all.length };
+  }, [text, path]);
   return (
     <div className="overflow-auto py-2 font-mono text-[12px] leading-[1.6] [font-variant-ligatures:none]">
       <table className="border-separate border-spacing-0">
@@ -43,7 +46,7 @@ function Code({ text, path }: { text: string; path: string }) {
           ))}
         </tbody>
       </table>
-      {lines.length > MAX_LINES && <p className="px-3 pt-2 font-sans text-[12px] text-muted-foreground">Showing the first {MAX_LINES.toLocaleString("en-US")} lines. Open the file to read the rest.</p>}
+      {total > MAX_LINES && <p className="px-3 pt-2 font-sans text-[12px] text-muted-foreground">Showing the first {MAX_LINES.toLocaleString("en-US")} lines. Open the file to read the rest.</p>}
     </div>
   );
 }

@@ -56,7 +56,7 @@ function CompanyChip({ project }: { project: Project }) {
         onClick={() => useCompany.getState().open(project.id)}
       >
         {initialsOf(project.name)}
-        {(needsYou || working) && <span className={cn("absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-card", needsYou ? "bg-attention" : "node-live bg-foreground")} />}
+        {(needsYou || working) && <span className={cn("absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-card", needsYou ? "bg-attention" : "node-live bg-foreground [--breathe:2]")} />}
       </button>
     </Tip>
   );

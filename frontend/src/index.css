@@ -204,16 +204,32 @@
 }
 
 /* A stage node that is running breathes; everything else holds still. */
+/* The ring is its own layer, grown and faded with transform and opacity, so a dozen running dots
+   never repaint the page on every frame the way an animated shadow does. Over the white dot it's
+   invisible at rest; --breathe sets how far it reaches (about 5px past a 6–8px dot). */
 @keyframes node-breathe {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(242, 242, 242, 0.35);
+    transform: scale(1);
+    opacity: 1;
   }
   50% {
-    box-shadow: 0 0 0 5px rgba(242, 242, 242, 0);
+    transform: scale(var(--breathe, 2.4));
+    opacity: 0;
   }
 }
-.node-live {
+@layer components {
+  .node-live {
+    position: relative;
+  }
+}
+.node-live::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(242, 242, 242, 0.35);
+  pointer-events: none;
   animation: node-breathe 1.6s cubic-bezier(0.33, 1, 0.68, 1) infinite;
 }
 
@@ -253,7 +269,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .node-live,
+  .node-live::after,
   .ghost-sweep,
   .relay-fill,
   .pop-in,
