@@ -60,6 +60,9 @@ function Planning() {
   );
 }
 
+// The rules the work runs under, in a few words: while it runs the switches step aside, the rules don't.
+const policy = (day: Day) => [day.ask ? "Asks first" : day.mcp ? "On its own, MCP on" : "On its own", day.lean && "Lean", day.review && "Review"].filter(Boolean).join(" · ");
+
 // What can happen next, in one bar: get suggestions, run what's waiting, or stop.
 function Bar({ project, day, engines, blank }: { project: Project; day: Day; engines: Engine[]; blank: boolean }) {
   useAgentOf(project.id);
@@ -93,6 +96,7 @@ function Bar({ project, day, engines, blank }: { project: Project; day: Day; eng
       <div className={card}>
         {/* What's working is said above the bar and on the task itself; here, only what can change. */}
         {picker ?? <p className="min-w-0 flex-1 truncate text-[12.5px] text-muted-foreground">Working{waiting ? ` · ${waiting} up next` : ""}</p>}
+        <span className="min-w-0 truncate text-[11.5px] text-muted-foreground" title="Change them once it's done, or stop it">{policy(day)}</span>
         <span className="ml-auto" />
         {suggest}
         <button type="button" className={quiet} onClick={() => stop(project.id)}><Square className="h-3 w-3 fill-current" />Stop</button>

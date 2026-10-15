@@ -128,4 +128,17 @@ describe("auto mode", () => {
     expect(auto()).toEqual(OFF);
     expect(pending.size).toBe(0);
   });
+
+  it("stopping after this task lets the running one land and starts nothing more", async () => {
+    useAuto.getState().start(P, 1);
+    await settle();
+    await reply(JSON.stringify([{ title: "A", prompt: "a" }, { title: "B", prompt: "b" }]));
+    useAuto.getState().finish(P);
+    await settle();
+    expect(auto()).toEqual({ until: null, ended: "what's running finishes first" });
+    expect(tasks()[0].status, "still running, not cut off").toBe("running");
+    await reply("A done");
+    expect(tasks().map((t) => [t.title, t.status])).toEqual([["A", "done"], ["B", "planned"]]);
+    expect(pending.size, "B never starts").toBe(0);
+  });
 });
