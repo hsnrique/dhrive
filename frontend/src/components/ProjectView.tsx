@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { FolderTree, Globe } from "lucide-react";
+import { AppWindow, FolderTree } from "lucide-react";
 
 import type { Project } from "@/lib/api";
 import type { Open } from "@/lib/conversations";
@@ -103,7 +103,7 @@ export function ProjectView({ project, open }: { project: Project; open: Open })
               <FolderTree className="h-4 w-4" />
             </button>
             <button type="button" title="See the project's dev server beside the conversation" aria-label="Browser" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={() => usePanel.getState().open(project.folder, BROWSER)}>
-              <Globe className="h-4 w-4" />
+              <AppWindow className="h-4 w-4" />
             </button>
             <AllowedRules project={project} />
             {conversationId && <ContextMeters conversationId={conversationId} folder={project.folder} />}

@@ -7,6 +7,7 @@ import { localResults, marked, withHits, type Result } from "@/lib/search";
 import { ago } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
+import { useCompany } from "@/store/company";
 import { useConversations } from "@/store/conversations";
 import { useSearch } from "@/store/search";
 import { Dialog } from "@/components/ui/layer";
@@ -29,7 +30,7 @@ function open(result: Result) {
   const conversations = useConversations.getState();
   if (result.kind === "conversation") void conversations.show(result.conversation.id);
   if (result.kind === "past") conversations.startNew(result.projectId, result.session);
-  if (result.kind === "project") conversations.openLatest(result.project.id);
+  if (result.kind === "project") useCompany.getState().open(result.project.id);
 }
 
 function Row({ result, query, active, onPick, onHover }: { result: Result; query: string; active: boolean; onPick: () => void; onHover: () => void }) {

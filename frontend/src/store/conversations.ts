@@ -27,7 +27,8 @@ interface ConversationsState {
   touch: (id: string) => void;
   rename: (id: string, title: string) => void;
   remove: (id: string) => Promise<void>;
-  openFolder: () => Promise<void>;
+  // The folder's project id once it's in dhrive, for the caller to open.
+  openFolder: () => Promise<string | null>;
   deleteProject: (projectId: string) => Promise<void>;
   hidePast: (projectId: string, sessionId: string) => void;
 }
@@ -173,13 +174,14 @@ export const useConversations = create<ConversationsState>((set, get) => ({
   openFolder: async () => {
     try {
       const folder = await pickFolder();
-      if (!folder) return;
+      if (!folder) return null;
       const project = await addProject(folder);
       useApp.setState((state) => ({ projects: [project, ...state.projects.filter((p) => p.id !== project.id)] }));
       await get().loadPast();
-      get().openLatest(project.id);
+      return project.id;
     } catch (error) {
       report(error);
+      return null;
     }
   },
 

@@ -57,9 +57,9 @@ export function RunControl({ project }: { project: Project }) {
 
 export function SidePane({ project, className }: { project: Project; className?: string }) {
   return (
-    <aside className={cn("flex-col border-l border-border bg-background", className)}>
+    <aside aria-label="Company chat" className={cn("flex-col border-l border-border bg-background", className)}>
       <div className="flex h-11 flex-none items-center border-b border-border px-4">
-        <h2 className="text-[12.5px] font-medium">Chat</h2>
+        <h2 className="text-[12.5px] font-medium">Company chat</h2>
       </div>
       <div className="min-h-0 flex-1">
         <Chat project={project} />

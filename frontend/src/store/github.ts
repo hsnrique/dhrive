@@ -79,7 +79,7 @@ export const useGitHub = create<GitHubStore>((set, get) => {
       patch(projectId, { saving: true, error: null });
       try {
         const repo = await committed(projectId, () => saveToGithub(projectId, message));
-        useLog.getState().add(projectId, entry("published", first ? `the code is on GitHub, private` : "the latest work is saved on GitHub", { url: repo }));
+        useLog.getState().add(projectId, entry("saved", first ? `the code is on GitHub, private` : "the latest work is saved on GitHub", { url: repo }));
         patch(projectId, { saving: false });
       } catch (error) {
         patch(projectId, { saving: false, error: String(error) });

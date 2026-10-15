@@ -18,7 +18,7 @@ import type { ProgressEvent, PullEvent } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAccount } from "@/store/account";
 import { useApp } from "@/store/app";
-import { useCompany } from "@/store/company";
+import { openFolderAsCompany, useCompany } from "@/store/company";
 import { useConversations } from "@/store/conversations";
 import { useGitHub } from "@/store/github";
 import { useLocal } from "@/store/local";
@@ -59,9 +59,10 @@ export default function App() {
       }
       if (e.metaKey && key === "o") {
         e.preventDefault();
-        void conversations().openFolder();
+        void openFolderAsCompany();
       }
-      const projectId = conversations().open?.projectId;
+      // ⌘N starts a conversation in the project in view: its conversation's, or the company page's.
+      const projectId = conversations().open?.projectId ?? (useApp.getState().page === "company" ? useCompany.getState().openId : null);
       if (e.metaKey && key === "n" && projectId) {
         e.preventDefault();
         conversations().startNew(projectId);

@@ -11,6 +11,8 @@ import { useDayOf } from "@/store/day";
 import { useDomains } from "@/store/domains";
 import { useFavorite } from "@/store/favorite";
 import { usePublish, usePublishedOf } from "@/store/publish";
+import { AllowedRules } from "@/components/Approvals";
+import { InstructionsButton } from "@/components/Instructions";
 import { useLayer } from "@/components/ui/layer";
 import { Army } from "./Army";
 import { BriefCard } from "./BriefCard";
@@ -95,6 +97,8 @@ function Toolbar({ project, brief, saving, chat }: { project: Project; brief: Br
       <span className="hidden flex-none text-[13px] text-muted-foreground @[46rem]:inline">Company</span>
       <span className="ml-auto" />
       {brief && (saving !== "saved" || !isBlank(brief)) && <span className={cn("hidden flex-none text-[11.5px] text-muted-foreground @[64rem]:inline", saving === "failed" && "inline text-failure")}>{SAVING[saving]}</span>}
+      <InstructionsButton folder={project.folder} />
+      <AllowedRules project={project} />
       <ConnectorsButton project={project} />
       <GitHubButton projectId={project.id} />
       <RunControl project={project} />
