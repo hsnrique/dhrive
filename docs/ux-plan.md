@@ -136,11 +136,18 @@ and the motion tokens did change. Outside clicks still close popovers three ways
 catcher, a window pointerdown, a backdrop), which works; ui/layer is where to unify them if needed.
 Phase 4 builds on the layers: the terminals' key to leave the pane, focus contrast, live regions.
 
+Phase 4 notes: a terminal is left with Control-Tab (Shift back); Chromium keeps that combination
+for its own tabs, so only the app's webview passes it on (tested there by dispatched events). The
+model picker's focus came with phase 3's layers. Left for later: search palette and mentions as
+full comboboxes (active descendant, arrow keys in radio groups), errors tied to their fields
+(aria-invalid/describedby), headings and landmarks for the project screen, and a keyboard way to
+resize the file panel.
+
 | Phase | PR | State |
 | --- | --- | --- |
 | 1. Reliability | feat/ux-reliability | done: auto mode, unreadable files, Stop, one writer per folder, Suggest, small guards (326 frontend tests, 264 backend) |
 | 2. Performance | feat/ux-performance | done: live store, thread re-renders, edit diffs, log flush, startup, cheap wins (333 frontend tests, 266 backend) |
 | 3. Design system | feat/ux-design-system | done: one hairline, color and title tokens, Button/Field/compose, Dialog and layers, InlineConfirm (334 frontend tests) |
-| 4. Accessibility | | planned |
+| 4. Accessibility | feat/ux-accessibility | done: terminals, sign-in gate, live regions, focus and contrast, reachable actions, zoom, names and status (334 frontend tests) |
 | 5. Journeys | | planned |
 | 6. Polish | | planned |
