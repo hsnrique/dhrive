@@ -14,13 +14,14 @@ import { usePublish, usePublishedOf } from "@/store/publish";
 import { useLayer } from "@/components/ui/layer";
 import { Army } from "./Army";
 import { BriefCard } from "./BriefCard";
+import { useCompanyPulse } from "./CompanyRow";
 import { Documents } from "./Documents";
 import { Environment } from "./Environment";
 import { ConnectorsButton } from "./Connectors";
 import { GitHubButton } from "./GitHubButton";
 import { RunControl, SidePane } from "./SitePane";
 import { SiteSheet } from "./SitePreview";
-import { Tasks } from "./Tasks";
+import { Tasks, tasksId } from "./Tasks";
 import { Website } from "./Website";
 
 // A project run as a company, all of it on one screen: its sections side by side in as many columns
@@ -34,6 +35,7 @@ function Overview({ project, brief }: { project: Project; brief: Brief }) {
   const now = standing(day.tasks, day.first);
   const line = tagline(brief);
   const live = usePublishedOf(project.id);
+  const { needsYou } = useCompanyPulse(project.id);
   return (
     <section className="grid gap-3">
       <h1 className="break-words display-title">{project.name}</h1>
@@ -46,6 +48,12 @@ function Overview({ project, brief }: { project: Project; brief: Brief }) {
             {live.url && !live.busy && <span className="text-muted-foreground"> · live at {live.url.replace(/^https:\/\//, "")}</span>}
           </span>
         </p>
+      )}
+      {needsYou && (
+        <button type="button" className="flex min-w-0 items-center gap-2 justify-self-start text-left text-[12.5px] text-attention underline-offset-4 hover:underline" onClick={() => document.getElementById(tasksId(project.id))?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+          <span className="mx-px h-[5px] w-[5px] flex-none rotate-45 rounded-[1px] bg-attention" aria-hidden />
+          {needsYou}
+        </button>
       )}
     </section>
   );

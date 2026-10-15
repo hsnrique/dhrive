@@ -7,6 +7,7 @@ import { stuckOn, type Task } from "@/lib/day";
 import { totalDetail, totalLine, totalOf } from "@/lib/spend";
 import { ago, useNow } from "@/lib/time";
 import { cn } from "@/lib/utils";
+import { upNext } from "@/lib/attention";
 import { useApp } from "@/store/app";
 import { companyAgent, useAgentOf } from "@/store/company";
 import { useDay, useDayOf, type Day } from "@/store/day";
@@ -141,16 +142,20 @@ function Group({ id, title, action, items, cap, children }: { id: string; title:
 
 const SHOWN = { next: 4, suggested: 3, done: 3 };
 
+// Where the overview's "needs your OK" line takes the owner.
+export const tasksId = (projectId: string) => `tasks-${projectId}`;
+
 export function Tasks({ project, brief }: { project: Project; brief: Brief }) {
   const day = useDayOf(project.id);
   useAgentOf(project.id);
   const engines = useApp((s) => s.clis).filter((cli) => cli.installed).map((cli) => cli.engine);
-  const open = day.tasks.filter((t) => t.status === "running" || t.status === "planned");
+  const asking = useApp((s) => s.approvals);
+  const open = upNext(day.tasks, (runId) => (asking[runId]?.length ?? 0) > 0);
   const suggested = day.tasks.filter((t) => t.status === "suggested");
   const finished = day.tasks.filter((t) => t.status === "done" || t.status === "failed" || t.status === "stopped");
   const row = (task: Task) => <TaskRow key={task.id} projectId={project.id} task={task} engines={engines} tasks={day.tasks} />;
   return (
-    <section className="grid gap-4">
+    <section id={tasksId(project.id)} className="grid gap-4 scroll-mt-16">
       <SectionHead title={day.first ? "First delivery" : "Tasks"}>
         <Spent tasks={day.tasks} />
         {!day.first && <AutoMode projectId={project.id} disabled={isBlank(brief) || !companyAgent(project.id)} />}
