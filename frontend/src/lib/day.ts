@@ -104,16 +104,17 @@ export function alreadyNote(tasks: Task[]): string {
 }
 
 // The planner names what a task waits for by the other tasks' titles in the same reply; they become
-// ids here, and a name that isn't one of them, or the task itself, is dropped.
+// ids here. A task waits only for ones listed before it, so two tasks can never wait for each other
+// (a cycle no run could ever start); a name that isn't an earlier task is dropped.
 export function parseDay(output: string, agent: Choice, army: Agent[] = []): Task[] {
   const items = arrayIn(output);
   const pairs = items.map((item) => [item, taskOf(item, agent, army)] as const).filter((p): p is readonly [unknown, Task] => p[1] !== null).slice(0, MAX_TASKS);
-  const byTitle = new Map(pairs.map(([, t]) => [t.title.trim().toLowerCase(), t.id]));
-  return pairs.map(([item, task]) => {
+  return pairs.map(([item, task], at) => {
+    const earlier = new Map(pairs.slice(0, at).map(([, t]) => [t.title.trim().toLowerCase(), t.id]));
     const said = (item as { after?: unknown }).after;
     const after = (Array.isArray(said) ? said : [])
-      .map((title) => (typeof title === "string" ? byTitle.get(title.trim().toLowerCase()) : undefined))
-      .filter((id): id is string => id !== undefined && id !== task.id);
+      .map((title) => (typeof title === "string" ? earlier.get(title.trim().toLowerCase()) : undefined))
+      .filter((id): id is string => id !== undefined);
     return after.length ? { ...task, after: [...new Set(after)] } : task;
   });
 }
@@ -124,6 +125,19 @@ export const ready = (task: Task, tasks: Task[]) =>
     const before = tasks.find((t) => t.id === id);
     return !before || before.status === "done";
   });
+
+// What holds it that failed or was stopped, through any chain of tasks waiting on each other: it
+// can't start until that one runs again, so it is stuck rather than waiting, and nothing should keep
+// trying to start it.
+export function stuckOn(task: Task, tasks: Task[], seen = new Set<string>()): Task[] {
+  seen.add(task.id);
+  return (task.after ?? []).flatMap((id) => {
+    const before = tasks.find((t) => t.id === id);
+    if (!before || seen.has(id)) return [];
+    if (before.status === "failed" || before.status === "stopped") return [before];
+    return before.status === "done" ? [] : stuckOn(before, tasks, seen);
+  });
+}
 
 // The titles of what it still waits for, for its card.
 export const waitingOn = (task: Task, tasks: Task[]) =>

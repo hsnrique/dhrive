@@ -1,7 +1,7 @@
 import { Check, Code2, LifeBuoy, Megaphone, RotateCcw, Search, Square, X, type LucideIcon } from "lucide-react";
 
 import type { Engine } from "@/lib/api";
-import { taskSummary, waitingOn, type Area, type Task, type TaskStatus } from "@/lib/day";
+import { stuckOn, taskSummary, waitingOn, type Area, type Task, type TaskStatus } from "@/lib/day";
 import { spendDetail, spendLine } from "@/lib/spend";
 import { cn } from "@/lib/utils";
 import { agentById } from "@/lib/army";
@@ -53,6 +53,7 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
   const { label, Icon } = AREA_LOOK[task.area];
   const agent = agentById(useArmyOf(projectId), task.agentId);
   const waits = task.status === "planned" ? waitingOn(task, tasks) : [];
+  const stuck = task.status === "planned" ? stuckOn(task, tasks) : [];
   const { edit, drop, accept, retry } = useDay.getState();
   const editable = task.status === "planned" || task.status === "suggested";
   const again = task.status === "failed" || task.status === "stopped";
@@ -89,7 +90,10 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
         ) : task.note && task.status === "planned" ? (
           <p className="truncate font-mono text-[11.5px] text-muted-foreground" title={task.note}>{task.note}</p>
         ) : waits.length > 0 ? (
-          <p className="truncate font-mono text-[11.5px] text-muted-foreground" title={`Starts once ${waits.join(", ")} ${waits.length === 1 ? "is" : "are"} done`}>waits for {waits.join(", ")}</p>
+          <p className="truncate font-mono text-[11.5px] text-muted-foreground" title={stuck.length ? `It starts once ${stuck[0].title} is tried again and done, or drop it` : `Starts once ${waits.join(", ")} ${waits.length === 1 ? "is" : "are"} done`}>
+            waits for {waits.join(", ")}
+            {stuck.length > 0 && <span className="text-[#ff8a8f]"> · {stuck[0].status}</span>}
+          </p>
         ) : !open && summary && (
           <div className="flex min-w-0 items-baseline gap-2">
             <p className={cn("min-w-0 flex-1 truncate text-[12px]", task.status === "failed" ? "text-[#ff8a8f]" : "text-muted-foreground")}>{summary}</p>

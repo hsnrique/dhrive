@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { newAgent } from "./army";
-import { MAX_KEPT, MAX_TASKS, alreadyNote, handoffs, ownTask, parseDay, ready, savedTasks, standing, taskPrompt, taskSummary, trimmed, waitingOn, type Task } from "./day";
+import { MAX_KEPT, MAX_TASKS, alreadyNote, handoffs, ownTask, parseDay, ready, savedTasks, standing, taskPrompt, taskSummary, trimmed, waitingOn, type Task, stuckOn } from "./day";
 
 const AGENT = { engine: "claude-code" as const, model: "sonnet" };
 
@@ -43,6 +43,25 @@ describe("a company's day", () => {
     expect(ready(page, [{ ...api, status: "failed" }, page]), "a failed one still holds it").toBe(false);
     expect(ready(page, [page]), "a dropped one no longer does").toBe(true);
     expect(savedTasks([{ ...page, after: [api.id, 7] }])[0].after).toEqual([api.id]);
+  });
+
+  it("never lets two tasks wait for each other: a task waits only for ones listed before it", () => {
+    const reply = JSON.stringify([
+      { title: "A", area: "code", prompt: "a", after: ["B"] },
+      { title: "B", area: "code", prompt: "b", after: ["A"] },
+    ]);
+    const [a, b] = parseDay(reply, AGENT);
+    expect(a.after, "B comes later, so A can't wait for it").toBeUndefined();
+    expect(b.after).toEqual([a.id]);
+  });
+
+  it("knows a task is stuck, not waiting, when what holds it failed or was stopped, through any chain", () => {
+    const [a, b, c] = parseDay(JSON.stringify([{ title: "A", area: "code", prompt: "a" }, { title: "B", area: "code", prompt: "b", after: ["A"] }, { title: "C", area: "code", prompt: "c", after: ["B"] }]), AGENT);
+    const failed = { ...a, status: "failed" as const };
+    expect(stuckOn(b, [failed, b, c]).map((t) => t.title)).toEqual(["A"]);
+    expect(stuckOn(c, [failed, b, c]).map((t) => t.title), "C waits on B, which waits on the failed A").toEqual(["A"]);
+    expect(stuckOn(c, [{ ...a, status: "planned" }, b, c])).toEqual([]);
+    expect(stuckOn(c, [{ ...a, status: "done" }, { ...b, status: "stopped" }, c]).map((t) => t.title)).toEqual(["B"]);
   });
 
   it("tells each agent what the others delivered lately", () => {

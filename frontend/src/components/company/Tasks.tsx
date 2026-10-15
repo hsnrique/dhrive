@@ -3,7 +3,7 @@ import { Square } from "lucide-react";
 
 import type { Engine, Project } from "@/lib/api";
 import { isBlank, type Brief } from "@/lib/company";
-import type { Task } from "@/lib/day";
+import { stuckOn, type Task } from "@/lib/day";
 import { totalDetail, totalLine, totalOf } from "@/lib/spend";
 import { ago, useNow } from "@/lib/time";
 import { useApp } from "@/store/app";
@@ -65,7 +65,8 @@ function Bar({ project, day, engines, blank }: { project: Project; day: Day; eng
   const picker = choice && <ChoicePicker choice={choice} onChoose={(next) => setAgent(project.id, next)} label="Agent that works for the company" engines={engines} down tunable />;
   const now = useNow(false);
   const running = day.tasks.some((t) => t.status === "running");
-  const waiting = day.tasks.filter((t) => t.status === "planned").length;
+  // What Run would start: a task stuck behind a failed one can't, so it isn't counted.
+  const waiting = day.tasks.filter((t) => t.status === "planned" && !stuckOn(t, day.tasks).length).length;
   // Wraps rather than overflows when its column is narrow.
   const card = "flex min-h-[48px] flex-wrap items-center gap-x-2.5 gap-y-2 rounded-xl border border-border bg-card px-2.5 py-2";
   const said = blank ? "Write the brief first" : day.plannedAt ? `Suggested ${ago(day.plannedAt, now)}. Reads the brief and the project, changes nothing.` : "Reads the brief and the project, changes nothing.";
