@@ -47,7 +47,7 @@ const listed = (projectId: string) => sidebarItems(projectId, store().conversati
 beforeEach(async () => {
   requests.length = 0;
   storage.clear();
-  useApp.setState({ projects: PROJECTS, threads: {}, mode: "chat", choices: { plan: { engine: "claude-code", model: "opus" }, code: { engine: "codex", model: "" } }, error: null });
+  useApp.setState({ projects: PROJECTS, threads: {}, mode: "chat", choices: { plan: { engine: "claude-code", model: "opus" }, code: { engine: "codex", model: "" } }, errors: [] });
   useConversations.setState({ conversations: [], past: {}, open: null });
   await store().load();
 });

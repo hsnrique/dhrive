@@ -61,7 +61,7 @@ describe("keeper", () => {
     calls.length = 0;
     delay = () => 0;
     failRead = failArchive = false;
-    useApp.setState({ error: null });
+    useApp.setState({ errors: [] });
   });
 
   it("merges the file in before writing, so a change made while it's read never drops what it held", async () => {
@@ -97,7 +97,7 @@ describe("keeper", () => {
     push("p", 2, [1]);
     await settle();
     expect(disk.get("p"), "no save drops what isn't archived").toEqual([1]);
-    expect(useApp.getState().error).toContain("disk full");
+    expect(useApp.getState().errors[0]?.text).toContain("disk full");
     failArchive = false;
     push("p", 3);
     await settle();
@@ -113,7 +113,7 @@ describe("keeper", () => {
     push("p", 8);
     await settle();
     expect(disk.get("p")).toEqual([7]);
-    expect(useApp.getState().error).toContain("damaged");
+    expect(useApp.getState().errors[0]?.text).toContain("damaged");
     failRead = false;
     push("p", 9);
     await settle();

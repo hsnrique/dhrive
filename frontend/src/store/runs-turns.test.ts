@@ -44,7 +44,7 @@ beforeEach(async () => {
   const projects = [{ id: "pa", name: "a", folder: "/a", createdAt: 0 }, { id: "pb", name: "b", folder: "/b", createdAt: 0 }];
   const conversation = (id: string, projectId: string) => ({ id, projectId, title: id, createdAt: 0, updatedAt: 0, continues: [] });
   useConversations.setState({ conversations: [conversation("a1", "pa"), conversation("a2", "pa"), conversation("a3", "pa"), conversation("b1", "pb")] });
-  useApp.setState({ projects, threads: { a1: emptyThread(), a2: emptyThread(), a3: emptyThread(), b1: emptyThread() }, choices: { plan: null, code: { engine: "codex", model: "" } }, mode: "code", error: null });
+  useApp.setState({ projects, threads: { a1: emptyThread(), a2: emptyThread(), a3: emptyThread(), b1: emptyThread() }, choices: { plan: null, code: { engine: "codex", model: "" } }, mode: "code", errors: [] });
 });
 
 describe("code steps in the same project", () => {

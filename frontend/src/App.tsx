@@ -3,7 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 
 import { AccountSheet, SignInGate } from "@/components/Account";
 import { Announcer } from "@/components/ui/announcer";
-import { ErrorToast } from "@/components/ErrorToast";
+import { Toasts } from "@/components/ErrorToast";
 import { Home } from "@/components/Home";
 import { CliPage } from "@/components/CliPage";
 import { CompanyView } from "@/components/company/CompanyView";
@@ -13,7 +13,6 @@ import { SearchPalette } from "@/components/SearchPalette";
 import { Sidebar } from "@/components/Sidebar";
 import { TerminalGrid } from "@/components/terminals/TerminalGrid";
 import { useTerminals } from "@/store/terminals";
-import { UpdateToast } from "@/components/UpdateToast";
 import type { ProgressEvent, PullEvent } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAccount } from "@/store/account";
@@ -100,8 +99,7 @@ export default function App() {
       {!shown && (
         <main className="min-w-0 flex-1">{page === "ollama" ? <LocalModels /> : page === "company" && company ? <CompanyView key={company.id} project={company} /> : page && page !== "terminals" && page !== "company" ? <CliPage key={page} engine={page} /> : project && open ? <ProjectView key={open.conversationId ?? `new:${project.id}:${open.from?.id ?? ""}`} project={project} open={open} /> : <Home />}</main>
       )}
-      <UpdateToast />
-      <ErrorToast />
+      <Toasts />
       <SearchPalette />
       <AccountSheet />
       <SignInGate />

@@ -54,7 +54,7 @@ function reset(mode: Mode, autoCode = true) {
     choices: { plan: { engine: "claude-code", model: "opus", effort: "max" }, code: { engine: "codex", model: "gpt-6-astra" } },
     mode,
     autoCode,
-    error: null,
+    errors: [],
   });
 }
 
@@ -333,7 +333,7 @@ describe("carrying out requests", () => {
     stop("pa");
     await flush();
     expect(runsOf("pa")[0]).toMatchObject({ plan: { status: "stopped" }, code: { status: "skipped" } });
-    expect(useApp.getState().error).toBeNull();
+    expect(useApp.getState().errors).toEqual([]);
   });
 
   it("the coder gets the plan, and each CLI resumes its own session next time", async () => {
