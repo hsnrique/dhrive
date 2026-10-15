@@ -8,6 +8,7 @@ import { compactionOf, useContextUsage } from "./context";
 import { folderOf, useConversations } from "./conversations";
 import { editing, inFolder } from "./editing";
 import { useFiles } from "./files";
+import { dropLive, setPhase } from "./live";
 import { usePreview } from "./preview";
 
 // Turning a request into CLI runs: a chat reply, or plan (in relay mode) then code carrying the
@@ -43,7 +44,7 @@ async function runStage(conversationId: string, message: RunMessage, step: Step)
   let release = () => {};
   try {
     if (step === "code" && !message.chat) {
-      if (editing.busy(folder)) useApp.setState((state) => ({ live: { ...state.live, [runId]: { phase: WAITING, log: [] } } }));
+      if (editing.busy(folder)) setPhase(runId, WAITING);
       release = await editing.take(folder);
       // Stopped while it waited: it never started, so there's nothing to run or undo.
       if (stageOf(conversationId, message.id, step)?.status === "stopped") return null;
@@ -68,6 +69,7 @@ async function runStage(conversationId: string, message: RunMessage, step: Step)
     return null;
   } finally {
     release();
+    dropLive(runId);
     // A code step may have added or removed files, which mentions should know about, and changed
     // what the project's dev server shows.
     if (step === "code") {

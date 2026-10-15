@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
 import { useDraft, useMaestro } from "@/store/maestro";
 import { useTerminals } from "@/store/terminals";
+import { useLiveLast, useLivePhase } from "@/store/live";
 import { ago, useNow } from "@/lib/time";
 import { ChoicePicker } from "../ModelPicker";
 import { FocusPicker } from "./FocusPicker";
@@ -21,8 +22,8 @@ const iconButton = "flex h-6 w-6 flex-none items-center justify-center rounded-m
 
 // The phase, then the CLI's latest action, on one line next to the CLI that's splitting.
 function Progress({ runId }: { runId: string }) {
-  const phase = useApp((s) => s.live[runId]?.phase) || "Starting";
-  const doing = useApp((s) => s.live[runId]?.log[s.live[runId].log.length - 1]);
+  const phase = useLivePhase(runId) || "Starting";
+  const doing = useLiveLast(runId);
   const said = doing ? `${phase} · ${doing}` : phase;
   return <p className="truncate text-xs text-muted-foreground" title={said}><span className="node-live mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-foreground align-middle" />{said}</p>;
 }

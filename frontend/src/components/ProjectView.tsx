@@ -50,9 +50,9 @@ export function ProjectView({ project, open }: { project: Project; open: Open })
   const scroller = useRef<HTMLDivElement>(null);
   const pinned = useRef(true);
   const seen = useRef(0);
+  const content = useRef<HTMLDivElement>(null);
   const { conversationId } = open;
   const messages = useApp((s) => (conversationId ? s.threads[conversationId]?.messages : undefined));
-  const live = useApp((s) => s.live);
   // With the side panel open the header has less room, so the folder's path gives way first.
   const panelOpen = usePanel((s) => s.tabs.some((t) => t.folder === project.folder));
 
@@ -66,7 +66,20 @@ export function ProjectView({ project, open }: { project: Project; open: Open })
     if (count > seen.current) pinned.current = true;
     seen.current = count;
     if (el && pinned.current) el.scrollTop = el.scrollHeight;
-  }, [messages, live]);
+  }, [messages]);
+
+  // Following the output by its size, not by watching every run's log: a line streaming in grows the
+  // content, and only then does the view move, without the whole conversation re-rendering for it.
+  useEffect(() => {
+    const el = scroller.current;
+    const body = content.current;
+    if (!el || !body) return;
+    const follow = new ResizeObserver(() => {
+      if (pinned.current) el.scrollTop = el.scrollHeight;
+    });
+    follow.observe(body);
+    return () => follow.disconnect();
+  }, []);
 
   return (
     <div className="flex h-full min-w-0">
@@ -96,7 +109,7 @@ export function ProjectView({ project, open }: { project: Project; open: Open })
             {conversationId && <KeepContext conversationId={conversationId} />}
           </div>
         </header>
-        <div className="mx-auto flex w-full max-w-[780px] flex-1 flex-col gap-5 px-6 pt-6">
+        <div ref={content} className="mx-auto flex w-full max-w-[780px] flex-1 flex-col gap-5 px-6 pt-6">
           <Thread conversationId={conversationId} from={open.from} />
           {/* Only the strip under the composer is painted black; the composer's own glass frosts
               whatever scrolls beneath it. */}

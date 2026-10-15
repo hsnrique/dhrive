@@ -10,6 +10,7 @@ import { useApp } from "@/store/app";
 import { companyAgent, useAgentOf } from "@/store/company";
 import { useDay, useDayOf, type Day } from "@/store/day";
 import { useFold } from "@/store/fold";
+import { useLiveLast, useLivePhase } from "@/store/live";
 import { ChoicePicker } from "../ModelPicker";
 import { Switch } from "../ui/switch";
 import { AutoEnded, AutoMode } from "./AutoMode";
@@ -32,8 +33,8 @@ function Spent({ tasks }: { tasks: Task[] }) {
 }
 
 function Progress({ runId }: { runId: string }) {
-  const phase = useApp((s) => s.live[runId]?.phase) || "Starting";
-  const doing = useApp((s) => s.live[runId]?.log[s.live[runId].log.length - 1]);
+  const phase = useLivePhase(runId) || "Starting";
+  const doing = useLiveLast(runId);
   const said = doing ? `${phase} · ${doing}` : phase;
   return (
     <p className="min-w-0 flex-1 truncate text-[12.5px] text-muted-foreground" title={said}>

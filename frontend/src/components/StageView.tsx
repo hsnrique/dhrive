@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useApp, useModelName } from "@/store/app";
 import { folderOf, projectOf } from "@/store/conversations";
 import { retry, stop } from "@/store/runs";
+import { useLiveRun } from "@/store/live";
 import { Approvals } from "./Approvals";
 import { ChangesView } from "./ChangesView";
 import { EngineMark } from "./EngineMark";
@@ -29,7 +30,7 @@ function StatusNode({ status }: { status: StageStatus }) {
 }
 
 function LiveLog({ runId, folder }: { runId: string | null; folder: string | undefined }) {
-  const live = useApp((s) => (runId ? s.live[runId] : undefined));
+  const live = useLiveRun(runId);
   const asking = useApp((s) => (runId ? (s.approvals[runId]?.length ?? 0) > 0 : false));
   const box = useRef<HTMLPreElement>(null);
   useEffect(() => {

@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Square } from "lucide-react";
 
 import type { Project } from "@/lib/api";
-import { useApp } from "@/store/app";
 import { companyAgent, useAgentOf } from "@/store/company";
 import { useChat, useTalkOf } from "@/store/chat";
 import { useLogOf } from "@/store/log";
+import { useLiveLast, useLivePhase } from "@/store/live";
 import { ChatEntry } from "./ChatEntry";
 
 // The company's chat: its timeline, newest at the bottom, and a box to ask it anything. An empty
@@ -14,8 +14,8 @@ import { ChatEntry } from "./ChatEntry";
 const STARTERS = ["How are we doing?", "What should we do next?"];
 
 function Thinking({ runId }: { runId: string }) {
-  const phase = useApp((s) => s.live[runId]?.phase) || "Thinking";
-  const doing = useApp((s) => s.live[runId]?.log[s.live[runId].log.length - 1]);
+  const phase = useLivePhase(runId) || "Thinking";
+  const doing = useLiveLast(runId);
   const said = doing ? `${phase} · ${doing}` : phase;
   return (
     <p className="flex min-w-0 items-center gap-2 px-1 text-[12.5px] text-muted-foreground" title={said}>

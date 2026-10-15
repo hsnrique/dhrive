@@ -17,20 +17,13 @@ import {
 } from "@/lib/api";
 import { asking, readQuestion } from "@/lib/approvals";
 import { readChanges } from "@/lib/changes";
-import { appendLog, restoreChoice, restoreMode, type Choice, type Mode } from "@/lib/flow";
-import { readEdit, type LiveEdit } from "@/lib/linediff";
+import { restoreChoice, restoreMode, type Choice, type Mode } from "@/lib/flow";
+import { readEdit } from "@/lib/linediff";
 import { modelName } from "@/lib/names";
 import { readSaved, save } from "@/lib/storage";
 import { emptyThread, withRunChanges, withRunSession, type Thread } from "@/lib/thread";
+import { pushLive } from "./live";
 
-export interface Live {
-  phase: string;
-  log: string[];
-  // The file edits the run made so far, newest last.
-  edits?: LiveEdit[];
-}
-
-const MAX_LIVE_EDITS = 40;
 
 export interface AppState {
   clis: Cli[];
@@ -43,8 +36,6 @@ export interface AppState {
   // A CLI's own screen, Terminals mode, or a project's company; null is the conversations.
   page: Engine | "terminals" | "company" | null;
   threads: Record<string, Thread>;
-  // Live activity per run id; never saved, a finished run keeps only its result.
-  live: Record<string, Live>;
   choices: Record<Step, Choice | null>;
   mode: Mode;
   // In Plan mode the code waits for the owner's OK on each plan, unless they chose to skip that.
@@ -78,7 +69,6 @@ export const useApp = create<AppState>((set, get) => ({
   projects: [],
   page: null,
   threads: {},
-  live: {},
   choices: { plan: null, code: null },
   mode: restoreMode(readSaved("mode"), readSaved("planFirst")),
   autoCode: readSaved("autoCode") === true,
@@ -176,21 +166,13 @@ export const useApp = create<AppState>((set, get) => ({
       if (typeof document !== "undefined" && !document.hasFocus()) notify("dhrive needs your OK", `Claude ${asking(question)} ${question.detail}`.trim()).catch(() => undefined);
       return;
     }
+    // What a run is doing right now goes to its own store, gathered into one update per beat (live.ts).
     if (event.kind === "edit") {
       const edit = readEdit(event.value);
-      if (edit) {
-        set((state) => {
-          const live = state.live[event.runId] ?? { phase: "", log: [] };
-          return { live: { ...state.live, [event.runId]: { ...live, edits: [...(live.edits ?? []), edit].slice(-MAX_LIVE_EDITS) } } };
-        });
-      }
+      if (edit) pushLive({ runId: event.runId, kind: "edit", edit });
       return;
     }
-    set((state) => {
-      const live = state.live[event.runId] ?? { phase: "", log: [] };
-      const next = event.kind === "phase" ? { ...live, phase: event.value } : { ...live, log: appendLog(live.log, event.value) };
-      return { live: { ...state.live, [event.runId]: next } };
-    });
+    pushLive({ runId: event.runId, kind: event.kind === "phase" ? "phase" : "log", value: event.value });
   },
 
   reportError: (error) => set({ error: message(error) }),
