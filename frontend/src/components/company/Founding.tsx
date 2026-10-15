@@ -6,6 +6,7 @@ import { useApp } from "@/store/app";
 import { companyAgent, useCompany } from "@/store/company";
 import { useFounding, type Phase } from "@/store/founding";
 import { useLiveLast, useLivePhase } from "@/store/live";
+import { buttonVariants } from "@/components/ui/button";
 import { Approvals } from "../Approvals";
 import { ChoicePicker } from "../ModelPicker";
 import { Switch } from "../ui/switch";
@@ -20,8 +21,8 @@ const STEPS: { phase: Phase | "building"; label: string }[] = [
   { phase: "building", label: "Building your autonomous company" },
 ];
 
-const primary = "h-9 flex-none rounded-md bg-foreground px-5 text-[13.5px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40";
-const quiet = "flex h-9 flex-none items-center gap-2 rounded-md px-4 text-[13.5px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground";
+const primary = buttonVariants({ variant: "primary", size: "lg" });
+const quiet = cn(buttonVariants({ variant: "ghost", size: "lg" }), "px-4");
 
 function Live({ runId }: { runId: string | null }) {
   const phase = useLivePhase(runId) || "Starting";
@@ -49,7 +50,7 @@ function Working() {
   const failed = phase === "failed";
   return (
     <div className="grid gap-8">
-      <h1 className="font-serif text-[46px] leading-[1.04] tracking-[-0.01em]">{name || (idea ? "Founding your company" : "Finding a company worth starting")}</h1>
+      <h1 className="display-hero">{name || (idea ? "Founding your company" : "Finding a company worth starting")}</h1>
       <ol className="grid gap-4">
         {STEPS.map((s, i) => (
           <Step key={s.phase} label={s.label} state={i < at ? "done" : i === at ? "now" : "next"}>
@@ -62,7 +63,7 @@ function Working() {
           </Step>
         ))}
       </ol>
-      {failed && <p className="text-[13px] text-[#ff8a8f]">{error}</p>}
+      {failed && <p className="text-[13px] text-failure">{error}</p>}
       <div className="flex items-center gap-2">
         {failed ? (
           <>
@@ -95,7 +96,7 @@ function Ask() {
   return (
     <div className="grid gap-6">
       <div className="grid gap-4">
-        <h1 className="font-serif text-[46px] leading-[1.04] tracking-[-0.01em]">What company should exist?</h1>
+        <h1 className="display-hero">What company should exist?</h1>
         <p className="max-w-[48ch] text-[14px] leading-relaxed text-muted-foreground">Say it in a sentence, or let dhrive pick. It creates the company and runs it.</p>
       </div>
       <div className="@container grid gap-2 rounded-2xl border border-border bg-card p-2 focus-within:border-ring">

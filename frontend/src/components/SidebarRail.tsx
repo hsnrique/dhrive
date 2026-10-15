@@ -11,6 +11,7 @@ import { useCompany } from "@/store/company";
 import { useConversations } from "@/store/conversations";
 import { useSearch } from "@/store/search";
 import { initialsOf, useSidebar } from "@/store/sidebar";
+import { buttonVariants } from "@/components/ui/button";
 import { Avatar } from "./AccountPanel";
 import { DiscordMark, FeedbackDialog, openDiscord } from "./Community";
 import { EngineMark } from "./EngineMark";
@@ -21,7 +22,7 @@ import { useCompanyPulse } from "./company/CompanyRow";
 // community, and the account.
 // Every button names itself beside the rail on hover, since initials and marks alone don't.
 
-const tool = "flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground";
+const tool = buttonVariants({ variant: "ghost", size: "icon" });
 
 // Placed on the window, not inside the rail: the rail scrolls, and a scrolling box clips what pokes out.
 function Tip({ label, children }: { label: string; children: ReactNode }) {
@@ -31,7 +32,7 @@ function Tip({ label, children }: { label: string; children: ReactNode }) {
       {children}
       {at &&
         createPortal(
-          <span role="tooltip" style={{ left: at.right + 10, top: at.top + at.height / 2 }} className="pop-in pointer-events-none fixed z-50 -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-[12px] text-foreground shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+          <span role="tooltip" style={{ left: at.right + 10, top: at.top + at.height / 2 }} className="pop-in pointer-events-none fixed z-50 -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-[12px] text-foreground shadow-popover">
             {label}
           </span>,
           document.body,
@@ -52,7 +53,7 @@ function CompanyChip({ project }: { project: Project }) {
         type="button"
         aria-label={project.name}
         aria-current={active ? "page" : undefined}
-        className={cn("relative flex h-10 w-10 items-center justify-center rounded-xl text-[12.5px] font-medium transition-colors", active ? "bg-foreground text-background" : "bg-white/[0.06] text-foreground/80 hover:bg-white/[0.12] hover:text-foreground")}
+        className={cn("relative flex h-10 w-10 items-center justify-center rounded-xl text-[12.5px] font-medium transition-colors", active ? "bg-foreground text-background" : "bg-white/[0.06] text-foreground/80 hover:bg-pressed hover:text-foreground")}
         onClick={() => useCompany.getState().open(project.id)}
       >
         {initialsOf(project.name)}

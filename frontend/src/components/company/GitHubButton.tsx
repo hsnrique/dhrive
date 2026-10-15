@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { ArrowUpRight, CircleAlert } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import { useDay } from "@/store/day";
 import { useGitHub, useGitHubOf } from "@/store/github";
+import { buttonVariants } from "@/components/ui/button";
 import { CommitBox } from "./CommitBox";
 
 // The company's code on GitHub, in the toolbar, one button that's always the next step: install gh,
@@ -13,7 +15,7 @@ import { CommitBox } from "./CommitBox";
 // repo exists the company lives only on this Mac, which the attention dot says; after, every
 // finished task is backed up on its own (store/github.ts).
 
-const pill = "flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] @[60rem]:px-3 transition-colors hover:bg-white/[0.07] disabled:opacity-50";
+const pill = cn(buttonVariants({ variant: "outline", size: "sm" }), "px-2.5 @[60rem]:px-3");
 const open = (url: string) => void openUrl(url).catch(() => undefined);
 // The toolbar is a container (CompanyView): below this the label gives way to the mark.
 const label = "hidden @[60rem]:inline";
@@ -32,7 +34,7 @@ function NotBackedUp() {
 
 function Code({ code }: { code: string }) {
   return (
-    <div className="absolute right-0 top-9 z-30 grid w-[260px] gap-2 rounded-xl border border-border bg-popover p-3 shadow-[0_18px_50px_rgba(0,0,0,0.55)]">
+    <div className="absolute right-0 top-9 z-30 grid w-[260px] gap-2 rounded-xl border border-border bg-popover p-3 shadow-popover">
       <p className="text-[12px] text-muted-foreground">Enter this code on GitHub to connect:</p>
       <button type="button" title="Copy" className="justify-self-start font-mono text-[18px] tracking-[0.12em]" onClick={() => void navigator.clipboard.writeText(code).catch(() => undefined)}>
         {code}
@@ -57,7 +59,7 @@ export function GitHubButton({ projectId }: { projectId: string }) {
   useEffect(() => void load(projectId), [projectId, done, load]);
   if (!state) return null;
   const errorLine = error && (
-    <span className="flex min-w-0 items-center text-[11.5px] text-[#ff8a8f]" title={error} role="alert">
+    <span className="flex min-w-0 items-center text-[11.5px] text-failure" title={error} role="alert">
       <CircleAlert className="h-3.5 w-3.5 flex-none @[52rem]:hidden" aria-label={error} />
       <span className="hidden max-w-[200px] truncate @[52rem]:inline">{error}</span>
     </span>

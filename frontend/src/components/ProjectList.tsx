@@ -140,7 +140,7 @@ function ProjectGroup({ project, collapsed, onToggle }: { project: Project; coll
         />
       )}
       <div className="group relative">
-        <button type="button" aria-expanded={!collapsed} title={project.folder} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors hover:bg-white/[0.04] group-hover:pr-24" onClick={onToggle}>
+        <button type="button" aria-expanded={!collapsed} title={project.folder} className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors hover:bg-hover group-hover:pr-24" onClick={onToggle}>
           <Icon className="h-[15px] w-[15px] flex-none text-muted-foreground" strokeWidth={1.75} />
           <span className="truncate">{project.name}</span>
           {running && collapsed && <span className="node-live h-1.5 w-1.5 flex-none rounded-full bg-foreground" title="Running" />}

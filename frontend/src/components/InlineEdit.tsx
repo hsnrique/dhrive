@@ -35,7 +35,7 @@ export function InlineEdit({ value, label, onSave, className, inputClassName }: 
   const [editing, setEditing] = useState(false);
   if (editing) return <NameInput value={value} label={label} onSave={onSave} onDone={() => setEditing(false)} className={inputClassName} />;
   return (
-    <button type="button" title={`Rename (${value})`} className={cn("truncate rounded-md px-1 text-left hover:bg-white/[0.06]", className)} onClick={() => setEditing(true)}>
+    <button type="button" title={`Rename (${value})`} className={cn("truncate rounded-md px-1 text-left hover:bg-hover", className)} onClick={() => setEditing(true)}>
       {value}
     </button>
   );

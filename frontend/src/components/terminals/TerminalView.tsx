@@ -124,5 +124,5 @@ export function TerminalView({ id, engine, start, project, copy, model, task, on
     };
   }, [id, engine, project, copy]);
 
-  return <div ref={host} className="h-full w-full overflow-hidden bg-[#050506] px-2 pt-1.5" />;
+  return <div ref={host} className="h-full w-full overflow-hidden bg-terminal px-2 pt-1.5" />;
 }

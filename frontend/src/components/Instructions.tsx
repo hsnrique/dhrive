@@ -9,6 +9,7 @@ import { useApp } from "@/store/app";
 import { useFiles } from "@/store/files";
 import { useInstructions } from "@/store/instructions";
 import { usePanel } from "@/store/panel";
+import { Dialog } from "@/components/ui/layer";
 
 // The owner's own AGENTS.md, for every project, and what one conversation adds on top. Every agent
 // dhrive runs gets both, even in a project that has no AGENTS.md or CLAUDE.md of its own.
@@ -67,13 +68,13 @@ function Editor({ initial, save }: { initial: string; save: (text: string) => Pr
         placeholder={EXAMPLE}
         spellCheck={false}
         aria-label="Instructions"
-        className="h-[min(50vh,420px)] w-full resize-none rounded-xl border border-border bg-black/40 p-3 font-mono text-[12.5px] leading-relaxed outline-none transition-colors [font-variant-ligatures:none] placeholder:text-muted-foreground/60 focus:border-ring"
+        className="h-[min(50vh,420px)] w-full resize-none rounded-xl border border-border bg-black/30 p-3 font-mono text-[12.5px] leading-relaxed outline-none transition-colors [font-variant-ligatures:none] placeholder:text-muted-foreground/60 focus:border-ring"
         onChange={(e) => {
           setText(e.target.value);
           change(e.target.value);
         }}
       />
-      <p className={cn("text-[11px] text-muted-foreground", status === "failed" && "text-diff-remove")}>
+      <p className={cn("text-[11px] text-muted-foreground", status === "failed" && "text-failure")}>
         {status === "saving" ? "Saving…" : status === "failed" ? "Couldn't save. Keep typing to try again." : "Saved"} · {text.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
       </p>
     </>
@@ -96,7 +97,7 @@ function ProjectFiles({ folder, onOpen }: { folder: string; onOpen: () => void }
     <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
       Also follows this project's
       {found.map((path) => (
-        <button key={path} type="button" className="flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 font-mono text-[11px] text-foreground/85 transition-colors hover:bg-white/[0.07]" onClick={() => { usePanel.getState().open(folder, path); onOpen(); }}>
+        <button key={path} type="button" className="flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 font-mono text-[11px] text-foreground/85 transition-colors hover:bg-hover" onClick={() => { usePanel.getState().open(folder, path); onOpen(); }}>
           <FileText className="h-3 w-3" />
           {path}
         </button>
@@ -105,44 +106,37 @@ function ProjectFiles({ folder, onOpen }: { folder: string; onOpen: () => void }
   );
 }
 
-function Dialog({ open, folder, onClose }: { open: Open; folder: string; onClose: () => void }) {
+function InstructionsDialog({ open, folder, onClose }: { open: Open; folder: string; onClose: () => void }) {
   const [scope, setScope] = useState<Scope>("every");
   const everyProject = useInstructions((s) => s.everyProject);
   const here = useApp((s) => (open.conversationId ? (s.threads[open.conversationId]?.instructions ?? "") : readDraft(instructionsKeyOf(open))));
-  useEffect(() => {
-    const close = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [onClose]);
   const hint = SCOPES.find((s) => s.id === scope)!.hint;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-6 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-label="Instructions" className="pop-in grid w-full max-w-[640px] gap-3 rounded-2xl border border-border bg-popover p-4 shadow-[0_24px_70px_rgba(0,0,0,0.6)]">
-        <div className="flex items-center gap-2">
-          <ScrollText className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-[14px] font-semibold tracking-tight">Instructions</h2>
-          <button type="button" aria-label="Close" className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="flex items-center gap-3">
-          <div role="tablist" className="flex rounded-lg border border-border p-0.5">
-            {SCOPES.map((s) => (
-              <button key={s.id} type="button" role="tab" aria-selected={scope === s.id} className={cn("rounded-md px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:text-foreground", scope === s.id && "bg-white/[0.09] text-foreground")} onClick={() => setScope(s.id)}>
-                {s.label}
-              </button>
-            ))}
-          </div>
-          <p className="min-w-0 truncate text-[11.5px] text-muted-foreground">{hint}</p>
-        </div>
-        {scope === "every" ? (
-          everyProject === null ? <p className="py-10 text-center text-[12px] text-muted-foreground">Loading…</p> : <Editor key="every" initial={everyProject} save={useInstructions.getState().save} />
-        ) : (
-          <Editor key={`here:${open.conversationId ?? instructionsKeyOf(open)}`} initial={here} save={saveHere(open)} />
-        )}
-        <ProjectFiles folder={folder} onOpen={onClose} />
+    <Dialog label="Instructions" onClose={onClose} className="grid max-w-[640px] gap-3 p-4">
+      <div className="flex items-center gap-2">
+        <ScrollText className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-[14px] font-semibold tracking-tight">Instructions</h2>
+        <button type="button" aria-label="Close" className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </button>
       </div>
-    </div>
+      <div className="flex items-center gap-3">
+        <div role="tablist" className="flex rounded-lg border border-border p-0.5">
+          {SCOPES.map((s) => (
+            <button key={s.id} type="button" role="tab" aria-selected={scope === s.id} className={cn("rounded-md px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:text-foreground", scope === s.id && "bg-selected text-foreground")} onClick={() => setScope(s.id)}>
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <p className="min-w-0 truncate text-[11.5px] text-muted-foreground">{hint}</p>
+      </div>
+      {scope === "every" ? (
+        everyProject === null ? <p className="py-10 text-center text-[12px] text-muted-foreground">Loading…</p> : <Editor key="every" initial={everyProject} save={useInstructions.getState().save} />
+      ) : (
+        <Editor key={`here:${open.conversationId ?? instructionsKeyOf(open)}`} initial={here} save={saveHere(open)} />
+      )}
+      <ProjectFiles folder={folder} onOpen={onClose} />
+    </Dialog>
   );
 }
 
@@ -154,11 +148,11 @@ export function InstructionsButton({ open, folder }: { open: Open; folder: strin
   useEffect(() => void useInstructions.getState().load(), []);
   return (
     <>
-      <button type="button" title="Instructions every agent follows" aria-label="Instructions" className={cn("flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground", (everyProject || here) && "text-foreground")} onClick={() => setShown(true)}>
+      <button type="button" title="Instructions every agent follows" aria-label="Instructions" className={cn("flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground", (everyProject || here) && "text-foreground")} onClick={() => setShown(true)}>
         <ScrollText className="h-4 w-4" />
       </button>
       {/* On the body: the glass header's backdrop filter would otherwise hold a fixed overlay inside it. */}
-      {shown && createPortal(<Dialog open={open} folder={folder} onClose={() => setShown(false)} />, document.body)}
+      {shown && createPortal(<InstructionsDialog open={open} folder={folder} onClose={() => setShown(false)} />, document.body)}
     </>
   );
 }

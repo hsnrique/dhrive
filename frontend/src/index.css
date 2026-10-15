@@ -12,6 +12,7 @@
 @import "@fontsource/ibm-plex-mono/latin-500.css";
 @import "@fontsource/ibm-plex-serif/latin-300.css";
 @import "@fontsource/ibm-plex-serif/latin-400.css";
+@import "./motion.css";
 
 /* dhrive is always-dark: black, white as the only accent, red only for failure. The surfaces are
    flat and ruled with hairlines, the corners nearly square. shadcn/Radix components read these via @theme inline below. */
@@ -30,8 +31,19 @@
   --muted-foreground: rgba(242, 242, 242, 0.55);
   --accent: #1f1f1f;
   --accent-foreground: #f2f2f2;
-  --destructive: #e5484d;
-  --destructive-foreground: #ffffff;
+  /* The one red: what failed, errors, and what can't be taken back. Read on black, so it's soft. */
+  --failure: #ff8a8f;
+  --destructive: var(--failure);
+  --destructive-foreground: #0c0c0c;
+  /* What's up and reachable: a site that's live, a server that's connected, a step that landed. */
+  --live: #3ddc84;
+  /* The three white levels a control moves through: pointed at, chosen (or a soft fill at rest),
+     and pointed at while filled. */
+  --hover: rgba(255, 255, 255, 0.07);
+  --selected: rgba(255, 255, 255, 0.1);
+  --pressed: rgba(255, 255, 255, 0.14);
+  /* A terminal's own black, a shade under the page so its pane reads as a screen. */
+  --terminal: #050506;
   /* Lines a code step added and removed, soft enough to read a long diff on black. */
   --diff-add: #7ee2a8;
   --diff-remove: #ff8a8f;
@@ -53,6 +65,12 @@
   --color-diff-add: var(--diff-add);
   --color-diff-remove: var(--diff-remove);
   --color-attention: var(--attention);
+  --color-failure: var(--failure);
+  --color-live: var(--live);
+  --color-hover: var(--hover);
+  --color-selected: var(--selected);
+  --color-pressed: var(--pressed);
+  --color-terminal: var(--terminal);
   --color-code-keyword: var(--code-keyword);
   --color-code-string: var(--code-string);
   --color-code-number: var(--code-number);
@@ -85,6 +103,35 @@
   --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  /* A raised surface is a flat panel with one hairline, its own border; nothing frosts, nothing
+     glows. What floats over the work casts one of two shadows: an anchored popover, or a dialog
+     or sheet that takes the window. */
+  --shadow-popover: 0 18px 50px rgba(0, 0, 0, 0.55);
+  --shadow-dialog: 0 24px 70px rgba(0, 0, 0, 0.6);
+  /* 12px reads on the same 1.5 line as every other UI size, not Tailwind's tighter 16px. */
+  --text-xs--line-height: 1.5;
+  /* One curve for everything that enters, and one length for it. */
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+  --duration-enter: 200ms;
+}
+
+/* The serif titles: the home's question, a page's title, a section's head. */
+@utility display-hero {
+  font-family: var(--font-serif);
+  font-size: 46px;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+}
+@utility display-title {
+  font-family: var(--font-serif);
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+@utility display-section {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  line-height: 1;
 }
 
 @layer base {
@@ -97,62 +144,6 @@
     -webkit-font-smoothing: antialiased;
     background: #000;
   }
-  /* A raised surface is a flat panel with a hairline edge; nothing frosts, nothing glows. */
-  [class~="bg-card"],
-  [class~="bg-popover"] {
-    box-shadow: inset 0 0 0 1px var(--border);
-  }
-  [class~="bg-popover"] {
-    box-shadow:
-      inset 0 0 0 1px rgba(255, 255, 255, 0.14),
-      0 16px 40px -20px rgba(0, 0, 0, 0.9);
-  }
-}
-
-/* Smooth entrance for overlays/modals. */
-@keyframes pop-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px) scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-.pop-in {
-  animation: pop-in 0.18s cubic-bezier(0.33, 1, 0.68, 1);
-}
-
-/* The sidebar opening over the work on a narrow window, and the dim behind it. */
-@keyframes slide-in-left {
-  from {
-    transform: translateX(-100%);
-  }
-}
-
-@keyframes slide-in-right {
-  from {
-    transform: translateX(100%);
-  }
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
-.slide-in-left {
-  animation: slide-in-left 0.2s cubic-bezier(0.33, 1, 0.68, 1);
-}
-
-.slide-in-right {
-  animation: slide-in-right 0.2s cubic-bezier(0.33, 1, 0.68, 1);
-}
-
-.fade-in {
-  animation: fade-in 0.2s ease-out;
 }
 
 /* Inside the company's columns every grid track may shrink to its column, so no long word or row
@@ -200,83 +191,6 @@
   /* The project's glass header sits inside its scroller; the scrollbar starts below it. */
   .project-scroll::-webkit-scrollbar-track {
     margin-top: 52px;
-  }
-}
-
-/* A stage node that is running breathes; everything else holds still. */
-/* The ring is its own layer, grown and faded with transform and opacity, so a dozen running dots
-   never repaint the page on every frame the way an animated shadow does. Over the white dot it's
-   invisible at rest; --breathe sets how far it reaches (about 5px past a 6–8px dot). */
-@keyframes node-breathe {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(var(--breathe, 2.4));
-    opacity: 0;
-  }
-}
-@layer components {
-  .node-live {
-    position: relative;
-  }
-}
-.node-live::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: rgba(242, 242, 242, 0.35);
-  pointer-events: none;
-  animation: node-breathe 1.6s cubic-bezier(0.33, 1, 0.68, 1) infinite;
-}
-
-/* The relay: the line from the plan to the code fills downward the moment the plan hands off. */
-@keyframes relay-fill {
-  from {
-    transform: scaleY(0);
-  }
-  to {
-    transform: scaleY(1);
-  }
-}
-.relay-fill {
-  transform-origin: top;
-  animation: relay-fill 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-/* A live log fades out at the top, so new lines read as arriving rather than a wall of text. */
-.log-fade {
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 28px);
-  mask-image: linear-gradient(to bottom, transparent, #000 28px);
-}
-
-/* A card still being written: a soft light passes over it while the maestro reads the project. */
-@keyframes ghost-sweep {
-  from {
-    background-position: 120% 0;
-  }
-  to {
-    background-position: -20% 0;
-  }
-}
-.ghost-sweep {
-  background-image: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.06) 50%, transparent 70%);
-  background-size: 250% 100%;
-  animation: ghost-sweep 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .node-live::after,
-  .ghost-sweep,
-  .relay-fill,
-  .pop-in,
-  .slide-in-left,
-  .slide-in-right,
-  .fade-in {
-    animation: none;
   }
 }
 

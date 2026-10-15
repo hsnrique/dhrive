@@ -2,8 +2,11 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 import type { Connector, Project } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { useConnectedOf, useConnectors } from "@/store/connectors";
 import { useGitHub, useGitHubOf } from "@/store/github";
+import { useLayer } from "@/components/ui/layer";
+import { buttonVariants } from "@/components/ui/button";
 import { SuggestTool } from "./SuggestTool";
 import { SiteLink, ToolMark } from "./ToolMark";
 
@@ -13,8 +16,8 @@ import { SiteLink, ToolMark } from "./ToolMark";
 // suggest one that isn't there. GitHub heads the code and
 // data, connected through gh the way the GitHub button does.
 
-const connect = "h-7 flex-none rounded-md border border-border px-3 text-[12px] transition-colors hover:bg-white/[0.08]";
-const again = "flex h-7 flex-none items-center gap-1.5 rounded-md px-2 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground";
+const connect = buttonVariants({ variant: "outline", size: "sm" });
+const again = cn(buttonVariants({ variant: "ghost", size: "sm" }), "px-2");
 
 const GITHUB = { id: "github", name: "GitHub", what: "Code, commits and backups", group: "Code and data", site: "https://github.com" };
 
@@ -27,7 +30,7 @@ interface Tool {
 
 function Row({ tool, connected, action, onConnect }: { tool: Tool; connected: boolean; action?: string; onConnect: () => void }) {
   return (
-    <li className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/[0.03]">
+    <li className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-hover">
       <ToolMark id={tool.id} />
       <div className="grid min-w-0 flex-1 gap-px">
         <span className="flex min-w-0 items-center gap-1">
@@ -38,7 +41,7 @@ function Row({ tool, connected, action, onConnect }: { tool: Tool; connected: bo
       </div>
       {connected ? (
         <button type="button" className={again} title="Run its setup again" onClick={onConnect}>
-          <span className="h-1.5 w-1.5 rounded-full bg-[#3FCF8E]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-live" />
           Connected
         </button>
       ) : (
@@ -73,21 +76,17 @@ export function ToolsMenu({ project, onRun, onClose }: { project: Project; onRun
   useEffect(() => {
     // The menu and its button share a parent; a press on the button is its own toggle.
     const away = (e: PointerEvent) => !box.current?.parentElement?.contains(e.target as Node) && onClose();
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("pointerdown", away);
-    window.addEventListener("keydown", esc);
-    return () => {
-      window.removeEventListener("pointerdown", away);
-      window.removeEventListener("keydown", esc);
-    };
+    return () => window.removeEventListener("pointerdown", away);
   }, [onClose]);
+  useLayer(box, onClose);
   const connectGitHub = () => {
     if (!github?.gh) return void openUrl("https://cli.github.com").catch(() => undefined);
     onClose();
     void useGitHub.getState().signIn(project.id);
   };
   return (
-    <div ref={box} className="absolute right-0 top-9 z-30 w-[min(400px,calc(100vw-32px))] rounded-2xl border border-border bg-[rgb(20,20,24)] p-2 shadow-[0_18px_50px_rgba(0,0,0,0.55)]">
+    <div ref={box} className="absolute right-0 top-9 z-30 w-[min(400px,calc(100vw-32px))] rounded-2xl border border-border bg-popover p-2 shadow-popover">
       <div className="flex items-baseline justify-between gap-3 px-2 pb-2 pt-1.5">
         <span className="text-[13px] font-medium">Tools</span>
         <span className="text-[11.5px] text-muted-foreground">{count > 0 ? `${count} connected` : "The agents use them through their own CLIs"}</span>

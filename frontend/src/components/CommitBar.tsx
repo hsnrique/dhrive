@@ -8,13 +8,15 @@ import type { RunMessage } from "@/lib/thread";
 import { cn } from "@/lib/utils";
 import { folderOf } from "@/store/conversations";
 import { commitStep, openPr } from "@/store/git";
+import { fieldVariants } from "@/components/ui/field";
+import { buttonVariants } from "@/components/ui/button";
 
 // The end of a code step, the way a developer ends one: commit the files it changed, on a new branch
 // when the project is on its default one, and open a pull request.
 
 function Action({ primary, disabled, title, onClick, children }: { primary?: boolean; disabled?: boolean; title?: string; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" disabled={disabled} title={title} className={cn("flex h-7 items-center gap-1.5 rounded-md px-3 text-[12px] transition-colors disabled:opacity-40", primary ? "bg-primary font-medium text-primary-foreground hover:opacity-90" : "border border-border hover:bg-white/[0.08]")} onClick={onClick}>
+    <button type="button" disabled={disabled} title={title} className={buttonVariants({ variant: primary ? "primary" : "outline", size: "sm" })} onClick={onClick}>
       {children}
     </button>
   );
@@ -43,7 +45,7 @@ function Done({ conversationId, message }: { conversationId: string; message: Ru
   return (
     <div className="grid gap-1.5 border-t border-border px-2 py-1.5 text-[12px]">
       <div className="flex flex-wrap items-center gap-2">
-        <Check className="h-3.5 w-3.5 text-diff-add" />
+        <Check className="h-3.5 w-3.5 text-live" />
         <span>
           Committed <span className="font-mono text-[11.5px]">{committed.sha}</span>
           {committed.branch && <span className="text-muted-foreground"> on <span className="font-mono text-[11.5px]">{committed.branch}</span></span>}
@@ -56,7 +58,7 @@ function Done({ conversationId, message }: { conversationId: string; message: Ru
           canPr && <span className="ml-auto"><Action disabled={busy} onClick={() => void open()}>{busy ? "Pushing and opening…" : "Open pull request"}</Action></span>
         )}
       </div>
-      {error && <p className="whitespace-pre-wrap text-[11.5px] text-diff-remove">{error}</p>}
+      {error && <p className="whitespace-pre-wrap text-[11.5px] text-failure">{error}</p>}
     </div>
   );
 }
@@ -86,13 +88,13 @@ function Form({ conversationId, message, info, onCancel }: { conversationId: str
   const count = message.code.changes?.files.length ?? 0;
   return (
     <div className="grid gap-2 border-t border-border p-2">
-      <textarea autoFocus rows={2} value={text} aria-label="Commit message" className="w-full resize-y rounded-lg border border-border bg-black/40 px-2.5 py-1.5 text-[12.5px] leading-relaxed outline-none focus:border-ring" onChange={(e) => setText(e.target.value)} />
+      <textarea autoFocus rows={2} value={text} aria-label="Commit message" className={cn(fieldVariants({ size: "area" }), "w-full resize-y px-2.5 py-1.5 text-[12.5px]")} onChange={(e) => setText(e.target.value)} />
       {info.onDefault && (
         <label className="flex items-center gap-2 text-[12px] text-muted-foreground">
           <input type="checkbox" checked={newBranch} className="accent-foreground" onChange={(e) => setNewBranch(e.target.checked)} />
           <GitBranch className="h-3.5 w-3.5" />
           New branch
-          <input value={branch} disabled={!newBranch} aria-label="Branch name" spellCheck={false} className="h-6 min-w-0 flex-1 rounded-md border border-border bg-black/40 px-2 font-mono text-[11.5px] text-foreground outline-none focus:border-ring disabled:opacity-40" onChange={(e) => setBranch(e.target.value)} />
+          <input value={branch} disabled={!newBranch} aria-label="Branch name" spellCheck={false} className={cn(fieldVariants({ size: "xs" }), "flex-1 font-mono")} onChange={(e) => setBranch(e.target.value)} />
         </label>
       )}
       <div className="flex flex-wrap items-center gap-1.5">
@@ -105,7 +107,7 @@ function Form({ conversationId, message, info, onCancel }: { conversationId: str
         <button type="button" disabled={busy !== null} className="px-1.5 text-[12px] text-muted-foreground hover:text-foreground" onClick={onCancel}>Cancel</button>
         <span className="ml-auto text-[11px] text-muted-foreground">Only the {count === 1 ? "file" : `${count} files`} this step changed</span>
       </div>
-      {error && <p className="whitespace-pre-wrap text-[11.5px] text-diff-remove">{error}</p>}
+      {error && <p className="whitespace-pre-wrap text-[11.5px] text-failure">{error}</p>}
     </div>
   );
 }
@@ -121,11 +123,11 @@ export function CommitBar({ conversationId, message }: { conversationId: string;
   };
   return (
     <div className="flex items-center gap-2 border-t border-border px-2 py-1.5 text-[12px]">
-      <button type="button" className="flex items-center gap-1.5 rounded px-1.5 py-0.5 text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground" onClick={start}>
+      <button type="button" className="flex items-center gap-1.5 rounded px-1.5 py-0.5 text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={start}>
         <GitCommitHorizontal className="h-3.5 w-3.5" />
         Commit
       </button>
-      {error && <span className="min-w-0 truncate text-[11.5px] text-diff-remove" title={error}>{error}</span>}
+      {error && <span className="min-w-0 truncate text-[11.5px] text-failure" title={error}>{error}</span>}
     </div>
   );
 }

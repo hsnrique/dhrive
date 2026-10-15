@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { PanelLeftClose, Plus, Search } from "lucide-react";
 
@@ -10,6 +10,7 @@ import { useCompany } from "@/store/company";
 import { useConversations } from "@/store/conversations";
 import { useSearch } from "@/store/search";
 import { WIDE, sidebarMode, useMediaQuery, useSidebar } from "@/store/sidebar";
+import { useLayer } from "@/components/ui/layer";
 import { AccountBadge, AccountRow } from "./Account";
 import { BrandLogo } from "./BrandLogo";
 import { CommunityRow } from "./Community";
@@ -24,7 +25,7 @@ function CliVersion({ cli }: { cli: Cli }) {
   if (!cli.version) return null;
   if (cli.missing.length > 0) {
     return (
-      <span className="text-[#ff8a8f]" title={`${cli.label} ${cli.version} no longer lists ${cli.missing.join(", ")}, which dhrive uses. Runs may fail until dhrive updates.`}>
+      <span className="text-failure" title={`${cli.label} ${cli.version} no longer lists ${cli.missing.join(", ")}, which dhrive uses. Runs may fail until dhrive updates.`}>
         may break
       </span>
     );
@@ -61,7 +62,7 @@ function LocalRow({ cli }: { cli: Cli }) {
   return (
     <button
       type="button"
-      className={cn("-mx-2 flex items-center gap-2 rounded-md px-2 py-0.5 text-left text-[11.5px] text-muted-foreground transition-colors hover:bg-white/[0.05] hover:text-foreground", open && "bg-white/[0.07] text-foreground")}
+      className={cn("-mx-2 flex items-center gap-2 rounded-md px-2 py-0.5 text-left text-[11.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground", open && "bg-selected text-foreground")}
       onClick={() => openPage("ollama")}
     >
       <EngineMark engine="ollama" className={cn("h-3 w-3", !cli.installed && "opacity-40")} />
@@ -85,7 +86,7 @@ function FullSidebar({ onFold }: { onFold: () => void }) {
   return (
     <aside data-tauri-drag-region className="relative flex h-full w-[244px] flex-none flex-col border-r border-border bg-card pt-[44px]">
       {/* In the title bar, level with the traffic lights, where a Mac app keeps its sidebar switch. */}
-      <button type="button" title="Hide sidebar (⌘B)" aria-label="Hide sidebar" className="absolute right-3 top-2.5 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground" onClick={onFold}>
+      <button type="button" title="Hide sidebar (⌘B)" aria-label="Hide sidebar" className="absolute right-3 top-2.5 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onFold}>
         <PanelLeftClose className="h-4 w-4" strokeWidth={1.75} />
       </button>
       <div data-tauri-drag-region className="flex items-center gap-2 px-4 pb-4">
@@ -100,7 +101,7 @@ function FullSidebar({ onFold }: { onFold: () => void }) {
           type="button"
           title="Search (⌘K)"
           aria-label="Search"
-          className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground"
+          className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground"
           onClick={() => useSearch.getState().setOpen(true)}
         >
           <Search className="h-3.5 w-3.5" />
@@ -109,7 +110,7 @@ function FullSidebar({ onFold }: { onFold: () => void }) {
           type="button"
           title="Start a company"
           aria-label="Start a company"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground"
           onClick={close}
         >
           <Plus className="h-4 w-4" />
@@ -155,8 +156,6 @@ function useSidebarKeys(wide: boolean) {
       if (e.metaKey && e.key.toLowerCase() === "b") {
         e.preventDefault();
         useSidebar.getState().toggle(wide);
-      } else if (e.key === "Escape" && useSidebar.getState().overlay) {
-        useSidebar.getState().fold();
       }
     };
     window.addEventListener("keydown", keys);
@@ -170,7 +169,9 @@ export function Sidebar() {
   const overlay = useSidebar((s) => s.overlay);
   const mode = sidebarMode(open, wide, overlay);
   const { toggle, fold } = useSidebar.getState();
+  const folded = useRef<HTMLDivElement>(null);
   useSidebarKeys(wide);
+  useLayer(folded, fold, { active: mode === "overlay" });
   return (
     <>
       <div className={cn("flex flex-none overflow-hidden transition-[width] duration-200 ease-out motion-reduce:transition-none", mode === "docked" ? "w-[244px]" : "w-[72px]")}>
@@ -179,7 +180,7 @@ export function Sidebar() {
       {mode === "overlay" && (
         <>
           <div aria-hidden className="fade-in fixed inset-0 z-40 bg-black/50" onClick={fold} />
-          <div role="dialog" aria-label="Sidebar" className="slide-in-left fixed inset-y-0 left-0 z-50 flex shadow-[0_24px_70px_rgba(0,0,0,0.6)]">
+          <div ref={folded} role="dialog" aria-modal="true" aria-label="Sidebar" className="slide-in-left fixed inset-y-0 left-0 z-50 flex shadow-dialog">
             <FullSidebar onFold={fold} />
           </div>
         </>

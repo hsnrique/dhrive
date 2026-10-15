@@ -7,6 +7,8 @@ import type { Choice } from "@/lib/flow";
 import { cliLabel, effortLabel } from "@/lib/names";
 import { cn } from "@/lib/utils";
 import { useApp, useModelName } from "@/store/app";
+import { useLayer } from "@/components/ui/layer";
+import { fieldVariants } from "@/components/ui/field";
 import { EngineMark } from "./EngineMark";
 import { CliTabs, EffortMeter, ModelList } from "./PickerParts";
 
@@ -55,17 +57,15 @@ export function ChoicePicker({ choice, onChoose, label, engines, align = "left",
   // list doesn't count.
   useEffect(() => {
     if (!open) return;
-    const close = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     const moved = (e: Event) => !panel.current?.contains(e.target as Node) && setOpen(false);
-    window.addEventListener("keydown", close);
     window.addEventListener("scroll", moved, true);
     window.addEventListener("resize", moved);
     return () => {
-      window.removeEventListener("keydown", close);
       window.removeEventListener("scroll", moved, true);
       window.removeEventListener("resize", moved);
     };
   }, [open]);
+  useLayer(panel, () => setOpen(false), { active: open });
 
   // On the body, not where the trigger sits: inside a glass card the panel would lose its own glass
   // (WebKit drops a backdrop filter nested in another) and the cards after it would paint over it.
@@ -105,7 +105,7 @@ export function ChoicePicker({ choice, onChoose, label, engines, align = "left",
         aria-haspopup="dialog"
         aria-expanded={open}
         title={summary}
-        className="inline-flex h-7 max-w-full items-center gap-1.5 whitespace-nowrap rounded-md border border-border bg-white/[0.04] pl-2 pr-1.5 text-xs text-foreground transition-colors hover:bg-white/[0.08]"
+        className="inline-flex h-7 max-w-full items-center gap-1.5 whitespace-nowrap rounded-md border border-border bg-white/[0.04] pl-2 pr-1.5 text-xs text-foreground transition-colors hover:bg-hover"
         onClick={toggle}
       >
         <EngineMark engine={choice.engine} />
@@ -122,13 +122,13 @@ export function ChoicePicker({ choice, onChoose, label, engines, align = "left",
       {open && createPortal(
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div ref={panel} role="dialog" aria-label={label} style={place} className="pop-in fixed z-50 flex w-[360px] flex-col overflow-hidden rounded-xl border border-border bg-popover">
+          <div ref={panel} role="dialog" aria-label={label} style={place} className="pop-in fixed z-50 flex w-[360px] flex-col overflow-hidden rounded-xl border border-border bg-popover shadow-popover">
             <CliTabs choice={choice} engines={engines} onPick={(cli) => onChoose(cli.engine === choice.engine ? choice : { engine: cli.engine, model: "" })} onSetUp={getModels} />
             <div className="min-h-0 flex-1 overflow-y-auto p-1.5">
               <ModelList choice={choice} models={models} onPick={setModel} onGetModels={getModels} />
               <input
                 aria-label="Any model id"
-                className="mx-1.5 mb-1 mt-2 h-8 w-[calc(100%-12px)] rounded-lg border border-border bg-black/30 px-2.5 font-mono text-xs outline-none placeholder:font-sans placeholder:text-muted-foreground focus:border-ring"
+                className={cn(fieldVariants({ size: "md" }), "mx-1.5 mb-1 mt-2 w-[calc(100%-12px)] font-mono text-xs placeholder:font-sans")}
                 placeholder="Or type any model id"
                 spellCheck={false}
                 value={choice.model}

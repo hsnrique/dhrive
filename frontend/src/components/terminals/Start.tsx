@@ -19,7 +19,7 @@ export function Intro() {
   return (
     <div className="mb-3 px-1">
       <MaestroMark />
-      <h2 className="mt-5 font-serif text-[40px] leading-[1.05] tracking-[-0.01em]">
+      <h2 className="mt-5 display-title">
         One task.
         <br />
         Several CLIs at once.
@@ -34,7 +34,7 @@ export function PaneStarters({ session, clis }: { session: string; clis: Cli[] }
     <div className="mt-2 flex flex-wrap items-center gap-1.5 px-1">
       <span className="mr-1 text-xs text-muted-foreground">or open a pane with</span>
       {clis.map((cli) => (
-        <button key={cli.engine} type="button" className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs transition-colors hover:bg-white/[0.08]" onClick={() => useTerminals.getState().add(session, cli.engine)}>
+        <button key={cli.engine} type="button" className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs transition-colors hover:bg-hover" onClick={() => useTerminals.getState().add(session, cli.engine)}>
           <EngineMark engine={cli.engine} className="h-3 w-3" />
           {cli.label}
         </button>

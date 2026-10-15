@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
 const FIRST_ROWS = 8;
 
 const DOT: Record<ServerStatus, string> = {
-  connected: "bg-diff-add",
+  connected: "bg-live",
   "needs-auth": "bg-attention",
-  failed: "bg-diff-remove",
+  failed: "bg-failure",
   connecting: "bg-foreground/40 motion-safe:animate-pulse",
   configured: "bg-foreground/35",
   disabled: "bg-foreground/15",
@@ -61,7 +61,7 @@ export function ServerRows({ servers, all }: { servers: McpServer[]; all: boolea
               {s.name}
               {s.source && <span className="text-[11px] text-muted-foreground"> · {s.source}</span>}
             </p>
-            {s.error && <p className="truncate text-[11px] text-diff-remove" title={s.error}>{s.error}</p>}
+            {s.error && <p className="truncate text-[11px] text-failure" title={s.error}>{s.error}</p>}
           </div>
           <span className="flex-none text-[11px] text-muted-foreground">{s.status === "connected" && s.tools ? `${s.tools} tools` : STATE[s.status]}</span>
         </li>

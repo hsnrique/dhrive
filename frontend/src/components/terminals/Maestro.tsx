@@ -1,24 +1,27 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowUp, Maximize2, Play, Square, X } from "lucide-react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { Maximize2, Play, X } from "lucide-react";
 
 import type { Cli } from "@/lib/api";
 import type { Part } from "@/lib/maestro";
 import { cn } from "@/lib/utils";
+import { ago, useNow } from "@/lib/time";
 import { useApp } from "@/store/app";
 import { useDraft, useMaestro } from "@/store/maestro";
 import { useTerminals } from "@/store/terminals";
 import { useLiveLast, useLivePhase } from "@/store/live";
-import { ago, useNow } from "@/lib/time";
+import { Dialog } from "@/components/ui/layer";
+import { buttonVariants } from "@/components/ui/button";
 import { ChoicePicker } from "../ModelPicker";
 import { FocusPicker } from "./FocusPicker";
 import { Intro, MaestroMark, PaneStarters } from "./Start";
+import { SendButton, StopButton } from "../ui/compose";
 
 // A session's maestro, above its grid: a brief and the CLI that splits it in the session's project,
 // then the subtasks it proposed, each editable before any pane opens.
 
 const words = "flex-none px-0.5 text-xs text-muted-foreground";
 const MAX_HEIGHT = 240;
-const iconButton = "flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
+const iconButton = buttonVariants({ variant: "ghost", size: "icon-xs" });
 
 // The phase, then the CLI's latest action, on one line next to the CLI that's splitting.
 function Progress({ runId }: { runId: string }) {
@@ -33,8 +36,8 @@ function Splitting() {
   return (
     <div className="grid grid-cols-3 gap-2">
       {[0, 1, 2].map((at) => (
-        <div key={at} className="ghost-sweep flex h-36 flex-col gap-2 rounded-lg border border-border bg-[#050506] p-3" style={{ animationDelay: `${at * 0.25}s` }}>
-          <span className="h-2.5 w-2/5 rounded-full bg-white/[0.08]" />
+        <div key={at} className="ghost-sweep flex h-36 flex-col gap-2 rounded-lg border border-border bg-terminal p-3" style={{ animationDelay: `${at * 0.25}s` }}>
+          <span className="h-2.5 w-2/5 rounded-full bg-selected" />
           <span className="mt-1 h-2 w-full rounded-full bg-white/[0.05]" />
           <span className="h-2 w-4/5 rounded-full bg-white/[0.05]" />
           <span className="h-2 w-3/5 rounded-full bg-white/[0.05]" />
@@ -47,7 +50,7 @@ function Splitting() {
 function PartCard({ session, part, clis, onOpen }: { session: string; part: Part; clis: Cli[]; onOpen: () => void }) {
   const { edit, drop } = useMaestro.getState();
   return (
-    <div className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-border bg-[#050506] p-2.5">
+    <div className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-border bg-terminal p-2.5">
       <div className="flex items-center gap-1">
         <input aria-label="Title" value={part.title} className="min-w-0 flex-1 bg-transparent text-[12.5px] font-medium outline-none" onChange={(e) => edit(session, part.id, { title: e.target.value })} />
         <button type="button" aria-label="Read and edit" title="Read and edit" className={iconButton} onClick={onOpen}>
@@ -69,28 +72,21 @@ function PartCard({ session, part, clis, onOpen }: { session: string; part: Part
 // One subtask at full size, to read it through and change it before it runs.
 function PartDialog({ session, part, clis, onClose }: { session: string; part: Part; clis: Cli[]; onClose: () => void }) {
   const { edit } = useMaestro.getState();
-  useEffect(() => {
-    const close = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [onClose]);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-6 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-label={part.title} className="pop-in flex max-h-full w-full max-w-[760px] flex-col gap-3 rounded-2xl border border-border bg-popover p-4 shadow-[0_24px_70px_rgba(0,0,0,0.6)]">
-        <div className="flex items-center gap-2">
-          <input aria-label="Title" value={part.title} className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold tracking-tight outline-none" onChange={(e) => edit(session, part.id, { title: e.target.value })} />
-          <button type="button" aria-label="Close" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <textarea autoFocus aria-label="Prompt" value={part.prompt} className="h-[55vh] w-full resize-none rounded-xl border border-border bg-black/30 p-3 text-[13px] leading-relaxed outline-none focus:border-ring" onChange={(e) => edit(session, part.id, { prompt: e.target.value })} />
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">runs with</span>
-          <ChoicePicker choice={{ engine: part.engine, model: part.model }} onChoose={(choice) => edit(session, part.id, choice)} label="Subtask CLI" engines={clis.map((cli) => cli.engine)} />
-          <button type="button" className="ml-auto rounded-md bg-foreground px-4 py-1.5 text-[12.5px] font-medium text-background" onClick={onClose}>Done</button>
-        </div>
+    <Dialog label={part.title} onClose={onClose} className="flex max-h-full max-w-[760px] flex-col gap-3 p-4">
+      <div className="flex items-center gap-2">
+        <input aria-label="Title" value={part.title} className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold tracking-tight outline-none" onChange={(e) => edit(session, part.id, { title: e.target.value })} />
+        <button type="button" aria-label="Close" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </button>
       </div>
-    </div>
+      <textarea autoFocus aria-label="Prompt" value={part.prompt} className="h-[55vh] w-full resize-none rounded-xl border border-border bg-black/30 p-3 text-[13px] leading-relaxed outline-none focus:border-ring" onChange={(e) => edit(session, part.id, { prompt: e.target.value })} />
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">runs with</span>
+        <ChoicePicker choice={{ engine: part.engine, model: part.model }} onChoose={(choice) => edit(session, part.id, choice)} label="Subtask CLI" engines={clis.map((cli) => cli.engine)} />
+        <button type="button" className={cn(buttonVariants({ variant: "primary", size: "md" }), "ml-auto px-4")} onClick={onClose}>Done</button>
+      </div>
+    </Dialog>
   );
 }
 
@@ -102,8 +98,8 @@ function RunBar({ session, count, room, ranAt }: { session: string; count: numbe
   return (
     <div className="flex items-center gap-3 px-1 text-xs text-muted-foreground">
       <span>{said}</span>
-      <button type="button" className="ml-auto hover:text-foreground" onClick={() => useMaestro.getState().clear(session)}>Clear</button>
-      <button type="button" disabled={!fits} className="flex h-8 items-center gap-1.5 rounded-md bg-primary px-4 text-[12.5px] font-medium text-primary-foreground transition-[opacity,transform] hover:opacity-90 active:scale-95 disabled:opacity-25" onClick={() => useMaestro.getState().run(session)}>
+      <button type="button" className="ml-auto transition-colors hover:text-foreground" onClick={() => useMaestro.getState().clear(session)}>Clear</button>
+      <button type="button" disabled={!fits} className={cn(buttonVariants({ variant: "primary", size: "md" }), "px-4")} onClick={() => useMaestro.getState().run(session)}>
         <Play className="h-3 w-3 fill-current" /> {ranAt ? "Run again" : "Approve and run"}
       </button>
     </div>
@@ -149,13 +145,9 @@ function Brief({ session, clis }: { session: string; clis: Cli[] }) {
         {folder && <FocusPicker session={session} engine={engine} folder={folder} />}
         <span className="min-w-0 flex-1 px-1">{runId && <Progress runId={runId} />}</span>
         {runId ? (
-          <button type="button" title="Stop" aria-label="Stop" className="flex h-8 w-8 flex-none items-center justify-center rounded-md border border-border bg-white/[0.08] hover:bg-white/[0.14]" onClick={() => stop(session)}>
-            <Square className="h-3 w-3 fill-current" />
-          </button>
+          <StopButton onClick={() => stop(session)} />
         ) : (
-          <button type="button" title="Split (Enter)" aria-label="Split" disabled={!ready} className="flex h-8 w-8 flex-none items-center justify-center rounded-md bg-primary text-primary-foreground transition-[opacity,transform] hover:opacity-90 active:scale-95 disabled:opacity-25" onClick={submit}>
-            <ArrowUp className="h-4 w-4" strokeWidth={2.4} />
-          </button>
+          <SendButton label="Split" title="Split (Enter)" disabled={!ready} onClick={submit} />
         )}
       </div>
     </div>
@@ -176,7 +168,7 @@ export function Maestro({ session, clis, room, fill }: { session: string; clis: 
         <Brief session={session} clis={clis} />
         {idle && <PaneStarters session={session} clis={clis} />}
         {runId && <Splitting />}
-        {error && <p className="select-text whitespace-pre-wrap px-2 text-xs leading-relaxed text-diff-remove">{error}</p>}
+        {error && <p className="select-text whitespace-pre-wrap px-2 text-xs leading-relaxed text-failure">{error}</p>}
         {parts.length > 0 && (
           <>
             <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(parts.length, 3)}, minmax(0, 1fr))` }}>

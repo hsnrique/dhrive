@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Check, X } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import type { Fit, LocalModel, LocalScan } from "@/lib/api";
 import { gigabytes } from "@/lib/names";
 import { cn } from "@/lib/utils";
 import { useLocal, type Pull } from "@/store/local";
+import { fieldVariants } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 import { EngineMark } from "./EngineMark";
 
 const FIT: Record<Fit, string> = { good: "Runs well", tight: "Tight fit", "too-big": "Too big for this Mac", "no-disk": "Not enough disk" };
@@ -24,7 +25,7 @@ function NoticeRow({ text, hint, action, onAction }: { text: string; hint?: stri
         {text} {hint && <span className="text-muted-foreground">{hint}</span>}
       </span>
       {action && (
-        <Button variant="secondary" size="sm" className="rounded-full" onClick={onAction}>
+        <Button variant="soft" onClick={onAction}>
           {action}
         </Button>
       )}
@@ -51,11 +52,11 @@ function pullLabel(pull: Pull) {
 }
 
 function PullLine({ pull }: { pull: Pull }) {
-  if (pull.error) return <p className="text-[12px] text-[#ff8a8f]">{pull.error}</p>;
+  if (pull.error) return <p className="text-[12px] text-failure">{pull.error}</p>;
   const percent = pull.total ? (pull.completed * 100) / pull.total : 0;
   return (
     <div className="flex items-center gap-3" role="progressbar" aria-valuenow={Math.floor(percent)} aria-valuemin={0} aria-valuemax={100}>
-      <div className="h-[1.5px] flex-1 overflow-hidden rounded-full bg-white/[0.08]">
+      <div className="h-[1.5px] flex-1 overflow-hidden rounded-full bg-selected">
         <div className="h-full bg-foreground/80 transition-[width] duration-300" style={{ width: `${percent}%` }} />
       </div>
       <span className="w-32 text-right font-mono text-[11px] text-muted-foreground">{pullLabel(pull)}</span>
@@ -75,14 +76,14 @@ function InstallAction({ id, installed, ready, fit }: { id: string; installed: b
   }
   if (pull && !pull.error) {
     return (
-      <Button variant="ghost" size="sm" className="rounded-full" title="Stop the download" aria-label={`Stop downloading ${id}`} onClick={() => stop(id)}>
+      <Button variant="ghost" title="Stop the download" aria-label={`Stop downloading ${id}`} onClick={() => stop(id)}>
         <X className="h-3.5 w-3.5" /> Stop
       </Button>
     );
   }
   return (
     // Too big stays possible (the owner decides), just not inviting; no disk space can't work.
-    <Button variant={fit === "too-big" ? "ghost" : "secondary"} size="sm" className={cn("rounded-full", fit === "too-big" && "text-muted-foreground")} disabled={!ready || fit === "no-disk"} onClick={() => void install(id)}>
+    <Button variant={fit === "too-big" ? "ghost" : "soft"} disabled={!ready || fit === "no-disk"} onClick={() => void install(id)}>
       Install
     </Button>
   );
@@ -135,13 +136,13 @@ function AnyModel({ ready }: { ready: boolean }) {
       <div className="flex gap-2">
         <input
           aria-label="Any Ollama model"
-          className="h-9 flex-1 rounded-lg border border-border bg-black/30 px-3 font-mono text-xs outline-none placeholder:font-sans placeholder:text-muted-foreground focus:border-ring"
+          className={cn(fieldVariants({ size: "lg" }), "flex-1 font-mono text-xs placeholder:font-sans")}
           placeholder="Any model from ollama.com, like granite4.1:8b"
           spellCheck={false}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <Button type="submit" variant="secondary" className="h-9 rounded-full" disabled={!ready || !id || (pull !== undefined && !pull.error)}>
+        <Button type="submit" variant="soft" size="lg" disabled={!ready || !id || (pull !== undefined && !pull.error)}>
           Install
         </Button>
       </div>
@@ -161,7 +162,7 @@ export function LocalModels() {
     <div data-tauri-drag-region className="h-full overflow-y-auto">
       <div className="mx-auto w-full max-w-[640px] px-8 pb-16 pt-[68px]">
         <EngineMark engine="ollama" className="h-7 w-7" />
-        <h1 className="mt-5 font-serif text-[40px] leading-[1.05] tracking-[-0.01em]">Models on this Mac.</h1>
+        <h1 className="mt-5 display-title">Models on this Mac.</h1>
         <p className="mt-2 font-mono text-[11.5px] text-muted-foreground">{scan ? machineLine(scan.machine) : "Checking this Mac…"}</p>
         {scan && (
           <>

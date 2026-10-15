@@ -20,7 +20,7 @@ function Inlines({ items, renderCode }: { items: Inline[]; renderCode?: RenderCo
         ) : item.kind === "code" && renderCode?.(item.text) ? (
           <span key={i}>{renderCode(item.text)}</span>
         ) : item.kind === "code" ? (
-          <code key={i} className={`rounded bg-white/[0.07] px-1 py-px font-mono text-[0.86em] ${item.strong ? "font-semibold text-foreground" : ""}`}>
+          <code key={i} className={`rounded bg-selected px-1 py-px font-mono text-[0.86em] ${item.strong ? "font-semibold text-foreground" : ""}`}>
             {item.text}
           </code>
         ) : (

@@ -1,7 +1,7 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
 
-import { Button } from "@/components/ui/button";
 import { useApp } from "@/store/app";
+import { Button } from "@/components/ui/button";
 import { EngineMark } from "./EngineMark";
 
 // Shown until a supported CLI is installed: dhrive drives the CLIs, it doesn't replace them.
@@ -16,12 +16,12 @@ export function NoCli() {
       </div>
       <div className="flex flex-wrap gap-2">
         {clis.map((cli) => (
-          <Button key={cli.engine} variant="secondary" className="rounded-full" onClick={() => void openUrl(cli.docsUrl)}>
+          <Button key={cli.engine} variant="soft" size="lg" onClick={() => void openUrl(cli.docsUrl)}>
             <EngineMark engine={cli.engine} />
             Install {cli.label}
           </Button>
         ))}
-        <Button variant="ghost" className="rounded-full" onClick={() => void boot()}>
+        <Button variant="ghost" size="lg" onClick={() => void boot()}>
           Check again
         </Button>
       </div>

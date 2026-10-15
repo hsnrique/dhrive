@@ -15,10 +15,10 @@ function WindowRow({ window, now }: { window: UsageWindow; now: number }) {
     <div className="grid gap-1">
       <div className="flex items-baseline gap-2 text-[12px]">
         <span className="min-w-0 flex-1 truncate">{window.label}</span>
-        <span className={cn("font-mono tabular-nums", window.warn && "text-diff-remove")}>{percent}%</span>
+        <span className={cn("font-mono tabular-nums", window.warn && "text-failure")}>{percent}%</span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
-        <div className={cn("h-full rounded-full", window.warn ? "bg-diff-remove" : "bg-foreground/70")} style={{ width: `${percent}%` }} />
+      <div className="h-1.5 overflow-hidden rounded-full bg-selected">
+        <div className={cn("h-full rounded-full", window.warn ? "bg-failure" : "bg-foreground/70")} style={{ width: `${percent}%` }} />
       </div>
       {reset && <p className="text-[10.5px] text-muted-foreground">{reset}</p>}
     </div>
@@ -41,7 +41,7 @@ export function PlanUsageCard({ engine, label }: { engine: Engine; label: string
           <p className="truncate text-[12.5px] font-medium">{usage?.plan ?? label}</p>
           {usage?.account && <p className="truncate text-[11px] text-muted-foreground">{usage.account}</p>}
         </div>
-        <button type="button" title="Read it again" className="flex flex-none items-center gap-1 rounded-md px-1 py-0.5 text-[10.5px] text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground" onClick={() => void useUsage.getState().refresh(engine, true)}>
+        <button type="button" title="Read it again" className="flex flex-none items-center gap-1 rounded-md px-1 py-0.5 text-[10.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={() => void useUsage.getState().refresh(engine, true)}>
           <RotateCw className={cn("h-3 w-3", reading && "motion-safe:animate-spin")} />
           {reading ? "Reading" : known && ago(known.at, now)}
         </button>
@@ -54,7 +54,7 @@ export function PlanUsageCard({ engine, label }: { engine: Engine; label: string
           {usage.notes.map((note) => <p key={note}>{note}</p>)}
         </div>
       )}
-      {failed && <p className="text-[11px] text-diff-remove">Couldn't read it: {failed}</p>}
+      {failed && <p className="text-[11px] text-failure">Couldn't read it: {failed}</p>}
     </div>
   );
 }
@@ -78,7 +78,7 @@ export function UsageHover({ engine, label, active, onOpen, children }: { engine
     <div ref={row} className="relative -mx-2" onMouseEnter={() => hoverTo(true)} onMouseLeave={() => hoverTo(false)}>
       <button
         type="button"
-        className={cn("flex w-full rounded-md px-2 py-0.5 text-left transition-colors hover:bg-white/[0.05]", active && "bg-white/[0.07]")}
+        className={cn("flex w-full rounded-md px-2 py-0.5 text-left transition-colors hover:bg-hover", active && "bg-selected")}
         onClick={() => {
           setHovered(false);
           onOpen();
@@ -90,7 +90,7 @@ export function UsageHover({ engine, label, active, onOpen, children }: { engine
           paints later. React still counts it inside this row, so moving onto it keeps it open. */}
       {at &&
         createPortal(
-          <div role="dialog" aria-label={`${label} plan usage`} className="pop-in fixed z-50 w-72 rounded-xl border border-border bg-popover p-3.5 shadow-[0_18px_50px_rgba(0,0,0,0.55)]" style={{ left: at.right + 12, bottom: Math.max(8, window.innerHeight - at.bottom) }}>
+          <div role="tooltip" aria-label={`${label} plan usage`} className="pop-in fixed z-50 w-72 rounded-xl border border-border bg-popover p-3.5 shadow-popover" style={{ left: at.right + 12, bottom: Math.max(8, window.innerHeight - at.bottom) }}>
             <PlanUsageCard engine={engine} label={label} />
           </div>,
           document.body,

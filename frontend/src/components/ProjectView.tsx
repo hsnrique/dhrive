@@ -99,10 +99,10 @@ export function ProjectView({ project, open }: { project: Project; open: Open })
           {!panelOpen && <span className="hidden min-w-0 flex-none truncate font-mono text-[11px] text-muted-foreground lg:inline" title={project.folder}>{shortPath(project.folder)}</span>}
           <div className="ml-auto flex flex-none items-center gap-2">
             <InstructionsButton open={open} folder={project.folder} />
-            <button type="button" title="Browse the project's files beside the conversation" aria-label="Files" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground" onClick={() => usePanel.getState().open(project.folder, "")}>
+            <button type="button" title="Browse the project's files beside the conversation" aria-label="Files" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={() => usePanel.getState().open(project.folder, "")}>
               <FolderTree className="h-4 w-4" />
             </button>
-            <button type="button" title="See the project's dev server beside the conversation" aria-label="Browser" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground" onClick={() => usePanel.getState().open(project.folder, BROWSER)}>
+            <button type="button" title="See the project's dev server beside the conversation" aria-label="Browser" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={() => usePanel.getState().open(project.folder, BROWSER)}>
               <Globe className="h-4 w-4" />
             </button>
             <AllowedRules project={project} />

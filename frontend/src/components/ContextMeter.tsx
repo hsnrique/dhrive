@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { fullness, percentOf, sessionsOf, tokens, type ThreadSession } from "@/lib/context";
 import { cliLabel } from "@/lib/names";
@@ -6,12 +6,13 @@ import { activeRun } from "@/lib/thread";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
 import { contextKey, useContextUsage } from "@/store/context";
+import { useLayer } from "@/components/ui/layer";
 import { EngineMark } from "./EngineMark";
 
 // How full each CLI session the conversation continues is: a ring in the header, and on a click what
 // fills it and a way to compact it before it gets compacted mid-task.
 
-const STROKE = { ok: "stroke-foreground/70", high: "stroke-attention", full: "stroke-diff-remove" };
+const STROKE = { ok: "stroke-foreground/70", high: "stroke-attention", full: "stroke-failure" };
 
 function Ring({ percent, level }: { percent: number; level: keyof typeof STROKE }) {
   const around = 2 * Math.PI * 5;
@@ -29,13 +30,13 @@ function Details({ session, folder, label, busy }: { session: ThreadSession; fol
   const { used, max, parts, autoCompactAt } = seen.value;
   const percent = percentOf(used, max);
   return (
-    <div role="dialog" aria-label={`${label} context`} className="pop-in absolute right-0 top-full z-30 mt-2 grid w-72 gap-2.5 rounded-xl border border-border bg-popover p-3.5">
+    <div role="dialog" aria-label={`${label} context`} className="pop-in absolute right-0 top-full z-30 mt-2 grid w-72 gap-2.5 rounded-xl border border-border bg-popover shadow-popover p-3.5">
       <div>
         <p className="text-[12.5px] font-medium">{label} session</p>
         <p className="text-[11.5px] text-muted-foreground">{tokens(used)} of {tokens(max)} tokens · {percent}%</p>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
-        <div className={cn("h-full rounded-full", { ok: "bg-foreground/70", high: "bg-attention", full: "bg-diff-remove" }[fullness(percent)])} style={{ width: `${percent}%` }} />
+      <div className="h-1.5 overflow-hidden rounded-full bg-selected">
+        <div className={cn("h-full rounded-full", { ok: "bg-foreground/70", high: "bg-attention", full: "bg-failure" }[fullness(percent)])} style={{ width: `${percent}%` }} />
       </div>
       {parts.length > 0 && (
         <ul className="grid gap-0.5 text-[11.5px]">
@@ -53,7 +54,7 @@ function Details({ session, folder, label, busy }: { session: ThreadSession; fol
           type="button"
           disabled={busy || seen.compacting}
           title={busy ? "Wait for the run to end" : "Summarize the conversation so far to free room"}
-          className="rounded-md border border-border px-3 py-1 text-[12px] transition-colors hover:bg-white/[0.08] disabled:opacity-40"
+          className="rounded-md border border-border px-3 py-1 text-[12px] transition-colors hover:bg-hover disabled:opacity-40"
           onClick={() => void useContextUsage.getState().compact({ ...session, folder })}
         >
           {seen.compacting ? "Compacting…" : "Compact now"}
@@ -69,17 +70,13 @@ function Meter({ conversationId, session, folder }: { conversationId: string; se
   const seen = useContextUsage((s) => s.seen[contextKey(session.engine, session.session)]);
   const busy = useApp((s) => activeRun(s.threads[conversationId]) !== null);
   const label = useApp((s) => cliLabel(session.engine, s.clis));
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [open]);
+  const panel = useRef<HTMLDivElement>(null);
+  useLayer(panel, () => setOpen(false), { active: open });
   if (!seen?.value) return null;
   const percent = percentOf(seen.value.used, seen.value.max);
   return (
     <div className="relative">
-      <button type="button" title={`${label} session: ${percent}% of its context used`} className="flex h-7 items-center gap-1.5 rounded-md px-1.5 text-[11.5px] text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground" onClick={() => setOpen((v) => !v)}>
+      <button type="button" title={`${label} session: ${percent}% of its context used`} className="flex h-7 items-center gap-1.5 rounded-md px-1.5 text-[11.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={() => setOpen((v) => !v)}>
         <EngineMark engine={session.engine} className="h-3 w-3" />
         <Ring percent={percent} level={fullness(percent)} />
         <span className={cn("font-mono tabular-nums", seen.compacting && "motion-safe:animate-pulse")}>{percent}%</span>
@@ -87,7 +84,9 @@ function Meter({ conversationId, session, folder }: { conversationId: string; se
       {open && (
         <>
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <Details session={session} folder={folder} label={label} busy={busy} />
+          <div ref={panel} className="contents">
+            <Details session={session} folder={folder} label={label} busy={busy} />
+          </div>
         </>
       )}
     </div>

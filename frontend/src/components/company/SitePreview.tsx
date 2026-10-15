@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { ArrowUpRight, Play, RotateCw, X } from "lucide-react";
 
@@ -10,6 +10,8 @@ import { useAddress } from "@/store/favorite";
 import { usePublishedOf } from "@/store/publish";
 import { useSheet } from "@/store/sheet";
 import { useSite, useSiteOf } from "@/store/site";
+import { Dialog } from "@/components/ui/layer";
+import { buttonVariants } from "@/components/ui/button";
 import { Page } from "../BrowserView";
 
 // The company's website seen from inside dhrive: a small live preview under its versions, and the
@@ -21,7 +23,7 @@ import { Page } from "../BrowserView";
 const PAGE = { width: 1280, height: 800 };
 const open = (url: string) => void openUrl(url).catch(() => undefined);
 const localAt = (port: number) => `http://localhost:${port}`;
-const iconButton = "flex h-7 w-7 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
+const iconButton = buttonVariants({ variant: "ghost", size: "icon-sm" });
 
 export function SitePreview({ project }: { project: Project }) {
   const { url, at } = usePublishedOf(project.id);
@@ -74,11 +76,11 @@ function NotAnswering({ project }: { project: Project }) {
   const crashed = site.log.length > 0;
   return (
     <Waiting title={crashed ? "The website stopped." : "Run the website"} detail={crashed ? undefined : "It runs on this Mac, where only you can see it."}>
-      <button type="button" disabled={site.busy} aria-label="Run the website" className="flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background shadow-[0_10px_40px_rgba(255,255,255,0.12)] transition-transform hover:scale-105 disabled:opacity-40" onClick={() => void useSite.getState().play(project.id)}>
+      <button type="button" disabled={site.busy} aria-label="Run the website" className="flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background transition-opacity hover:opacity-90 disabled:opacity-40" onClick={() => void useSite.getState().play(project.id)}>
         <Play className="ml-0.5 h-5 w-5 fill-current" />
       </button>
       {crashed && <pre className="mt-2 max-h-40 w-full max-w-[52ch] overflow-auto whitespace-pre-wrap rounded-lg bg-black/45 p-3 text-left font-mono text-[11px] leading-relaxed text-muted-foreground">{site.log.join("\n")}</pre>}
-      {site.error && <p className="text-[12px] text-[#ff8a8f]">{site.error}</p>}
+      {site.error && <p className="text-[12px] text-failure">{site.error}</p>}
     </Waiting>
   );
 }
@@ -98,37 +100,28 @@ export function SiteSheet({ project }: { project: Project }) {
   const close = useSheet((s) => s.close);
   const { here, browser, label } = useShown(project, shown === "live");
   const [version, setVersion] = useState(0);
-  useEffect(() => {
-    if (!shown) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [shown, close]);
   if (!shown) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-      <div aria-hidden className="fade-in absolute inset-0 bg-black/60" onClick={close} />
-      <div role="dialog" aria-modal="true" aria-label={`${project.name}'s website`} className="relative flex h-full max-h-[820px] w-full max-w-[1180px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-[0_30px_90px_rgba(0,0,0,0.7)]">
-        <div className="flex h-11 flex-none items-center gap-2 border-b border-border pl-4 pr-2">
-          <span className="flex-none text-[12.5px] font-medium">{label}</span>
-          {here && <span className="min-w-0 truncate font-mono text-[11.5px] text-muted-foreground">{hostOf(browser ?? here)}</span>}
-          <span className="ml-auto" />
-          {here && (
-            <>
-              <button type="button" title="Reload" aria-label="Reload" className={iconButton} onClick={() => setVersion((v) => v + 1)}>
-                <RotateCw className="h-3.5 w-3.5" />
-              </button>
-              <button type="button" title="Open in your browser" aria-label="Open in your browser" className={iconButton} onClick={() => open(browser ?? here)}>
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              </button>
-            </>
-          )}
-          <button type="button" title="Close" aria-label="Close" className={iconButton} onClick={close}>
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-        <div className="min-h-0 flex-1 bg-white">{here ? <Page url={here} version={version} /> : <div className="h-full bg-background"><NotAnswering project={project} /></div>}</div>
+    <Dialog label={`${project.name}'s website`} onClose={close} className="flex h-full max-h-[820px] max-w-[1180px] flex-col overflow-hidden bg-background">
+      <div className="flex h-11 flex-none items-center gap-2 border-b border-border pl-4 pr-2">
+        <span className="flex-none text-[12.5px] font-medium">{label}</span>
+        {here && <span className="min-w-0 truncate font-mono text-[11.5px] text-muted-foreground">{hostOf(browser ?? here)}</span>}
+        <span className="ml-auto" />
+        {here && (
+          <>
+            <button type="button" title="Reload" aria-label="Reload" className={iconButton} onClick={() => setVersion((v) => v + 1)}>
+              <RotateCw className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" title="Open in your browser" aria-label="Open in your browser" className={iconButton} onClick={() => open(browser ?? here)}>
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </button>
+          </>
+        )}
+        <button type="button" title="Close" aria-label="Close" className={iconButton} onClick={close}>
+          <X className="h-3.5 w-3.5" />
+        </button>
       </div>
-    </div>
+      <div className="min-h-0 flex-1 bg-background">{here ? <Page url={here} version={version} /> : <div className="h-full bg-background"><NotAnswering project={project} /></div>}</div>
+    </Dialog>
   );
 }

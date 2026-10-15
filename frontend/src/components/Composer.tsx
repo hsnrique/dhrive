@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowRight, ArrowUp, Paperclip, Square, UserCheck } from "lucide-react";
+import { ArrowRight, Paperclip, UserCheck } from "lucide-react";
 
 import { draftKeyOf, type Open } from "@/lib/conversations";
 import { readDraft, writeDraft } from "@/lib/drafts";
@@ -11,9 +11,11 @@ import { useConversations } from "@/store/conversations";
 import { useFiles } from "@/store/files";
 import { runsBlocked, useAccount } from "@/store/account";
 import { send, stop } from "@/store/runs";
+import { buttonVariants } from "@/components/ui/button";
 import { AttachmentChips, useAttachments } from "./Attachments";
 import { MentionList, useMentionPicker } from "./Mentions";
 import { ModelPicker } from "./ModelPicker";
+import { SendButton, StopButton } from "./ui/compose";
 
 const MAX_HEIGHT = 240;
 
@@ -29,7 +31,7 @@ function ModeSwitch() {
   const mode = useApp((s) => s.mode);
   const setMode = useApp((s) => s.setMode);
   return (
-    <div role="radiogroup" aria-label="Mode" className="flex items-center rounded-full border border-border p-0.5">
+    <div role="radiogroup" aria-label="Mode" className="flex items-center rounded-lg border border-border p-0.5">
       {MODES.map((option) => (
         <button
           key={option}
@@ -37,7 +39,7 @@ function ModeSwitch() {
           role="radio"
           aria-checked={mode === option}
           title={MODE_INFO[option].title}
-          className={cn("h-6 rounded-md px-2.5 text-xs transition-colors", mode === option ? "bg-white/[0.12] font-medium text-foreground" : "text-muted-foreground hover:text-foreground")}
+          className={cn("h-6 rounded-md px-2.5 text-xs transition-colors", mode === option ? "bg-selected font-medium text-foreground" : "text-muted-foreground hover:text-foreground")}
           onClick={() => setMode(option)}
         >
           {MODE_INFO[option].label}
@@ -56,7 +58,7 @@ function Handoff() {
       type="button"
       aria-pressed={!autoCode}
       title={autoCode ? "The code starts right after the plan. Click to approve each plan first." : "You approve each plan before the code starts. Click to code right after the plan."}
-      className="flex h-6 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground"
+      className="flex h-6 items-center gap-1 rounded-md px-1.5 text-xs text-muted-foreground transition-colors hover:bg-hover hover:text-foreground"
       onClick={() => setAutoCode(!autoCode)}
     >
       {!autoCode && (
@@ -127,7 +129,7 @@ export function Composer({ open, projectName, folder }: { open: Open; projectNam
       {blocked && (
         <div className="mb-1.5 flex items-center gap-2 rounded-xl bg-white/[0.05] px-3 py-2 text-[12.5px]">
           <span className="flex-1 text-muted-foreground">Your free days are over. Subscribe to keep sending.</span>
-          <button type="button" className="rounded-md bg-primary px-3 py-1 text-[12px] font-medium text-primary-foreground hover:opacity-90" onClick={() => useAccount.getState().setSheetOpen(true)}>
+          <button type="button" className={buttonVariants({ variant: "primary", size: "xs" })} onClick={() => useAccount.getState().setSheetOpen(true)}>
             Subscribe
           </button>
         </div>
@@ -170,7 +172,7 @@ export function Composer({ open, projectName, folder }: { open: Open; projectNam
           title={files.full ? "Up to 10 files per request" : "Attach files (or paste a screenshot, or drop files here)"}
           aria-label="Attach files"
           disabled={files.full}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground disabled:opacity-40"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40"
           onClick={() => void files.pick()}
         >
           <Paperclip className="h-3.5 w-3.5" />
@@ -179,25 +181,10 @@ export function Composer({ open, projectName, folder }: { open: Open; projectNam
         <Route mode={mode} />
         <span className="ml-auto flex items-center gap-1.5">
           {running && (
-            <button
-              type="button"
-              title="Stop"
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-white/[0.08] text-foreground transition-colors hover:bg-white/[0.14]"
-              onClick={() => conversationId && stop(conversationId)}
-            >
-              <Square className="h-3 w-3 fill-current" />
-            </button>
+            <StopButton onClick={() => conversationId && stop(conversationId)} />
           )}
           {(!running || canSend) && (
-            <button
-              type="button"
-              title={running ? "Queue it (Enter)" : "Send (Enter)"}
-              disabled={!canSend}
-              className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground transition-[opacity,transform] hover:opacity-90 active:scale-95 disabled:opacity-25"
-              onClick={submit}
-            >
-              <ArrowUp className="h-4 w-4" strokeWidth={2.4} />
-            </button>
+            <SendButton label={running ? "Queue it" : "Send"} title={running ? "Queue it (Enter)" : "Send (Enter)"} disabled={!canSend} onClick={submit} />
           )}
         </span>
       </div>

@@ -29,7 +29,7 @@ export function RunControl({ project }: { project: Project }) {
       <span className="mx-0.5 h-4 w-px bg-border" />
       {site.running && (
         <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-          <span className={cn("h-1.5 w-1.5 rounded-full", starting ? "node-live bg-foreground" : "bg-[#3ddc84]")} />
+          <span className={cn("h-1.5 w-1.5 rounded-full", starting ? "node-live bg-foreground" : "bg-live")} />
           {starting ? "Starting…" : (
             <button type="button" className="hidden font-mono text-[11.5px] text-foreground/85 transition-colors hover:text-foreground @[60rem]:inline" title="See it here" onClick={() => useSheet.getState().show(project.id, "local")}>
               localhost:{site.port}
@@ -42,7 +42,7 @@ export function RunControl({ project }: { project: Project }) {
         disabled={site.busy}
         title={site.running ? "Stop the website" : "Run the website"}
         aria-label={site.running ? "Stop the website" : "Run the website"}
-        className={cn("flex h-7 w-7 items-center justify-center rounded-md transition-colors disabled:opacity-40", site.running ? "bg-white/[0.1] hover:bg-white/[0.16]" : "bg-foreground text-background hover:opacity-90")}
+        className={cn("flex h-7 w-7 items-center justify-center rounded-md transition-colors disabled:opacity-40", site.running ? "bg-selected hover:bg-pressed" : "bg-foreground text-background hover:opacity-90")}
         onClick={() => {
           if (site.running) return void stop(project.id);
           useSheet.getState().show(project.id, "local");

@@ -11,6 +11,7 @@ import { useDayOf } from "@/store/day";
 import { useDomains } from "@/store/domains";
 import { useFavorite } from "@/store/favorite";
 import { usePublish, usePublishedOf } from "@/store/publish";
+import { useLayer } from "@/components/ui/layer";
 import { Army } from "./Army";
 import { BriefCard } from "./BriefCard";
 import { Documents } from "./Documents";
@@ -35,7 +36,7 @@ function Overview({ project, brief }: { project: Project; brief: Brief }) {
   const live = usePublishedOf(project.id);
   return (
     <section className="grid gap-3">
-      <h1 className="break-words font-serif text-[38px] leading-[1.02] tracking-[-0.015em]">{project.name}</h1>
+      <h1 className="break-words display-title">{project.name}</h1>
       {line ? <p className="text-[14.5px] leading-relaxed text-foreground/80">{line}</p> : <p className="text-[13.5px] text-muted-foreground">An autonomous company. It works from its brief, one task after another.</p>}
       {!isBlank(brief) && (
         <p className="flex min-w-0 items-center gap-2 text-[12.5px] text-muted-foreground">
@@ -85,7 +86,7 @@ function Toolbar({ project, brief, saving, chat }: { project: Project; brief: Br
       <span className="min-w-0 truncate text-[14px] font-semibold tracking-tight">{project.name}</span>
       <span className="hidden flex-none text-[13px] text-muted-foreground @[46rem]:inline">Company</span>
       <span className="ml-auto" />
-      {brief && (saving !== "saved" || !isBlank(brief)) && <span className={cn("hidden flex-none text-[11.5px] text-muted-foreground @[64rem]:inline", saving === "failed" && "inline text-[#ff8a8f]")}>{SAVING[saving]}</span>}
+      {brief && (saving !== "saved" || !isBlank(brief)) && <span className={cn("hidden flex-none text-[11.5px] text-muted-foreground @[64rem]:inline", saving === "failed" && "inline text-failure")}>{SAVING[saving]}</span>}
       <ConnectorsButton project={project} />
       <GitHubButton projectId={project.id} />
       <RunControl project={project} />
@@ -112,14 +113,10 @@ export function CompanyView({ project }: { project: Project }) {
   useEffect(() => {
     if (docked) setSliding(false);
   }, [docked]);
-  useEffect(() => {
-    if (!sliding) return;
-    const close = (e: KeyboardEvent) => e.key === "Escape" && setSliding(false);
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [sliding]);
+  const slid = useRef<HTMLDivElement>(null);
+  useLayer(slid, () => setSliding(false), { active: sliding });
   const chat = !docked && (
-    <button type="button" aria-label="Chat" aria-expanded={sliding} title="Chat" className={cn("flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] transition-colors hover:bg-white/[0.07]", sliding && "bg-white/[0.1]")} onClick={() => setSliding((v) => !v)}>
+    <button type="button" aria-label="Chat" aria-expanded={sliding} title="Chat" className={cn("flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] transition-colors hover:bg-hover", sliding && "bg-selected")} onClick={() => setSliding((v) => !v)}>
       <MessageCircle className="h-3.5 w-3.5" />
       <span className="hidden @[40rem]:inline">Chat</span>
     </button>
@@ -129,9 +126,9 @@ export function CompanyView({ project }: { project: Project }) {
       <Toolbar project={project} brief={brief} saving={saving} chat={chat} />
       <div className="flex min-h-0 flex-1">
         {unreadable && (
-          <div role="alert" className="mx-6 mt-6 flex items-start gap-3 rounded-md border border-[#ff8a8f]/40 px-3 py-2.5">
-            <p className="min-w-0 flex-1 text-[12.5px] text-[#ff8a8f]">{unreadable}</p>
-            <button type="button" className="h-7 flex-none rounded-md bg-white/[0.08] px-3 text-[12px] font-medium transition-colors hover:bg-white/[0.14]" onClick={() => void useCompany.getState().load(project.id)}>Try again</button>
+          <div role="alert" className="mx-6 mt-6 flex items-start gap-3 rounded-md border border-failure/40 px-3 py-2.5">
+            <p className="min-w-0 flex-1 text-[12.5px] text-failure">{unreadable}</p>
+            <button type="button" className="h-7 flex-none rounded-md bg-selected px-3 text-[12px] font-medium transition-colors hover:bg-pressed" onClick={() => void useCompany.getState().load(project.id)}>Try again</button>
           </div>
         )}
         {brief === null ? !unreadable && <p className="flex-1 px-6 pt-8 text-[12.5px] text-muted-foreground">Reading COMPANY.md…</p> : <Sections project={project} brief={brief} />}
@@ -140,7 +137,9 @@ export function CompanyView({ project }: { project: Project }) {
       {sliding && (
         <>
           <div aria-hidden className="fade-in absolute inset-x-0 bottom-0 top-[52px] z-30 bg-black/50" onClick={() => setSliding(false)} />
-          <SidePane project={project} className="slide-in-right absolute bottom-0 right-0 top-[52px] z-40 flex w-[min(420px,100%)] shadow-[0_24px_70px_rgba(0,0,0,0.6)]" />
+          <div ref={slid} className="slide-in-right absolute bottom-0 right-0 top-[52px] z-40 flex w-[min(420px,100%)] shadow-dialog">
+            <SidePane project={project} className="flex w-full" />
+          </div>
         </>
       )}
       <SiteSheet project={project} />

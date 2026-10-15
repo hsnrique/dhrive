@@ -9,6 +9,7 @@ import { useArmyOf } from "@/store/army";
 import { useDay } from "@/store/day";
 import { useFold } from "@/store/fold";
 import { useLiveLast, useLivePhase } from "@/store/live";
+import { buttonVariants } from "@/components/ui/button";
 import { Approvals } from "../Approvals";
 import { Markdown } from "../Markdown";
 import { ChoicePicker } from "../ModelPicker";
@@ -25,7 +26,7 @@ export const AREA_LOOK: Record<Area, { label: string; Icon: LucideIcon }> = {
   research: { label: "Research", Icon: Search },
 };
 
-const action = "flex h-6 items-center gap-1 rounded-md px-2 text-[11.5px] text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground";
+const action = cn(buttonVariants({ variant: "ghost", size: "xs" }), "px-2");
 
 const STATUS: Record<TaskStatus, string> = { suggested: "Suggested", planned: "Up next", running: "Working", done: "Done", failed: "Failed", stopped: "Stopped" };
 
@@ -33,7 +34,7 @@ function Mark({ status }: { status: TaskStatus }) {
   const box = "flex h-[18px] w-[18px] flex-none items-center justify-center rounded-full";
   if (status === "running") return <span className={box} title={STATUS[status]}><span className="node-live h-2 w-2 rounded-full bg-foreground" /></span>;
   if (status === "done") return <span className={cn(box, "bg-foreground text-background")} title={STATUS[status]}><Check className="h-3 w-3" strokeWidth={3} /></span>;
-  if (status === "failed") return <span className={cn(box, "border border-[#ff8a8f]/60 text-[#ff8a8f]")} title={STATUS[status]}><X className="h-3 w-3" strokeWidth={2.5} /></span>;
+  if (status === "failed") return <span className={cn(box, "border border-failure/60 text-failure")} title={STATUS[status]}><X className="h-3 w-3" strokeWidth={2.5} /></span>;
   if (status === "stopped") return <span className={cn(box, "border border-border text-muted-foreground")} title={STATUS[status]}><Square className="h-2 w-2 fill-current" /></span>;
   return <span className={cn(box, "border border-border", status === "suggested" && "border-dashed")} title={STATUS[status]} />;
 }
@@ -76,7 +77,7 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
         {agent && <span className="max-w-24 flex-none truncate font-mono text-[11px] text-muted-foreground" title={`${agent.name} does it`}>{agent.name}</span>}
         <Icon className="h-3 w-3 flex-none text-muted-foreground" strokeWidth={1.75} aria-label={label} />
         {task.status === "suggested" ? (
-          <button type="button" className="h-6 flex-none rounded-md bg-white/[0.08] px-2.5 text-[11.5px] font-medium transition-colors hover:bg-white/[0.14]" onClick={(e) => (own(e), accept(projectId, task.id))}>
+          <button type="button" className="h-6 flex-none rounded-md bg-selected px-2.5 text-[11.5px] font-medium transition-colors hover:bg-pressed" onClick={(e) => (own(e), accept(projectId, task.id))}>
             Add
           </button>
         ) : !editable && <span className="flex-none text-[11px] text-muted-foreground">{STATUS[task.status]}</span>}
@@ -92,18 +93,18 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
         ) : waits.length > 0 ? (
           <p className="truncate font-mono text-[11.5px] text-muted-foreground" title={stuck.length ? `It starts once ${stuck[0].title} is tried again and done, or drop it` : `Starts once ${waits.join(", ")} ${waits.length === 1 ? "is" : "are"} done`}>
             waits for {waits.join(", ")}
-            {stuck.length > 0 && <span className="text-[#ff8a8f]"> · {stuck[0].status}</span>}
+            {stuck.length > 0 && <span className="text-failure"> · {stuck[0].status}</span>}
           </p>
         ) : !open && summary && (
           <div className="flex min-w-0 items-baseline gap-2">
-            <p className={cn("min-w-0 flex-1 truncate text-[12px]", task.status === "failed" ? "text-[#ff8a8f]" : "text-muted-foreground")}>{summary}</p>
+            <p className={cn("min-w-0 flex-1 truncate text-[12px]", task.status === "failed" ? "text-failure" : "text-muted-foreground")}>{summary}</p>
             {task.spent && <span className="flex-none font-mono text-[11px] text-muted-foreground/70" title={spendDetail(task.spent)}>{spendLine(task.spent)}</span>}
           </div>
         )}
         {open && (editable ? (
           <p className="whitespace-pre-wrap text-[12.5px] leading-relaxed text-muted-foreground">{task.prompt}</p>
         ) : task.status === "failed" ? (
-          <p className="whitespace-pre-wrap text-[12.5px] text-[#ff8a8f]">{task.result}</p>
+          <p className="whitespace-pre-wrap text-[12.5px] text-failure">{task.result}</p>
         ) : (
           <div className="min-w-0 [&_p]:text-[12.5px]"><Markdown source={task.result} /></div>
         ))}

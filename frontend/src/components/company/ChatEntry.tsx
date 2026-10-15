@@ -8,6 +8,7 @@ import { useChat } from "@/store/chat";
 import { useDay } from "@/store/day";
 import { useLog } from "@/store/log";
 import { usePublish } from "@/store/publish";
+import { buttonVariants } from "@/components/ui/button";
 import { Markdown } from "../Markdown";
 
 // One line of the company's timeline. What the owner said sits on the right; the agent answers on
@@ -23,7 +24,7 @@ const EVENTS: Record<"done" | "failed" | "published" | "auto" | "build", { Icon:
   build: { Icon: Hammer, label: "Build failed" },
 };
 
-const action = "flex h-6 flex-none items-center gap-1 rounded-md bg-white/[0.08] px-2.5 text-[11.5px] font-medium transition-colors hover:bg-white/[0.14]";
+const action = buttonVariants({ variant: "soft", size: "xs" });
 
 function Suggested({ projectId, said }: { projectId: string; said: Entry }) {
   return (
@@ -73,7 +74,7 @@ function Event({ projectId, event }: { projectId: string; event: Entry }) {
   const stillFailed = useDay((s) => event.kind === "failed" && s.byProject[projectId]?.tasks.some((t) => t.id === event.taskId && t.status === "failed"));
   return (
     <div className="flex min-h-7 items-center gap-2 px-1 text-[12px] text-muted-foreground">
-      <Icon className={cn("h-3.5 w-3.5 flex-none", (event.kind === "failed" || event.kind === "build") && "text-[#ff8a8f]")} strokeWidth={2} />
+      <Icon className={cn("h-3.5 w-3.5 flex-none", (event.kind === "failed" || event.kind === "build") && "text-failure")} strokeWidth={2} />
       <span className="flex-none">{label}</span>
       <span className="min-w-0 flex-1 truncate text-foreground/85">{event.text}</span>
       {stillFailed && (
@@ -95,7 +96,7 @@ function Event({ projectId, event }: { projectId: string; event: Entry }) {
 
 export function ChatEntry({ projectId, said }: { projectId: string; said: Entry }) {
   if (said.kind === "owner") {
-    return <p className="ml-10 min-w-0 justify-self-end whitespace-pre-wrap rounded-2xl [overflow-wrap:anywhere] rounded-br-md bg-white/[0.08] px-3.5 py-2 text-[13px] leading-relaxed">{said.text}</p>;
+    return <p className="ml-10 min-w-0 justify-self-end whitespace-pre-wrap rounded-2xl [overflow-wrap:anywhere] rounded-br-md bg-selected px-3.5 py-2 text-[13px] leading-relaxed">{said.text}</p>;
   }
   if (said.kind === "agent") {
     return (

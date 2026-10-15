@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Square } from "lucide-react";
 
 import type { Project } from "@/lib/api";
 import { companyAgent, useAgentOf } from "@/store/company";
@@ -7,6 +6,7 @@ import { useChat, useTalkOf } from "@/store/chat";
 import { useLogOf } from "@/store/log";
 import { useLiveLast, useLivePhase } from "@/store/live";
 import { ChatEntry } from "./ChatEntry";
+import { SendButton, StopButton } from "../ui/compose";
 
 // The company's chat: its timeline, newest at the bottom, and a box to ask it anything. An empty
 // chat offers the two questions an owner asks most.
@@ -52,13 +52,9 @@ function Composer({ project, busy }: { project: Project; busy: boolean }) {
         }}
       />
       {busy ? (
-        <button type="button" aria-label="Stop" title="Stop" className="flex h-7 w-7 flex-none items-center justify-center rounded-md bg-white/[0.1] transition-colors hover:bg-white/[0.16]" onClick={() => stop(project.id)}>
-          <Square className="h-2.5 w-2.5 fill-current" />
-        </button>
+        <StopButton onClick={() => stop(project.id)} />
       ) : (
-        <button type="button" aria-label="Send" title="Send" disabled={!said.trim() || !can} className="flex h-7 w-7 flex-none items-center justify-center rounded-md bg-foreground text-background transition-opacity hover:opacity-90 disabled:opacity-30" onClick={send}>
-          <ArrowUp className="h-3.5 w-3.5" strokeWidth={2.5} />
-        </button>
+        <SendButton label="Send" disabled={!said.trim() || !can} onClick={send} />
       )}
     </div>
   );
@@ -80,7 +76,7 @@ export function Chat({ project }: { project: Project }) {
         <div className="grid grid-cols-[minmax(0,1fr)] gap-3 pb-4">
           {entries.map((said) => <ChatEntry key={said.id} projectId={project.id} said={said} />)}
           {runId && <Thinking runId={runId} />}
-          {error && <p className="px-1 text-[12.5px] text-[#ff8a8f]">{error}</p>}
+          {error && <p className="px-1 text-[12.5px] text-failure">{error}</p>}
           <div ref={end} />
         </div>
       </div>
@@ -88,7 +84,7 @@ export function Chat({ project }: { project: Project }) {
         {quiet && !runId && (
           <div className="flex flex-wrap gap-1.5">
             {STARTERS.map((starter) => (
-              <button key={starter} type="button" disabled={!companyAgent(project.id)} className="h-7 rounded-md border border-border px-3 text-[12px] text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground disabled:opacity-40" onClick={() => void useChat.getState().ask(project.id, starter)}>
+              <button key={starter} type="button" disabled={!companyAgent(project.id)} className="h-7 rounded-md border border-border px-3 text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40" onClick={() => void useChat.getState().ask(project.id, starter)}>
                 {starter}
               </button>
             ))}

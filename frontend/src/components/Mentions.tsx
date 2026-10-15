@@ -14,7 +14,7 @@ export function FileMention({ folder, path, label }: { folder: string; path: str
     <button
       type="button"
       title={`Open ${path} beside the conversation`}
-      className="rounded bg-white/[0.09] px-1 py-px font-mono text-[0.86em] text-foreground underline-offset-2 transition-colors hover:bg-white/[0.14] hover:underline"
+      className="rounded bg-selected px-1 py-px font-mono text-[0.86em] text-foreground underline-offset-2 transition-colors hover:bg-pressed hover:underline"
       onClick={() => usePanel.getState().open(folder, path)}
     >
       {label ?? path}
@@ -86,7 +86,7 @@ export function useMentionPicker(text: string, setText: (text: string) => void, 
 export function MentionList({ items, active, onPick }: { items: string[]; active: number; onPick: (path: string) => void }) {
   if (items.length === 0) return null;
   return (
-    <div role="listbox" aria-label="Files and folders" className="pop-in absolute bottom-full left-0 right-0 z-30 mb-2 max-h-72 overflow-y-auto rounded-xl border border-border bg-popover p-1">
+    <div role="listbox" aria-label="Files and folders" className="pop-in absolute bottom-full left-0 right-0 z-30 mb-2 max-h-72 overflow-y-auto rounded-xl border border-border bg-popover shadow-popover p-1">
       {items.map((path, i) => {
         const folder = path.endsWith("/");
         const Icon = folder ? Folder : FileText;
@@ -97,7 +97,7 @@ export function MentionList({ items, active, onPick }: { items: string[]; active
             type="button"
             role="option"
             aria-selected={i === active}
-            className={cn("flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12.5px]", i === active ? "bg-white/[0.09]" : "hover:bg-white/[0.05]")}
+            className={cn("flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12.5px]", i === active ? "bg-selected" : "hover:bg-hover")}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => onPick(path)}
           >
