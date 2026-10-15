@@ -140,7 +140,7 @@ export function CompanyView({ project }: { project: Project }) {
       {sliding && (
         <>
           <div aria-hidden className="fade-in absolute inset-x-0 bottom-0 top-[52px] z-30 bg-black/50" onClick={() => setSliding(false)} />
-          <SidePane project={project} className="slide-in-right absolute bottom-0 right-0 top-[52px] z-40 flex w-[min(420px,100%)] shadow-[0_24px_70px_rgba(0,0,0,0.6)]" />
+          <SidePane project={project} className="slide-in-right absolute bottom-0 right-0 top-[52px] z-40 flex w-[min(420px,100%)] shadow-dialog" />
         </>
       )}
       <SiteSheet project={project} />

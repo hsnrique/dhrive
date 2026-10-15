@@ -41,7 +41,7 @@ function Run({ project, connector, onClose }: { project: Project; connector: Con
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       <div aria-hidden className="fade-in absolute inset-0 bg-black/60" onClick={onClose} />
-      <div role="dialog" aria-modal="true" aria-label={`Connecting ${connector.name}`} className="relative flex h-[min(560px,calc(100vh-48px))] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-[0_30px_90px_rgba(0,0,0,0.7)]">
+      <div role="dialog" aria-modal="true" aria-label={`Connecting ${connector.name}`} className="relative flex h-[min(560px,calc(100vh-48px))] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-dialog">
         <div className="flex h-12 flex-none items-center gap-2.5 border-b border-border pl-3 pr-2">
           <ToolMark id={connector.id} size={26} />
           <span className="text-[13px] font-medium">Connecting {connector.name}</span>

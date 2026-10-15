@@ -108,7 +108,7 @@ export function SiteSheet({ project }: { project: Project }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       <div aria-hidden className="fade-in absolute inset-0 bg-black/60" onClick={close} />
-      <div role="dialog" aria-modal="true" aria-label={`${project.name}'s website`} className="relative flex h-full max-h-[820px] w-full max-w-[1180px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-[0_30px_90px_rgba(0,0,0,0.7)]">
+      <div role="dialog" aria-modal="true" aria-label={`${project.name}'s website`} className="relative flex h-full max-h-[820px] w-full max-w-[1180px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-dialog">
         <div className="flex h-11 flex-none items-center gap-2 border-b border-border pl-4 pr-2">
           <span className="flex-none text-[12.5px] font-medium">{label}</span>
           {here && <span className="min-w-0 truncate font-mono text-[11.5px] text-muted-foreground">{hostOf(browser ?? here)}</span>}

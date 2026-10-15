@@ -49,7 +49,7 @@ export function FeedbackDialog({ onClose }: { onClose: () => void }) {
   }, [state, onClose]);
   return createPortal(
     <div className="fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-6" onMouseDown={(e) => e.target === e.currentTarget && state !== "sending" && onClose()}>
-      <form role="dialog" aria-modal="true" aria-labelledby={titleId} className="pop-in grid w-full max-w-[440px] gap-3 rounded-2xl border border-border bg-popover p-5 shadow-[0_24px_70px_rgba(0,0,0,0.6)]" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
+      <form role="dialog" aria-modal="true" aria-labelledby={titleId} className="pop-in grid w-full max-w-[440px] gap-3 rounded-2xl border border-border bg-popover p-5 shadow-dialog" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
         <h2 id={titleId} className="text-[15px] font-medium">Feedback</h2>
         {state === "sent" ? (
           <p className="py-6 text-center text-[13px] text-muted-foreground">Sent. Thank you, every one gets read.</p>

@@ -31,7 +31,7 @@ function Tip({ label, children }: { label: string; children: ReactNode }) {
       {children}
       {at &&
         createPortal(
-          <span role="tooltip" style={{ left: at.right + 10, top: at.top + at.height / 2 }} className="pop-in pointer-events-none fixed z-50 -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-[12px] text-foreground shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+          <span role="tooltip" style={{ left: at.right + 10, top: at.top + at.height / 2 }} className="pop-in pointer-events-none fixed z-50 -translate-y-1/2 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-[12px] text-foreground shadow-popover">
             {label}
           </span>,
           document.body,

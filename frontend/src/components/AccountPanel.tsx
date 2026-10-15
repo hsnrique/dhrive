@@ -95,7 +95,7 @@ export function AccountPanel({ status, onClose }: { status: AccountStatus; onClo
   }, [onClose]);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-6 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-label="Account" className="pop-in grid w-full max-w-[440px] gap-4 rounded-2xl border border-border bg-popover p-5 shadow-[0_24px_70px_rgba(0,0,0,0.6)]">
+      <div role="dialog" aria-label="Account" className="pop-in grid w-full max-w-[440px] gap-4 rounded-2xl border border-border bg-popover p-5 shadow-dialog">
         <div className="flex items-center gap-3">
           <Avatar email={email} className="h-10 w-10 text-[15px]" />
           <div className="grid min-w-0 flex-1">

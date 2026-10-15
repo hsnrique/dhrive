@@ -76,7 +76,7 @@ function PartDialog({ session, part, clis, onClose }: { session: string; part: P
   }, [onClose]);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-6 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-label={part.title} className="pop-in flex max-h-full w-full max-w-[760px] flex-col gap-3 rounded-2xl border border-border bg-popover p-4 shadow-[0_24px_70px_rgba(0,0,0,0.6)]">
+      <div role="dialog" aria-label={part.title} className="pop-in flex max-h-full w-full max-w-[760px] flex-col gap-3 rounded-2xl border border-border bg-popover p-4 shadow-dialog">
         <div className="flex items-center gap-2">
           <input aria-label="Title" value={part.title} className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold tracking-tight outline-none" onChange={(e) => edit(session, part.id, { title: e.target.value })} />
           <button type="button" aria-label="Close" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.07] hover:text-foreground" onClick={onClose}>

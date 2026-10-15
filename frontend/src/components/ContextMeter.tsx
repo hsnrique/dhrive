@@ -29,7 +29,7 @@ function Details({ session, folder, label, busy }: { session: ThreadSession; fol
   const { used, max, parts, autoCompactAt } = seen.value;
   const percent = percentOf(used, max);
   return (
-    <div role="dialog" aria-label={`${label} context`} className="pop-in absolute right-0 top-full z-30 mt-2 grid w-72 gap-2.5 rounded-xl border border-border bg-popover p-3.5">
+    <div role="dialog" aria-label={`${label} context`} className="pop-in absolute right-0 top-full z-30 mt-2 grid w-72 gap-2.5 rounded-xl border border-border bg-popover shadow-popover p-3.5">
       <div>
         <p className="text-[12.5px] font-medium">{label} session</p>
         <p className="text-[11.5px] text-muted-foreground">{tokens(used)} of {tokens(max)} tokens · {percent}%</p>

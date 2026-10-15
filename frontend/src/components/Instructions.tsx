@@ -117,7 +117,7 @@ function Dialog({ open, folder, onClose }: { open: Open; folder: string; onClose
   const hint = SCOPES.find((s) => s.id === scope)!.hint;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-6 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-label="Instructions" className="pop-in grid w-full max-w-[640px] gap-3 rounded-2xl border border-border bg-popover p-4 shadow-[0_24px_70px_rgba(0,0,0,0.6)]">
+      <div role="dialog" aria-label="Instructions" className="pop-in grid w-full max-w-[640px] gap-3 rounded-2xl border border-border bg-popover p-4 shadow-dialog">
         <div className="flex items-center gap-2">
           <ScrollText className="h-4 w-4 text-muted-foreground" />
           <h2 className="text-[14px] font-semibold tracking-tight">Instructions</h2>

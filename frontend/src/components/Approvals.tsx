@@ -84,7 +84,7 @@ export function AllowedRules({ project }: { project: Project }) {
       {open && (
         <>
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <div role="dialog" aria-label="Always allowed" className="pop-in absolute right-0 top-full z-30 mt-2 w-72 rounded-xl border border-border bg-popover p-1.5">
+          <div role="dialog" aria-label="Always allowed" className="pop-in absolute right-0 top-full z-30 mt-2 w-72 rounded-xl border border-border bg-popover shadow-popover p-1.5">
             <p className="px-2 pb-1 pt-1 text-[11px] text-muted-foreground">Always allowed in {project.name}</p>
             {rules.map((rule) => (
               <div key={rule} className="flex items-center gap-2 rounded-lg px-2 py-1 text-[12px] hover:bg-white/[0.05]" title={rule}>

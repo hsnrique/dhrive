@@ -81,7 +81,7 @@ function Palette() {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-center bg-black/55 px-6 pt-[14vh] backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && close()}>
-      <div role="dialog" aria-label="Search" className="pop-in flex h-fit max-h-[62vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl border border-border bg-popover shadow-[0_24px_70px_rgba(0,0,0,0.6)]">
+      <div role="dialog" aria-label="Search" className="pop-in flex h-fit max-h-[62vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl border border-border bg-popover shadow-dialog">
         <label className="flex items-center gap-2.5 border-b border-border px-4">
           <Search className="h-4 w-4 flex-none text-muted-foreground" />
           <input

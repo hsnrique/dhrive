@@ -87,7 +87,7 @@ export function ToolsMenu({ project, onRun, onClose }: { project: Project; onRun
     void useGitHub.getState().signIn(project.id);
   };
   return (
-    <div ref={box} className="absolute right-0 top-9 z-30 w-[min(400px,calc(100vw-32px))] rounded-2xl border border-border bg-[rgb(20,20,24)] p-2 shadow-[0_18px_50px_rgba(0,0,0,0.55)]">
+    <div ref={box} className="absolute right-0 top-9 z-30 w-[min(400px,calc(100vw-32px))] rounded-2xl border border-border bg-popover p-2 shadow-popover">
       <div className="flex items-baseline justify-between gap-3 px-2 pb-2 pt-1.5">
         <span className="text-[13px] font-medium">Tools</span>
         <span className="text-[11.5px] text-muted-foreground">{count > 0 ? `${count} connected` : "The agents use them through their own CLIs"}</span>

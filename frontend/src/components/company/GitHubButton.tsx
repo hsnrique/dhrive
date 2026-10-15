@@ -32,7 +32,7 @@ function NotBackedUp() {
 
 function Code({ code }: { code: string }) {
   return (
-    <div className="absolute right-0 top-9 z-30 grid w-[260px] gap-2 rounded-xl border border-border bg-popover p-3 shadow-[0_18px_50px_rgba(0,0,0,0.55)]">
+    <div className="absolute right-0 top-9 z-30 grid w-[260px] gap-2 rounded-xl border border-border bg-popover p-3 shadow-popover">
       <p className="text-[12px] text-muted-foreground">Enter this code on GitHub to connect:</p>
       <button type="button" title="Copy" className="justify-self-start font-mono text-[18px] tracking-[0.12em]" onClick={() => void navigator.clipboard.writeText(code).catch(() => undefined)}>
         {code}

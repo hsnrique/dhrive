@@ -86,7 +86,7 @@ export function useMentionPicker(text: string, setText: (text: string) => void, 
 export function MentionList({ items, active, onPick }: { items: string[]; active: number; onPick: (path: string) => void }) {
   if (items.length === 0) return null;
   return (
-    <div role="listbox" aria-label="Files and folders" className="pop-in absolute bottom-full left-0 right-0 z-30 mb-2 max-h-72 overflow-y-auto rounded-xl border border-border bg-popover p-1">
+    <div role="listbox" aria-label="Files and folders" className="pop-in absolute bottom-full left-0 right-0 z-30 mb-2 max-h-72 overflow-y-auto rounded-xl border border-border bg-popover shadow-popover p-1">
       {items.map((path, i) => {
         const folder = path.endsWith("/");
         const Icon = folder ? Folder : FileText;

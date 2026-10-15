@@ -35,7 +35,7 @@ export function CommitBox({ projectId, changes, onClose }: { projectId: string; 
     if (written) setMessage(written);
   };
   return (
-    <div ref={box} className="absolute right-0 top-9 z-30 grid w-[min(340px,calc(100vw-32px))] gap-2.5 rounded-xl border border-border bg-popover p-3 shadow-[0_18px_50px_rgba(0,0,0,0.55)]">
+    <div ref={box} className="absolute right-0 top-9 z-30 grid w-[min(340px,calc(100vw-32px))] gap-2.5 rounded-xl border border-border bg-popover p-3 shadow-popover">
       <p className="text-[12px] text-muted-foreground">{changes === 1 ? "1 change" : `${changes} changes`}</p>
       <textarea
         autoFocus

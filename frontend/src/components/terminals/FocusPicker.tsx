@@ -78,7 +78,7 @@ export function FocusPicker({ session, engine, folder }: { session: string; engi
       {open && (
         <>
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <div role="dialog" aria-label="Skills, MCP servers and plugins" className="pop-in absolute left-0 top-full z-30 mt-2 w-80 rounded-xl border border-border bg-popover p-1.5">
+          <div role="dialog" aria-label="Skills, MCP servers and plugins" className="pop-in absolute left-0 top-full z-30 mt-2 w-80 rounded-xl border border-border bg-popover shadow-popover p-1.5">
             <input autoFocus aria-label="Filter" placeholder="Filter" value={filter} className="mx-0.5 mb-1 h-8 w-[calc(100%-4px)] rounded-lg border border-border bg-black/30 px-2.5 text-xs outline-none placeholder:text-muted-foreground focus:border-ring" onChange={(e) => setFilter(e.target.value)} onKeyDown={(e) => e.key === "Escape" && setOpen(false)} />
             {empty ? <p className="px-2 py-2 text-xs text-muted-foreground">{empty}</p> : <FocusList session={session} offered={offered} filter={filter} />}
           </div>

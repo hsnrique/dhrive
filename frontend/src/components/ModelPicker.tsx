@@ -122,7 +122,7 @@ export function ChoicePicker({ choice, onChoose, label, engines, align = "left",
       {open && createPortal(
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div ref={panel} role="dialog" aria-label={label} style={place} className="pop-in fixed z-50 flex w-[360px] flex-col overflow-hidden rounded-xl border border-border bg-popover">
+          <div ref={panel} role="dialog" aria-label={label} style={place} className="pop-in fixed z-50 flex w-[360px] flex-col overflow-hidden rounded-xl border border-border bg-popover shadow-popover">
             <CliTabs choice={choice} engines={engines} onPick={(cli) => onChoose(cli.engine === choice.engine ? choice : { engine: cli.engine, model: "" })} onSetUp={getModels} />
             <div className="min-h-0 flex-1 overflow-y-auto p-1.5">
               <ModelList choice={choice} models={models} onPick={setModel} onGetModels={getModels} />

@@ -35,7 +35,7 @@ export function TypeToConfirm({ title, detail, word, action, doing, onConfirm, o
   }, [busy, onClose]);
   return createPortal(
     <div className="fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-6" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
-      <div role="alertdialog" aria-modal="true" aria-labelledby={titleId} className="pop-in grid w-full max-w-[400px] gap-4 rounded-2xl border border-border bg-popover p-5 shadow-[0_24px_70px_rgba(0,0,0,0.6)]">
+      <div role="alertdialog" aria-modal="true" aria-labelledby={titleId} className="pop-in grid w-full max-w-[400px] gap-4 rounded-2xl border border-border bg-popover p-5 shadow-dialog">
         <div className="grid gap-1.5">
           <h2 id={titleId} className="text-[15px] font-medium">{title}</h2>
           <p className="text-[12.5px] leading-relaxed text-muted-foreground">{detail}</p>

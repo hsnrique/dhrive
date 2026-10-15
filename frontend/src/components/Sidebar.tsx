@@ -179,7 +179,7 @@ export function Sidebar() {
       {mode === "overlay" && (
         <>
           <div aria-hidden className="fade-in fixed inset-0 z-40 bg-black/50" onClick={fold} />
-          <div role="dialog" aria-label="Sidebar" className="slide-in-left fixed inset-y-0 left-0 z-50 flex shadow-[0_24px_70px_rgba(0,0,0,0.6)]">
+          <div role="dialog" aria-label="Sidebar" className="slide-in-left fixed inset-y-0 left-0 z-50 flex shadow-dialog">
             <FullSidebar onFold={fold} />
           </div>
         </>
