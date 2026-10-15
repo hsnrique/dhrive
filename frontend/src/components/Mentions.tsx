@@ -97,7 +97,7 @@ export function MentionList({ items, active, onPick }: { items: string[]; active
             type="button"
             role="option"
             aria-selected={i === active}
-            className={cn("flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12.5px]", i === active ? "bg-selected" : "hover:bg-hover")}
+            className={cn("flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12.5px] transition-colors", i === active ? "bg-selected" : "hover:bg-hover")}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => onPick(path)}
           >

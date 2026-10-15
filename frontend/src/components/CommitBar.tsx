@@ -115,17 +115,22 @@ function Form({ conversationId, message, info, onCancel }: { conversationId: str
 export function CommitBar({ conversationId, message }: { conversationId: string; message: RunMessage }) {
   const [info, setInfo] = useState<GitInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Reading the branch takes a moment on a big repo; the button says so instead of doing nothing.
+  const [reading, setReading] = useState(false);
   if (message.code.committed) return <Done conversationId={conversationId} message={message} />;
   if (info) return <Form conversationId={conversationId} message={message} info={info} onCancel={() => setInfo(null)} />;
   const start = () => {
     const folder = folderOf(conversationId);
-    if (folder) gitInfo(folder).then(setInfo, (e) => setError(String(e)));
+    if (!folder || reading) return;
+    setReading(true);
+    setError(null);
+    gitInfo(folder).then(setInfo, (e) => setError(String(e))).finally(() => setReading(false));
   };
   return (
     <div className="flex items-center gap-2 border-t border-border px-2 py-1.5 text-[12px]">
-      <button type="button" className="flex items-center gap-1.5 rounded px-1.5 py-0.5 text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={start}>
+      <button type="button" aria-busy={reading} className="flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={start}>
         <GitCommitHorizontal className="h-3.5 w-3.5" />
-        Commit
+        {reading ? "Reading the branch…" : "Commit"}
       </button>
       {error && <span className="min-w-0 truncate text-[11.5px] text-failure" title={error}>{error}</span>}
     </div>

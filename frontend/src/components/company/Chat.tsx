@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 import type { Project } from "@/lib/api";
+import { useKeptText } from "@/lib/drafts";
 import { companyAgent, useAgentOf } from "@/store/company";
 import { useChat, useTalkOf } from "@/store/chat";
 import { useLogOf } from "@/store/log";
@@ -26,7 +27,7 @@ function Thinking({ runId }: { runId: string }) {
 }
 
 function Composer({ project, busy }: { project: Project; busy: boolean }) {
-  const [said, setSaid] = useState("");
+  const [said, setSaid] = useKeptText(`chat:${project.id}`);
   useAgentOf(project.id);
   const can = Boolean(companyAgent(project.id));
   const { ask, stop } = useChat.getState();
@@ -64,14 +65,24 @@ export function Chat({ project }: { project: Project }) {
   const entries = useLogOf(project.id);
   const { runId, error } = useTalkOf(project.id);
   const end = useRef<HTMLDivElement>(null);
+  // Whether the owner is at the bottom: news (a task done, a site published) comes in all day, and
+  // someone reading further up stays where they are. What they just said always comes into view.
+  const pinned = useRef(true);
+  const mine = entries[entries.length - 1]?.kind === "owner";
   // Braces matter: newer engines return a promise from scrollIntoView, and an effect may only return a cleanup.
   useEffect(() => {
-    end.current?.scrollIntoView({ block: "end" });
-  }, [entries.length, runId]);
+    if (pinned.current || mine) end.current?.scrollIntoView({ block: "end" });
+  }, [entries.length, runId, mine]);
   const quiet = !entries.some((e) => e.kind === "owner");
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pt-4">
+      <div
+        className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pt-4"
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          pinned.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+        }}
+      >
         {/* One column that never grows past the pane: a long command or path truncates instead. */}
         <div className="grid grid-cols-[minmax(0,1fr)] gap-3 pb-4">
           {entries.map((said) => <ChatEntry key={said.id} projectId={project.id} said={said} />)}

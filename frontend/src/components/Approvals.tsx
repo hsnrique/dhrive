@@ -31,7 +31,7 @@ function Card({ projectId, runId, question }: { projectId: string | undefined; r
   const reply = (choice: Answer) => void answer(projectId, runId, question, choice);
   const ask = useId();
   return (
-    <div role="group" aria-labelledby={ask} className="mt-3 grid gap-2 rounded-xl border border-border bg-white/[0.04] p-3">
+    <div role="group" aria-labelledby={ask} className="pop-in mt-3 grid gap-2 rounded-xl border border-border bg-white/[0.04] p-3">
       <p id={ask} className="flex items-center gap-1.5 text-[12.5px]">
         <ShieldQuestion className="h-3.5 w-3.5 flex-none text-muted-foreground" />
         Claude {asking(question)}

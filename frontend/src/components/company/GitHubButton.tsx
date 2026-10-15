@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { ArrowUpRight, CircleAlert } from "lucide-react";
+import { ArrowUpRight, Check, CircleAlert, Copy } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { useDay } from "@/store/day";
@@ -33,11 +33,14 @@ function NotBackedUp() {
 }
 
 function Code({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => void navigator.clipboard.writeText(code).then(() => (setCopied(true), setTimeout(() => setCopied(false), 1500))).catch(() => undefined);
   return (
     <div className="absolute right-0 top-9 z-30 grid w-[260px] gap-2 rounded-xl border border-border bg-popover p-3 shadow-popover">
       <p className="text-[12px] text-muted-foreground">Enter this code on GitHub to connect:</p>
-      <button type="button" title="Copy" className="justify-self-start font-mono text-[18px] tracking-[0.12em]" onClick={() => void navigator.clipboard.writeText(code).catch(() => undefined)}>
+      <button type="button" title="Copy" aria-label={copied ? `${code}, copied` : `Copy ${code}`} className="flex items-center gap-2 justify-self-start rounded-md font-mono text-[18px] tracking-[0.12em]" onClick={copy}>
         {code}
+        {copied ? <Check className="h-3.5 w-3.5 text-live" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
       </button>
       <button type="button" className="flex items-center gap-1 justify-self-start text-[12px] text-foreground/85 hover:text-foreground" onClick={() => open("https://github.com/login/device")}>
         Open github.com/login/device
@@ -76,7 +79,8 @@ export function GitHubButton({ projectId }: { projectId: string }) {
       </div>
     );
   }
-  if (saving) return <span className="flex h-7 items-center gap-1.5 px-1 text-[12px] text-muted-foreground" title="Saving to GitHub…"><span className="node-live h-1.5 w-1.5 rounded-full bg-foreground" /><span className={label}>Saving to GitHub…</span></span>;
+  // In the button's own shape, so the toolbar keeps its width while it saves.
+  if (saving) return <span role="status" className={cn(pill, "cursor-default text-muted-foreground hover:bg-transparent")} title="Saving to GitHub…"><span className="node-live mx-1 h-1.5 w-1.5 flex-none rounded-full bg-foreground" /><span className={label}>Saving to GitHub…</span></span>;
   if (!state.repo || state.changes > 0) {
     return (
       <div className="relative flex items-center gap-1.5">

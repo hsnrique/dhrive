@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 
 import { AREAS, type Area } from "@/lib/day";
 import { cn } from "@/lib/utils";
+import { useKeptText } from "@/lib/drafts";
 import { useDay } from "@/store/day";
 import { AREA_LOOK } from "./TaskRow";
 
@@ -10,13 +11,13 @@ import { AREA_LOOK } from "./TaskRow";
 // the owner asking is the OK. Enter adds it; Shift+Enter starts a new line.
 
 export function TaskComposer({ projectId, disabled }: { projectId: string; disabled: boolean }) {
-  const [said, setSaid] = useState("");
+  const [said, setSaid] = useKeptText(`task:${projectId}`);
   const [area, setArea] = useState<Area>("code");
   const submit = () => {
     if (useDay.getState().add(projectId, said, area)) setSaid("");
   };
   return (
-    <li className="grid gap-2 rounded-xl border border-dashed border-border px-3 py-1.5 transition-colors focus-within:border-ring">
+    <li className="group grid gap-2 rounded-xl border border-dashed border-border px-3 py-1.5 transition-colors focus-within:border-ring">
       <div className="flex items-start gap-2.5">
         <Plus className="mt-[5px] h-[18px] w-[18px] flex-none p-0.5 text-muted-foreground" />
         <textarea
@@ -34,8 +35,9 @@ export function TaskComposer({ projectId, disabled }: { projectId: string; disab
           }}
         />
       </div>
-      {said.trim() && (
-        <div className="flex flex-wrap items-center gap-1 pl-[28px]" role="radiogroup" aria-label="Area">
+      {/* Its area opens with the field, not with the first letter typed, so writing never shifts it. */}
+      {!disabled && (
+        <div className={cn("flex flex-wrap items-center gap-1 pl-[28px]", !said.trim() && "hidden group-focus-within:flex")} role="radiogroup" aria-label="Area">
           {AREAS.map((each) => {
             const { label, Icon } = AREA_LOOK[each];
             return (

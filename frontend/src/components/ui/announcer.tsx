@@ -8,7 +8,7 @@ export function Announcer() {
   const polite = useAnnounce((s) => s.polite);
   const assertive = useAnnounce((s) => s.assertive);
   return createPortal(
-    <div data-announcer className="sr-only">
+    <div data-live className="sr-only">
       <div role="status" aria-live="polite">
         {polite && <span key={polite.at}>{polite.text}</span>}
       </div>

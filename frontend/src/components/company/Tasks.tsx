@@ -113,7 +113,7 @@ function Bar({ project, day, engines, blank }: { project: Project; day: Day; eng
     <div className={card}>
       {picker}
       <Switch on={day.ask} label="Ask first" title={day.ask ? ASK_FIRST_ON : ASK_FIRST_OFF} onChange={(on) => setAsk(project.id, on)} />
-      {!day.ask && <Switch on={day.mcp} label="MCP tools" title={day.mcp ? "MCP tools run without asking too: they can send, post or pay in your name" : "MCP tools are off while tasks run on their own"} onChange={(on) => setMcp(project.id, on)} />}
+      <Switch on={day.mcp && !day.ask} disabled={day.ask} label="MCP tools" title={day.ask ? "With Ask first on, every tool waits for your OK" : day.mcp ? "MCP tools run without asking too: they can send, post or pay in your name" : "MCP tools are off while tasks run on their own"} onChange={(on) => setMcp(project.id, on)} />
       <Switch on={day.lean} label="Lean" title={day.lean ? "Agents work without narrating, one line at the end: your plan lasts longer" : "Agents explain as they work"} onChange={(on) => setLean(project.id, on)} />
       <span className="ml-auto" />
       {suggest}

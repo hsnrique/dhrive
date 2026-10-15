@@ -149,11 +149,15 @@ latest conversation (the rail and sidebar already did). Not done: per-conversati
 a confirm before a pane's model change restarts it. store/day.ts is at 297 lines: split it before
 it grows.
 
+Phase 6 notes: overlays still leave without an exit animation, and the composer still trades Stop
+for Send while a request runs; both are cosmetic. With this phase the six are done; what each one
+left for later is in its notes above, and the next audit can start from them.
+
 | Phase | PR | State |
 | --- | --- | --- |
 | 1. Reliability | merged (#17) | done: auto mode, unreadable files, Stop, one writer per folder, Suggest, small guards (326 frontend tests, 264 backend) |
 | 2. Performance | merged (#18) | done: live store, thread re-renders, edit diffs, log flush, startup, cheap wins (333 frontend tests, 266 backend) |
 | 3. Design system | merged (#19) | done: one hairline, color and title tokens, Button/Field/compose, Dialog and layers, InlineConfirm (334 frontend tests) |
 | 4. Accessibility | merged (#20) | done: terminals, sign-in gate, live regions, focus and contrast, reachable actions, zoom, names and status (334 frontend tests) |
-| 5. Journeys | feat/ux-journeys | done: needs your OK everywhere, needs attention, policy and gentle Auto stop, founding recovery, blocked runs, company reach, confirm tiers (340 frontend tests) |
-| 6. Polish | | planned |
+| 5. Journeys | merged (#21) | done: needs your OK everywhere, needs attention, policy and gentle Auto stop, founding recovery, blocked runs, company reach, confirm tiers (340 frontend tests) |
+| 6. Polish | feat/ux-polish | done: error queue, drafts everywhere, pinned chat scroll, no swaps or jumps, missing states (342 frontend tests) |

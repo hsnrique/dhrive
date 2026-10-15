@@ -114,14 +114,14 @@ describe("a project's company", () => {
   });
 
   it("a pick that can't be kept in the company's folder goes back to the one before, and says so", async () => {
-    useApp.setState({ clis: [{ engine: "claude-code", installed: true }, { engine: "codex", installed: true }] as never, error: null });
+    useApp.setState({ clis: [{ engine: "claude-code", installed: true }, { engine: "codex", installed: true }] as never, errors: [] });
     useCompany.getState().choose({ engine: "claude-code", model: "opus" }, P);
     await settle();
     saveCompanyRecord.mockRejectedValueOnce(new Error("disk full") as never);
     useCompany.getState().choose({ engine: "codex", model: "gpt-5.5" }, P);
     await settle();
     expect(companyAgent(P)).toEqual({ engine: "claude-code", model: "opus" });
-    expect(String(useApp.getState().error)).toContain("Couldn't keep the company's agent");
+    expect(String(useApp.getState().errors[0]?.text)).toContain("Couldn't keep the company's agent");
   });
 
   it("reads a company's agent from its record when it opens, and a CLI gone falls back", async () => {

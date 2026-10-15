@@ -17,14 +17,7 @@ const SHOW_BUILT_MS = 4_000;
 // The toolbar is a container (CompanyView): below this its labels give way to their icons.
 const label = "hidden @[60rem]:inline";
 
-function Working({ label }: { label: string }) {
-  return (
-    <span className="flex h-7 items-center gap-1.5 px-1 text-[12px] text-muted-foreground">
-      <span className="node-live h-1.5 w-1.5 rounded-full bg-foreground" />
-      {label}
-    </span>
-  );
-}
+const Pulse = () => <span className="node-live mx-1 h-1.5 w-1.5 flex-none rounded-full bg-foreground" />;
 
 // "Built" for a moment after a build passes, then back to Build.
 function useJustBuilt(builtAt: number | null): boolean {
@@ -43,8 +36,8 @@ export function SiteActions({ projectId }: { projectId: string }) {
   const url = useAddress(projectId);
   const built = useJustBuilt(builtAt);
   const { build, publish } = usePublish.getState();
-  if (busy) return <Working label="Publishing…" />;
-  if (building) return <Working label="Building…" />;
+  // The buttons stay where they are while one works: it says so in place, the toolbar never jumps.
+  const working = busy ? "publish" : building ? "build" : null;
   return (
     <div className="flex items-center gap-1.5">
       {error && (
@@ -60,13 +53,13 @@ export function SiteActions({ projectId }: { projectId: string }) {
           <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
         </button>
       )}
-      <button type="button" className={pill} aria-label={built ? "Built" : "Build"} title="Build the website on this Mac, to catch errors before publishing" onClick={() => void build(projectId)}>
-        {built ? <Check className="h-3.5 w-3.5 text-live" /> : <Hammer className="h-3.5 w-3.5" />}
-        <span className={label}>{built ? "Built" : "Build"}</span>
+      <button type="button" disabled={working === "publish"} aria-busy={working === "build"} className={pill} aria-label={working === "build" ? "Building" : built ? "Built" : "Build"} title="Build the website on this Mac, to catch errors before publishing" onClick={() => !working && void build(projectId)}>
+        {working === "build" ? <Pulse /> : built ? <Check className="h-3.5 w-3.5 text-live" /> : <Hammer className="h-3.5 w-3.5" />}
+        <span className={label}>{working === "build" ? "Building…" : built ? "Built" : "Build"}</span>
       </button>
-      <button type="button" className={pill} aria-label={published ? "Publish again" : "Publish"} title={published ? "Publish what's on this Mac now" : "Put the website on the web"} onClick={() => void publish(projectId)}>
-        <Globe className="h-3.5 w-3.5" />
-        <span className={label}>{published ? "Publish again" : "Publish"}</span>
+      <button type="button" disabled={working === "build"} aria-busy={working === "publish"} className={pill} aria-label={working === "publish" ? "Publishing" : published ? "Publish again" : "Publish"} title={published ? "Publish what's on this Mac now" : "Put the website on the web"} onClick={() => !working && void publish(projectId)}>
+        {working === "publish" ? <Pulse /> : <Globe className="h-3.5 w-3.5" />}
+        <span className={label}>{working === "publish" ? "Publishing…" : published ? "Publish again" : "Publish"}</span>
       </button>
     </div>
   );

@@ -116,6 +116,13 @@
   --duration-enter: 200ms;
 }
 
+/* A sidebar row's title fades out where its hover action sits over its end, rather than the row
+   taking in padding and re-truncating it every time the pointer passes. */
+.group:hover .fade-under,
+.group:focus-within .fade-under {
+  mask-image: linear-gradient(to left, transparent 22px, #000 38px);
+}
+
 /* The serif titles: the home's question, a page's title, a section's head. */
 @utility display-hero {
   font-family: var(--font-serif);

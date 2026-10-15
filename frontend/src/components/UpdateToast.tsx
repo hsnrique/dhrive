@@ -10,7 +10,7 @@ export function UpdateToast() {
   const setUpdateReady = useApp((s) => s.setUpdateReady);
   if (version === null) return null;
   return (
-    <div className="fixed bottom-24 right-6 z-40 flex max-w-sm items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-[12.5px]">
+    <div role="status" className="pop-in flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-[12.5px] shadow-popover">
       <span className="h-2 w-2 flex-none rounded-full bg-foreground" />
       <div className="flex-1">
         <p className="font-medium">Update ready</p>
@@ -19,14 +19,16 @@ export function UpdateToast() {
         </p>
       </div>
       <button
+        type="button"
         className={buttonVariants({ variant: "primary", size: "sm" })}
         onClick={() => void restartApp()}
       >
         Restart
       </button>
       <button
+        type="button"
         aria-label="Dismiss"
-        className="text-muted-foreground transition-colors hover:text-foreground"
+        className="-mr-1.5 flex h-5 w-5 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground"
         onClick={() => setUpdateReady(null)}
       >
         <X className="h-3.5 w-3.5" />

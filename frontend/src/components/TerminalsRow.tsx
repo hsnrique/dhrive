@@ -2,7 +2,6 @@ import { useState } from "react";
 import { SquareTerminal, X } from "lucide-react";
 
 import { removePaneCopy } from "@/lib/api";
-import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
 import { useMaestro } from "@/store/maestro";
 import { openSession } from "@/store/open-terminals";
@@ -46,9 +45,9 @@ export function TerminalsRow({ session }: { session: TerminalSession }) {
   if (editing) return <NameInput value={session.title} label="Terminals name" onSave={(title) => useTerminals.getState().rename(session.id, title)} onDone={() => setEditing(false)} className="ml-[10px] w-[calc(100%-10px)] text-[12.5px]" />;
   return (
     <div className="group relative">
-      <button type="button" title={`${session.title} · Terminals\nDouble-click to rename`} aria-current={active ? "page" : undefined} className={cn(rowClass(active), "group-hover:pr-8")} onClick={() => openSession(session.id)} onDoubleClick={() => setEditing(true)}>
+      <button type="button" title={`${session.title} · Terminals\nDouble-click to rename`} aria-current={active ? "page" : undefined} className={rowClass(active)} onClick={() => openSession(session.id)} onDoubleClick={() => setEditing(true)}>
         <SquareTerminal className="h-[13px] w-[13px] flex-none opacity-70" strokeWidth={1.75} aria-label="Terminals" />
-        <span className="min-w-0 flex-1 truncate">{session.title}</span>
+        <span className="fade-under min-w-0 flex-1 truncate">{session.title}</span>
         <RowPulse needsYou={status === "needs-you" && "A pane is waiting for you"} working={status === "working" && "Working"} />
       </button>
       <div className="absolute right-1 top-1/2 -translate-y-1/2">

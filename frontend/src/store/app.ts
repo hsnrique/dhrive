@@ -22,6 +22,7 @@ import { readEdit } from "@/lib/linediff";
 import { modelName } from "@/lib/names";
 import { readSaved, save } from "@/lib/storage";
 import { emptyThread, withRunChanges, withRunSession, type Thread } from "@/lib/thread";
+import { withError, type Shown } from "@/lib/errors";
 import { announce } from "./announce";
 import { pushLive } from "./live";
 
@@ -46,7 +47,8 @@ export interface AppState {
   autoCode: boolean;
   // Tool calls waiting on the owner's OK, per run id; never saved, a run that ends drops its own.
   approvals: Record<string, Question[]>;
-  error: string | null;
+  // What went wrong lately, newest first (lib/errors.ts).
+  errors: Shown[];
   updateReady: string | null;
 
   boot: () => Promise<void>;
@@ -60,11 +62,12 @@ export interface AppState {
   setAutoCode: (on: boolean) => void;
   onProgress: (event: ProgressEvent) => void;
   reportError: (error: unknown) => void;
-  clearError: () => void;
+  dismissError: (id: number) => void;
   setUpdateReady: (version: string | null) => void;
 }
 
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
+let reported = 0;
 
 export const useApp = create<AppState>((set, get) => ({
   clis: [],
@@ -78,7 +81,7 @@ export const useApp = create<AppState>((set, get) => ({
   mode: restoreMode(readSaved("mode"), readSaved("planFirst")),
   autoCode: readSaved("autoCode") === true,
   approvals: {},
-  error: null,
+  errors: [],
   updateReady: null,
 
   // The projects are a file read and the CLIs a probe of each one, which takes far longer: the
@@ -191,8 +194,8 @@ export const useApp = create<AppState>((set, get) => ({
     pushLive({ runId: event.runId, kind: event.kind === "phase" ? "phase" : "log", value: event.value });
   },
 
-  reportError: (error) => set({ error: message(error) }),
-  clearError: () => set({ error: null }),
+  reportError: (error) => set((s) => ({ errors: withError(s.errors, message(error), ++reported) })),
+  dismissError: (id) => set((s) => ({ errors: s.errors.filter((e) => e.id !== id) })),
   setUpdateReady: (version) => set({ updateReady: version }),
 }));
 
