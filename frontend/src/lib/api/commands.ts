@@ -27,7 +27,8 @@ export type RecordName = "tasks" | "log" | "site" | "connectors" | "agent" | "ar
 export const readCompanyRecord = (project: string, name: RecordName) => invoke<unknown>("read_company_record", { project, name });
 export const saveCompanyRecord = (project: string, name: RecordName, value: unknown) => invoke<void>("save_company_record", { project, name, value });
 export const archiveCompanyRecord = (project: string, name: RecordName, items: unknown[]) => invoke<void>("archive_company_record", { project, name, items });
-export const readDocuments = (project: string) => invoke<{ id: string; text: string | null }[]>("read_documents", { project });
+// `unreadable`: the file is there but dhrive can't read it (too big, another encoding); never "missing".
+export const readDocuments = (project: string) => invoke<{ id: string; text: string | null; unreadable?: boolean }[]>("read_documents", { project });
 // A company's published versions on dhrive's site host, newest first, and putting one back live.
 export const siteReleases = (project: string) => invoke<{ at: number; live: boolean }[]>("site_releases", { project });
 export const sitePublished = (project: string) => invoke<{ url: string; at: number } | null>("site_published", { project });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ownTask } from "./day";
-import { DOCUMENTS, documentPrompt, missing, preview } from "./documents";
+import { DOCUMENTS, documentPrompt, missing, preview, writtenOf } from "./documents";
 
 describe("a company's documents", () => {
   it("lists the ones not written yet, in order", () => {
@@ -19,5 +19,10 @@ describe("a company's documents", () => {
   it("is known by its first line of prose", () => {
     expect(preview("# Mission\n\n---\n- **Help** people [budget](https://x.y) in `minutes`.\nMore.")).toBe("Help people budget in minutes.");
     expect(preview("# Only a title")).toBe("");
+  });
+  it("counts as missing only what isn't there: one that can't be read is never written over", () => {
+    const written = writtenOf([{ id: "mission", text: "# Mission" }, { id: "roadmap", text: null }, { id: "design-guide", text: null, unreadable: true }]);
+    expect(written["design-guide"]).toBe(false);
+    expect(missing(written).map((k) => k.id)).toEqual(["roadmap", "market-research"]);
   });
 });

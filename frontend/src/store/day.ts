@@ -5,7 +5,7 @@ import { PARALLEL, rosterNote, type Agent } from "@/lib/army";
 import { RECHECK_MS } from "@/lib/logistics";
 import { isBlank, toMarkdown } from "@/lib/company";
 import { alreadyNote, ownTask, parseDay, ready, savedTasks, trimmed, type Area, type Task } from "@/lib/day";
-import { documentPrompt, missing } from "@/lib/documents";
+import { documentPrompt, missing, writtenOf } from "@/lib/documents";
 import type { Choice } from "@/lib/flow";
 import { readSaved } from "@/lib/storage";
 import { useApp } from "./app";
@@ -184,8 +184,10 @@ export const useDay = create<DayState>((set, get) => {
     if (!first || halted.has(projectId) || !tasks.length || !tasks.every((t) => t.status === "done")) return;
     patch(projectId, () => ({ first: false }));
     await usePublish.getState().publish(projectId);
-    const written = await readDocuments(projectId).catch(() => []);
-    for (const kind of missing(Object.fromEntries(written.map((d) => [d.id, d.text])))) get().add(projectId, documentPrompt(kind), kind.area);
+    // A folder that can't be read at all writes nothing: missing is only what is known to be absent.
+    const written = await readDocuments(projectId).catch(() => null);
+    if (!written) return;
+    for (const kind of missing(writtenOf(written))) get().add(projectId, documentPrompt(kind), kind.area);
   };
 
   return {

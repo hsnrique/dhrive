@@ -25,9 +25,12 @@ export interface Company {
   // The draft in flight, whose progress is in the app's live log under this id.
   runId: string | null;
   error: string | null;
+  // Why COMPANY.md couldn't be read, while it can't: nothing writes the brief meanwhile, since what's
+  // in memory isn't what's in the owner's file.
+  unreadable?: string | null;
 }
 
-const IDLE: Company = { brief: null, saving: "saved", runId: null, error: null };
+const IDLE: Company = { brief: null, saving: "saved", runId: null, error: null, unreadable: null };
 
 interface CompanyState {
   openId: string | null;
@@ -63,8 +66,8 @@ export const useCompany = create<CompanyState>((set, get) => {
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
 
   const write = async (projectId: string) => {
-    const brief = company(projectId).brief;
-    if (!brief) return;
+    const { brief, unreadable } = company(projectId);
+    if (!brief || unreadable) return;
     try {
       await saveCompany(projectId, toMarkdown(brief, nameOf(projectId)));
       patch(projectId, { saving: "saved" });
@@ -104,12 +107,14 @@ export const useCompany = create<CompanyState>((set, get) => {
       // A brief being typed or drafted isn't replaced by what's on disk.
       if (company(projectId).brief && (company(projectId).saving !== "saved" || company(projectId).runId)) return;
       try {
-        patch(projectId, { brief: fromMarkdown(await readCompany(projectId)) });
+        patch(projectId, { brief: fromMarkdown(await readCompany(projectId)), unreadable: null });
       } catch (error) {
-        patch(projectId, { brief: company(projectId).brief ?? { ...EMPTY_BRIEF }, error: String(error) });
+        // An empty brief here would be saved over the file at the first keystroke.
+        patch(projectId, { unreadable: String(error) });
       }
     },
     change: (projectId, section, text) => {
+      if (company(projectId).unreadable) return;
       patch(projectId, { brief: { ...(company(projectId).brief ?? EMPTY_BRIEF), [section]: text } });
       saveSoon(projectId);
     },
@@ -125,7 +130,7 @@ export const useCompany = create<CompanyState>((set, get) => {
     draft: async (projectId) => {
       const folder = useApp.getState().projects.find((p) => p.id === projectId)?.folder;
       const choice = companyAgent(projectId);
-      if (!folder || !choice || company(projectId).runId) return;
+      if (!folder || !choice || company(projectId).runId || company(projectId).unreadable) return;
       const runId = crypto.randomUUID();
       patch(projectId, { runId, error: null });
       try {
