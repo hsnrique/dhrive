@@ -6,6 +6,7 @@ import { useApp } from "@/store/app";
 import { companyAgent, useCompany } from "@/store/company";
 import { useFounding, type Phase } from "@/store/founding";
 import { useLiveLast, useLivePhase } from "@/store/live";
+import { buttonVariants } from "@/components/ui/button";
 import { Approvals } from "../Approvals";
 import { ChoicePicker } from "../ModelPicker";
 import { Switch } from "../ui/switch";
@@ -20,8 +21,8 @@ const STEPS: { phase: Phase | "building"; label: string }[] = [
   { phase: "building", label: "Building your autonomous company" },
 ];
 
-const primary = "h-9 flex-none rounded-md bg-foreground px-5 text-[13.5px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40";
-const quiet = "flex h-9 flex-none items-center gap-2 rounded-md px-4 text-[13.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
+const primary = buttonVariants({ variant: "primary", size: "lg" });
+const quiet = cn(buttonVariants({ variant: "ghost", size: "lg" }), "px-4");
 
 function Live({ runId }: { runId: string | null }) {
   const phase = useLivePhase(runId) || "Starting";

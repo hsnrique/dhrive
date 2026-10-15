@@ -9,6 +9,7 @@ import { useArmyOf } from "@/store/army";
 import { useDay } from "@/store/day";
 import { useFold } from "@/store/fold";
 import { useLiveLast, useLivePhase } from "@/store/live";
+import { buttonVariants } from "@/components/ui/button";
 import { Approvals } from "../Approvals";
 import { Markdown } from "../Markdown";
 import { ChoicePicker } from "../ModelPicker";
@@ -25,7 +26,7 @@ export const AREA_LOOK: Record<Area, { label: string; Icon: LucideIcon }> = {
   research: { label: "Research", Icon: Search },
 };
 
-const action = "flex h-6 items-center gap-1 rounded-md px-2 text-[11.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
+const action = cn(buttonVariants({ variant: "ghost", size: "xs" }), "px-2");
 
 const STATUS: Record<TaskStatus, string> = { suggested: "Suggested", planned: "Up next", running: "Working", done: "Done", failed: "Failed", stopped: "Stopped" };
 

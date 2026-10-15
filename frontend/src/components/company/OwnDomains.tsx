@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useDomains, useDomainsOf } from "@/store/domains";
 import { useAddress, useFavorite } from "@/store/favorite";
 import { usePublishedOf } from "@/store/publish";
+import { buttonVariants } from "@/components/ui/button";
 import { TypeToConfirm } from "../TypeToConfirm";
 
 // The owner's own domain for the site: type it, set the two DNS records shown, check. Live ones open;
@@ -15,7 +16,7 @@ import { TypeToConfirm } from "../TypeToConfirm";
 // and the owner stars the one the company goes by (store/favorite.ts).
 
 const MAX = 3;
-const pill = "flex h-7 flex-none items-center gap-1.5 rounded-md bg-selected px-3 text-[12px] font-medium transition-colors hover:bg-pressed disabled:opacity-40";
+const pill = buttonVariants({ variant: "soft", size: "sm" });
 
 function Copyable({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);

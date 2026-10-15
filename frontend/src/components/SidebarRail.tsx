@@ -11,6 +11,7 @@ import { useCompany } from "@/store/company";
 import { useConversations } from "@/store/conversations";
 import { useSearch } from "@/store/search";
 import { initialsOf, useSidebar } from "@/store/sidebar";
+import { buttonVariants } from "@/components/ui/button";
 import { Avatar } from "./AccountPanel";
 import { DiscordMark, FeedbackDialog, openDiscord } from "./Community";
 import { EngineMark } from "./EngineMark";
@@ -21,7 +22,7 @@ import { useCompanyPulse } from "./company/CompanyRow";
 // community, and the account.
 // Every button names itself beside the rail on hover, since initials and marks alone don't.
 
-const tool = "flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
+const tool = buttonVariants({ variant: "ghost", size: "icon" });
 
 // Placed on the window, not inside the rail: the rail scrolls, and a scrolling box clips what pokes out.
 function Tip({ label, children }: { label: string; children: ReactNode }) {

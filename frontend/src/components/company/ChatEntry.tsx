@@ -8,6 +8,7 @@ import { useChat } from "@/store/chat";
 import { useDay } from "@/store/day";
 import { useLog } from "@/store/log";
 import { usePublish } from "@/store/publish";
+import { buttonVariants } from "@/components/ui/button";
 import { Markdown } from "../Markdown";
 
 // One line of the company's timeline. What the owner said sits on the right; the agent answers on
@@ -23,7 +24,7 @@ const EVENTS: Record<"done" | "failed" | "published" | "auto" | "build", { Icon:
   build: { Icon: Hammer, label: "Build failed" },
 };
 
-const action = "flex h-6 flex-none items-center gap-1 rounded-md bg-selected px-2.5 text-[11.5px] font-medium transition-colors hover:bg-pressed";
+const action = buttonVariants({ variant: "soft", size: "xs" });
 
 function Suggested({ projectId, said }: { projectId: string; said: Entry }) {
   return (

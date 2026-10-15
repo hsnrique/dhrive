@@ -6,6 +6,7 @@ import type { Focus } from "@/lib/maestro";
 import { cn } from "@/lib/utils";
 import { connectionsKey, useConnections } from "@/store/connections";
 import { useDraft, useMaestro } from "@/store/maestro";
+import { fieldVariants } from "@/components/ui/field";
 
 // The skills, MCP servers and plugins the maestro's CLI has in this project, to point it at the ones
 // that matter for the brief. Asked fresh on opening; only what's switched on is offered.
@@ -79,7 +80,7 @@ export function FocusPicker({ session, engine, folder }: { session: string; engi
         <>
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
           <div role="dialog" aria-label="Skills, MCP servers and plugins" className="pop-in absolute left-0 top-full z-30 mt-2 w-80 rounded-xl border border-border bg-popover shadow-popover p-1.5">
-            <input autoFocus aria-label="Filter" placeholder="Filter" value={filter} className="mx-0.5 mb-1 h-8 w-[calc(100%-4px)] rounded-lg border border-border bg-black/30 px-2.5 text-xs outline-none placeholder:text-muted-foreground focus:border-ring" onChange={(e) => setFilter(e.target.value)} onKeyDown={(e) => e.key === "Escape" && setOpen(false)} />
+            <input autoFocus aria-label="Filter" placeholder="Filter" value={filter} className={cn(fieldVariants({ size: "md" }), "mx-0.5 mb-1 w-[calc(100%-4px)] text-xs")} onChange={(e) => setFilter(e.target.value)} onKeyDown={(e) => e.key === "Escape" && setOpen(false)} />
             {empty ? <p className="px-2 py-2 text-xs text-muted-foreground">{empty}</p> : <FocusList session={session} offered={offered} filter={filter} />}
           </div>
         </>

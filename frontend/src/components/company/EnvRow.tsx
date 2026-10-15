@@ -2,14 +2,19 @@ import { useState } from "react";
 import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 
 import { envReveal } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { useEnv } from "@/store/env";
+import { buttonVariants } from "@/components/ui/button";
+import { fieldVariants } from "@/components/ui/field";
 
 // One variable on one line: its name, the last four characters of its value, and what can be done
 // with it. The value itself comes up from the Keychain only while the owner asked to see it.
 
-export const pill = "h-6 flex-none rounded-md bg-selected px-2.5 text-[11.5px] font-medium transition-colors hover:bg-pressed disabled:opacity-40";
-const icon = "flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
-export const field = "h-8 min-w-0 rounded-lg border border-border bg-black/30 px-2.5 font-mono text-[12px] outline-none placeholder:font-sans placeholder:text-muted-foreground/70 focus-visible:border-white/30";
+export const pill = buttonVariants({ variant: "soft", size: "xs" });
+const icon = buttonVariants({ variant: "ghost", size: "icon-xs" });
+// A secret's name and value are mono, like the code that reads them.
+export const field = cn(fieldVariants({ size: "sm" }), "font-mono placeholder:font-sans");
+export const saveButton = buttonVariants({ variant: "soft", size: "sm" });
 
 // Typed into a password field: what's on screen is dots until it's kept.
 export function ValueForm({ projectId, name, onDone }: { projectId: string; name: string; onDone: () => void }) {
@@ -25,8 +30,8 @@ export function ValueForm({ projectId, name, onDone }: { projectId: string; name
   return (
     <form className="flex items-center gap-2 pb-2 pl-1" onSubmit={(e) => { e.preventDefault(); void save(); }}>
       <input autoFocus type="password" autoComplete="off" spellCheck={false} className={`${field} flex-1`} value={value} placeholder={`Value of ${name}`} aria-label={`Value of ${name}`} onChange={(e) => setValue(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onDone()} />
-      <button type="button" className="h-7 rounded-md px-2.5 text-[12px] text-muted-foreground hover:text-foreground" onClick={onDone}>Cancel</button>
-      <button type="submit" disabled={saving} className={pill}>Save</button>
+      <button type="button" className={buttonVariants({ variant: "ghost", size: "sm" })} onClick={onDone}>Cancel</button>
+      <button type="submit" disabled={saving} className={saveButton}>Save</button>
     </form>
   );
 }

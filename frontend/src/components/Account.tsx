@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { emailOf, standing, urgent } from "@/lib/account";
 import { cn } from "@/lib/utils";
 import { useAccount } from "@/store/account";
+import { buttonVariants } from "@/components/ui/button";
 import { AccountPanel, Avatar } from "./AccountPanel";
 import { BrandLogo } from "./BrandLogo";
 
@@ -13,7 +14,7 @@ import { BrandLogo } from "./BrandLogo";
 
 function Pill({ primary, disabled, onClick, children }: { primary?: boolean; disabled?: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" disabled={disabled} className={cn("h-8 rounded-md px-4 text-[12.5px] transition-colors disabled:opacity-40", primary ? "bg-primary font-medium text-primary-foreground hover:opacity-90" : "border border-border hover:bg-hover")} onClick={onClick}>
+    <button type="button" disabled={disabled} className={buttonVariants({ variant: primary ? "primary" : "outline", size: "md" })} onClick={onClick}>
       {children}
     </button>
   );

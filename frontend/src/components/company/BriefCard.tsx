@@ -9,6 +9,7 @@ import { companyAgent, useAgentOf, useCompany, useCompanyOf } from "@/store/comp
 import { useDay } from "@/store/day";
 import { useFold } from "@/store/fold";
 import { useLiveLast, useLivePhase } from "@/store/live";
+import { buttonVariants } from "@/components/ui/button";
 import { Markdown } from "../Markdown";
 import { ChoicePicker } from "../ModelPicker";
 import { BriefSection } from "./BriefSection";
@@ -53,7 +54,7 @@ function DraftBar({ project, brief, runId }: { project: Project; brief: Brief; r
         <>
           <ChoicePicker choice={choice} onChoose={(next) => useDay.getState().setAgent(project.id, next)} label="Agent that works for the company" engines={engines} down tunable />
           <span className="min-w-0 flex-1 truncate text-[12.5px] text-muted-foreground">{whole ? "Reads the project, changes nothing." : `${left} ${left === 1 ? "section is" : "sections are"} still empty.`}</span>
-          <button type="button" className="h-8 flex-none rounded-md bg-foreground px-4 text-[13px] font-medium text-background transition-opacity hover:opacity-90" onClick={() => void draft(project.id)}>
+          <button type="button" className={cn(buttonVariants({ variant: "primary", size: "md" }), "px-4")} onClick={() => void draft(project.id)}>
             {whole ? "Draft it from the project" : "Fill them in"}
           </button>
         </>

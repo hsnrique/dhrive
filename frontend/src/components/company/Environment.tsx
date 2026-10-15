@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 
 import type { Project } from "@/lib/api";
 import { useEnv } from "@/store/env";
-import { EnvRow, MissingRow, field, pill } from "./EnvRow";
+import { buttonVariants } from "@/components/ui/button";
+import { EnvRow, MissingRow, field, pill, saveButton } from "./EnvRow";
 import { SectionHead } from "./SectionHead";
 
 // The keys and settings the company's code reads, kept in this Mac's Keychain and never in the repo
@@ -25,8 +26,8 @@ function AddForm({ projectId, onDone }: { projectId: string; onDone: () => void 
       <input autoFocus spellCheck={false} autoCapitalize="characters" className={`${field} w-[40%] min-w-[140px]`} value={name} placeholder="NAME" aria-label="Variable name" onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onDone()} />
       <input type="password" autoComplete="off" spellCheck={false} className={`${field} min-w-[140px] flex-1`} value={value} placeholder="Value" aria-label="Value" onChange={(e) => setValue(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onDone()} />
       <div className="ml-auto flex items-center gap-1">
-        <button type="button" className="h-7 rounded-md px-2.5 text-[12px] text-muted-foreground hover:text-foreground" onClick={onDone}>Cancel</button>
-        <button type="submit" disabled={!name.trim() || saving} className={pill}>Save</button>
+        <button type="button" className={buttonVariants({ variant: "ghost", size: "sm" })} onClick={onDone}>Cancel</button>
+        <button type="submit" disabled={!name.trim() || saving} className={saveButton}>Save</button>
       </div>
     </form>
   );

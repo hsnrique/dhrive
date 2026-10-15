@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowRight, ArrowUp, Paperclip, Square, UserCheck } from "lucide-react";
+import { ArrowRight, Paperclip, UserCheck } from "lucide-react";
 
 import { draftKeyOf, type Open } from "@/lib/conversations";
 import { readDraft, writeDraft } from "@/lib/drafts";
@@ -11,9 +11,11 @@ import { useConversations } from "@/store/conversations";
 import { useFiles } from "@/store/files";
 import { runsBlocked, useAccount } from "@/store/account";
 import { send, stop } from "@/store/runs";
+import { buttonVariants } from "@/components/ui/button";
 import { AttachmentChips, useAttachments } from "./Attachments";
 import { MentionList, useMentionPicker } from "./Mentions";
 import { ModelPicker } from "./ModelPicker";
+import { SendButton, StopButton } from "./ui/compose";
 
 const MAX_HEIGHT = 240;
 
@@ -29,7 +31,7 @@ function ModeSwitch() {
   const mode = useApp((s) => s.mode);
   const setMode = useApp((s) => s.setMode);
   return (
-    <div role="radiogroup" aria-label="Mode" className="flex items-center rounded-full border border-border p-0.5">
+    <div role="radiogroup" aria-label="Mode" className="flex items-center rounded-lg border border-border p-0.5">
       {MODES.map((option) => (
         <button
           key={option}
@@ -127,7 +129,7 @@ export function Composer({ open, projectName, folder }: { open: Open; projectNam
       {blocked && (
         <div className="mb-1.5 flex items-center gap-2 rounded-xl bg-white/[0.05] px-3 py-2 text-[12.5px]">
           <span className="flex-1 text-muted-foreground">Your free days are over. Subscribe to keep sending.</span>
-          <button type="button" className="rounded-md bg-primary px-3 py-1 text-[12px] font-medium text-primary-foreground hover:opacity-90" onClick={() => useAccount.getState().setSheetOpen(true)}>
+          <button type="button" className={buttonVariants({ variant: "primary", size: "xs" })} onClick={() => useAccount.getState().setSheetOpen(true)}>
             Subscribe
           </button>
         </div>
@@ -179,25 +181,10 @@ export function Composer({ open, projectName, folder }: { open: Open; projectNam
         <Route mode={mode} />
         <span className="ml-auto flex items-center gap-1.5">
           {running && (
-            <button
-              type="button"
-              title="Stop"
-              className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-selected text-foreground transition-colors hover:bg-pressed"
-              onClick={() => conversationId && stop(conversationId)}
-            >
-              <Square className="h-3 w-3 fill-current" />
-            </button>
+            <StopButton onClick={() => conversationId && stop(conversationId)} />
           )}
           {(!running || canSend) && (
-            <button
-              type="button"
-              title={running ? "Queue it (Enter)" : "Send (Enter)"}
-              disabled={!canSend}
-              className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground transition-[opacity,transform] hover:opacity-90 active:scale-95 disabled:opacity-25"
-              onClick={submit}
-            >
-              <ArrowUp className="h-4 w-4" strokeWidth={2.4} />
-            </button>
+            <SendButton label={running ? "Queue it" : "Send"} title={running ? "Queue it (Enter)" : "Send (Enter)"} disabled={!canSend} onClick={submit} />
           )}
         </span>
       </div>

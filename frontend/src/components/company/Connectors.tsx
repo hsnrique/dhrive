@@ -5,6 +5,7 @@ import { Plug, X } from "lucide-react";
 import { connectorOpen, type Connector, type Project } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useConnectedOf, useConnectors } from "@/store/connectors";
+import { buttonVariants } from "@/components/ui/button";
 import { TerminalView } from "../terminals/TerminalView";
 import { SiteLink, ToolMark } from "./ToolMark";
 import { ToolsMenu } from "./ToolsMenu";
@@ -14,11 +15,11 @@ import { ToolsMenu } from "./ToolsMenu";
 // here (connectors.rs): its CLI is installed if missing, the owner signs in through the browser, its
 // skills land in the project; from then on every step's prompt names it.
 
-const pill = "flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] @[60rem]:px-3 transition-colors hover:bg-hover";
+const pill = cn(buttonVariants({ variant: "outline", size: "sm" }), "px-2.5 @[60rem]:px-3");
 const label = "hidden @[60rem]:inline";
-const primary = "h-7 flex-none rounded-md bg-foreground px-3.5 text-[12px] font-medium text-background transition-opacity hover:opacity-90";
-const quiet = "flex h-7 flex-none items-center gap-1.5 rounded-md px-2.5 text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
-const iconButton = "flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
+const primary = cn(buttonVariants({ variant: "primary", size: "sm" }), "px-3.5");
+const quiet = cn(buttonVariants({ variant: "ghost", size: "sm" }), "px-2.5");
+const iconButton = buttonVariants({ variant: "ghost", size: "icon-sm" });
 
 // A connector's setup in its own terminal: the owner answers whatever a sign-in asks right there.
 // Portaled to the body: the toolbar is a size container, which would hold a fixed box inside it.

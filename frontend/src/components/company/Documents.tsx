@@ -8,6 +8,7 @@ import { companyAgent, useAgentOf } from "@/store/company";
 import { useDay } from "@/store/day";
 import { useDocuments, writing } from "@/store/documents";
 import { useFold } from "@/store/fold";
+import { buttonVariants } from "@/components/ui/button";
 import { Markdown } from "../Markdown";
 import { SectionHead } from "./SectionHead";
 
@@ -17,7 +18,7 @@ import { SectionHead } from "./SectionHead";
 
 const ICONS: Record<DocumentId, LucideIcon> = { mission: Target, roadmap: MapIcon, "design-guide": Palette, "market-research": TrendingUp };
 
-const pill = "h-6 flex-none rounded-md bg-selected px-2.5 text-[11.5px] font-medium transition-colors hover:bg-pressed disabled:opacity-40";
+const pill = buttonVariants({ variant: "soft", size: "xs" });
 
 function DocRow({ projectId, kind, text, can }: { projectId: string; kind: (typeof DOCUMENTS)[number]; text: string | null | false | undefined; can: boolean }) {
   const [open, setOpen] = useFold(`doc:${projectId}:${kind.id}`);

@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { useGitHub, useGitHubOf } from "@/store/github";
+import { fieldVariants } from "@/components/ui/field";
+import { buttonVariants } from "@/components/ui/button";
 
 // Saving to GitHub with a message: the owner writes what changed, or has the company's agent write it
 // from the changes, then saves. Left empty, the save goes out with dhrive's plain line, as before.
 // Esc or a click outside closes it; ⌘↵ saves from the message.
 
-const quiet = "h-7 rounded-md px-3 text-[12px] text-foreground/80 transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40";
-const primary = "h-7 rounded-md bg-foreground px-3.5 text-[12px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40";
+const quiet = buttonVariants({ variant: "ghost", size: "sm" });
+const primary = cn(buttonVariants({ variant: "primary", size: "sm" }), "px-3.5");
 
 export function CommitBox({ projectId, changes, onClose }: { projectId: string; changes: number; onClose: () => void }) {
   const [message, setMessage] = useState("");
@@ -46,7 +48,7 @@ export function CommitBox({ projectId, changes, onClose }: { projectId: string; 
         disabled={writing !== null}
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && e.metaKey && submit()}
-        className="resize-none rounded-lg border border-border bg-black/30 px-2.5 py-2 text-[13px] leading-snug outline-none placeholder:text-muted-foreground/70 focus-visible:border-white/30 disabled:opacity-60"
+        className={cn(fieldVariants({ size: "area" }), "resize-none px-2.5 py-2 leading-snug")}
       />
       <div className="flex items-center justify-between gap-2">
         <button type="button" className={cn(quiet, "flex items-center gap-1.5")} disabled={writing !== null} onClick={() => void write()}>

@@ -5,6 +5,9 @@ import { MessageSquare } from "lucide-react";
 
 import { sendFeedback } from "@/lib/api";
 import { BRANDS } from "@/lib/brands";
+import { cn } from "@/lib/utils";
+import { fieldVariants } from "@/components/ui/field";
+import { buttonVariants } from "@/components/ui/button";
 
 // Right above the account: feedback to the dhrive team in one box, and the community on Discord.
 // The invite never expires.
@@ -63,14 +66,14 @@ export function FeedbackDialog({ onClose }: { onClose: () => void }) {
               disabled={state === "sending"}
               placeholder="What's working, what isn't, what you wish it did…"
               aria-label="Your feedback"
-              className="resize-none rounded-lg border border-border bg-black/30 px-3 py-2.5 text-[13px] leading-relaxed outline-none placeholder:text-muted-foreground/70 focus-visible:border-white/30"
+              className={cn(fieldVariants({ size: "area" }), "resize-none")}
               onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && e.metaKey && void submit()}
             />
             {error && <p className="text-[12px] text-failure" role="alert">{error}</p>}
             <div className="flex items-center justify-end gap-2">
               <button type="button" disabled={state === "sending"} className="h-8 rounded-md px-4 text-[12.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40" onClick={onClose}>Cancel</button>
-              <button type="submit" disabled={!ready} className="h-8 rounded-md bg-foreground px-4 text-[12.5px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-40">{state === "sending" ? "Sending…" : "Send"}</button>
+              <button type="submit" disabled={!ready} className={cn(buttonVariants({ variant: "primary", size: "md" }), "px-4")}>{state === "sending" ? "Sending…" : "Send"}</button>
             </div>
           </>
         )}
@@ -80,7 +83,7 @@ export function FeedbackDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-const link = "flex h-8 flex-1 items-center justify-center gap-2 rounded-md text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
+const link = cn(buttonVariants({ variant: "ghost", size: "md" }), "flex-1");
 
 export function CommunityRow() {
   const [writing, setWriting] = useState(false);

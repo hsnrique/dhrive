@@ -6,6 +6,7 @@ import { asking, ruleLabel } from "@/lib/approvals";
 import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
 import { answer, type Answer } from "@/store/runs";
+import { buttonVariants } from "@/components/ui/button";
 
 // Claude Code asks before a tool call it isn't allowed to make on its own; the run waits here for
 // the owner, the way Claude Code itself asks: once, always in this project, or no.
@@ -17,7 +18,7 @@ function Choice({ label, title, onClick, primary }: { label: string; title?: str
     <button
       type="button"
       title={title}
-      className={cn("min-w-0 truncate rounded-lg px-2.5 py-1 text-[12px] transition-colors", primary ? "bg-primary text-primary-foreground hover:opacity-90" : "border border-border hover:bg-hover")}
+      className={cn(buttonVariants({ variant: primary ? "primary" : "outline", size: "sm" }), "min-w-0 truncate")}
       onClick={onClick}
     >
       {label}

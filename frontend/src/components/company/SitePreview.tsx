@@ -10,6 +10,7 @@ import { useAddress } from "@/store/favorite";
 import { usePublishedOf } from "@/store/publish";
 import { useSheet } from "@/store/sheet";
 import { useSite, useSiteOf } from "@/store/site";
+import { buttonVariants } from "@/components/ui/button";
 import { Page } from "../BrowserView";
 
 // The company's website seen from inside dhrive: a small live preview under its versions, and the
@@ -21,7 +22,7 @@ import { Page } from "../BrowserView";
 const PAGE = { width: 1280, height: 800 };
 const open = (url: string) => void openUrl(url).catch(() => undefined);
 const localAt = (port: number) => `http://localhost:${port}`;
-const iconButton = "flex h-7 w-7 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
+const iconButton = buttonVariants({ variant: "ghost", size: "icon-sm" });
 
 export function SitePreview({ project }: { project: Project }) {
   const { url, at } = usePublishedOf(project.id);
@@ -74,7 +75,7 @@ function NotAnswering({ project }: { project: Project }) {
   const crashed = site.log.length > 0;
   return (
     <Waiting title={crashed ? "The website stopped." : "Run the website"} detail={crashed ? undefined : "It runs on this Mac, where only you can see it."}>
-      <button type="button" disabled={site.busy} aria-label="Run the website" className="flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background shadow-[0_10px_40px_rgba(255,255,255,0.12)] transition-transform hover:scale-105 disabled:opacity-40" onClick={() => void useSite.getState().play(project.id)}>
+      <button type="button" disabled={site.busy} aria-label="Run the website" className="flex h-14 w-14 items-center justify-center rounded-full bg-foreground text-background transition-opacity hover:opacity-90 disabled:opacity-40" onClick={() => void useSite.getState().play(project.id)}>
         <Play className="ml-0.5 h-5 w-5 fill-current" />
       </button>
       {crashed && <pre className="mt-2 max-h-40 w-full max-w-[52ch] overflow-auto whitespace-pre-wrap rounded-lg bg-black/45 p-3 text-left font-mono text-[11px] leading-relaxed text-muted-foreground">{site.log.join("\n")}</pre>}

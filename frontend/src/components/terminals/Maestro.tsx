@@ -1,24 +1,26 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowUp, Maximize2, Play, Square, X } from "lucide-react";
+import { Maximize2, Play, X } from "lucide-react";
 
 import type { Cli } from "@/lib/api";
 import type { Part } from "@/lib/maestro";
 import { cn } from "@/lib/utils";
+import { ago, useNow } from "@/lib/time";
 import { useApp } from "@/store/app";
 import { useDraft, useMaestro } from "@/store/maestro";
 import { useTerminals } from "@/store/terminals";
 import { useLiveLast, useLivePhase } from "@/store/live";
-import { ago, useNow } from "@/lib/time";
+import { buttonVariants } from "@/components/ui/button";
 import { ChoicePicker } from "../ModelPicker";
 import { FocusPicker } from "./FocusPicker";
 import { Intro, MaestroMark, PaneStarters } from "./Start";
+import { SendButton, StopButton } from "../ui/compose";
 
 // A session's maestro, above its grid: a brief and the CLI that splits it in the session's project,
 // then the subtasks it proposed, each editable before any pane opens.
 
 const words = "flex-none px-0.5 text-xs text-muted-foreground";
 const MAX_HEIGHT = 240;
-const iconButton = "flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
+const iconButton = buttonVariants({ variant: "ghost", size: "icon-xs" });
 
 // The phase, then the CLI's latest action, on one line next to the CLI that's splitting.
 function Progress({ runId }: { runId: string }) {
@@ -87,7 +89,7 @@ function PartDialog({ session, part, clis, onClose }: { session: string; part: P
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">runs with</span>
           <ChoicePicker choice={{ engine: part.engine, model: part.model }} onChoose={(choice) => edit(session, part.id, choice)} label="Subtask CLI" engines={clis.map((cli) => cli.engine)} />
-          <button type="button" className="ml-auto rounded-md bg-foreground px-4 py-1.5 text-[12.5px] font-medium text-background" onClick={onClose}>Done</button>
+          <button type="button" className={cn(buttonVariants({ variant: "primary", size: "md" }), "ml-auto px-4")} onClick={onClose}>Done</button>
         </div>
       </div>
     </div>
@@ -102,8 +104,8 @@ function RunBar({ session, count, room, ranAt }: { session: string; count: numbe
   return (
     <div className="flex items-center gap-3 px-1 text-xs text-muted-foreground">
       <span>{said}</span>
-      <button type="button" className="ml-auto hover:text-foreground" onClick={() => useMaestro.getState().clear(session)}>Clear</button>
-      <button type="button" disabled={!fits} className="flex h-8 items-center gap-1.5 rounded-md bg-primary px-4 text-[12.5px] font-medium text-primary-foreground transition-[opacity,transform] hover:opacity-90 active:scale-95 disabled:opacity-25" onClick={() => useMaestro.getState().run(session)}>
+      <button type="button" className="ml-auto transition-colors hover:text-foreground" onClick={() => useMaestro.getState().clear(session)}>Clear</button>
+      <button type="button" disabled={!fits} className={cn(buttonVariants({ variant: "primary", size: "md" }), "px-4")} onClick={() => useMaestro.getState().run(session)}>
         <Play className="h-3 w-3 fill-current" /> {ranAt ? "Run again" : "Approve and run"}
       </button>
     </div>
@@ -149,13 +151,9 @@ function Brief({ session, clis }: { session: string; clis: Cli[] }) {
         {folder && <FocusPicker session={session} engine={engine} folder={folder} />}
         <span className="min-w-0 flex-1 px-1">{runId && <Progress runId={runId} />}</span>
         {runId ? (
-          <button type="button" title="Stop" aria-label="Stop" className="flex h-8 w-8 flex-none items-center justify-center rounded-md border border-border bg-selected hover:bg-pressed" onClick={() => stop(session)}>
-            <Square className="h-3 w-3 fill-current" />
-          </button>
+          <StopButton onClick={() => stop(session)} />
         ) : (
-          <button type="button" title="Split (Enter)" aria-label="Split" disabled={!ready} className="flex h-8 w-8 flex-none items-center justify-center rounded-md bg-primary text-primary-foreground transition-[opacity,transform] hover:opacity-90 active:scale-95 disabled:opacity-25" onClick={submit}>
-            <ArrowUp className="h-4 w-4" strokeWidth={2.4} />
-          </button>
+          <SendButton label="Split" title="Split (Enter)" disabled={!ready} onClick={submit} />
         )}
       </div>
     </div>

@@ -2,8 +2,10 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 import type { Connector, Project } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { useConnectedOf, useConnectors } from "@/store/connectors";
 import { useGitHub, useGitHubOf } from "@/store/github";
+import { buttonVariants } from "@/components/ui/button";
 import { SuggestTool } from "./SuggestTool";
 import { SiteLink, ToolMark } from "./ToolMark";
 
@@ -13,8 +15,8 @@ import { SiteLink, ToolMark } from "./ToolMark";
 // suggest one that isn't there. GitHub heads the code and
 // data, connected through gh the way the GitHub button does.
 
-const connect = "h-7 flex-none rounded-md border border-border px-3 text-[12px] transition-colors hover:bg-hover";
-const again = "flex h-7 flex-none items-center gap-1.5 rounded-md px-2 text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
+const connect = buttonVariants({ variant: "outline", size: "sm" });
+const again = cn(buttonVariants({ variant: "ghost", size: "sm" }), "px-2");
 
 const GITHUB = { id: "github", name: "GitHub", what: "Code, commits and backups", group: "Code and data", site: "https://github.com" };
 

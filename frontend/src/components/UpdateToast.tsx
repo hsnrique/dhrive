@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 
 import { restartApp } from "@/lib/api";
 import { useApp } from "@/store/app";
+import { buttonVariants } from "@/components/ui/button";
 
 // Shown once an update is downloaded and staged; restart now or it applies on next launch.
 export function UpdateToast() {
@@ -18,7 +19,7 @@ export function UpdateToast() {
         </p>
       </div>
       <button
-        className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
+        className={buttonVariants({ variant: "primary", size: "sm" })}
         onClick={() => void restartApp()}
       >
         Restart

@@ -5,16 +5,21 @@ import type { Engine } from "@/lib/api";
 import { MAX_NAME, MAX_OWNS, MAX_ROLE, type Agent } from "@/lib/army";
 import type { Choice } from "@/lib/flow";
 import { totalDetail, totalLine, type Tokens } from "@/lib/spend";
+import { cn } from "@/lib/utils";
 import { useArmy } from "@/store/army";
 import { useDay } from "@/store/day";
+import { buttonVariants } from "@/components/ui/button";
+import { fieldVariants } from "@/components/ui/field";
 import { ChoicePicker } from "../ModelPicker";
-import { field, pill } from "./EnvRow";
+import { saveButton } from "./EnvRow";
+
+const field = fieldVariants({ size: "sm" });
 
 // One agent of the army: its name and role, the CLI and model it works on, and, on hover, edit and
 // dismiss. A new CLI or model moves the tasks waiting on it too; a dismissed agent's waiting tasks go
 // back to the company's own agent. Dismissing asks once more, by name.
 
-const quiet = "flex h-6 items-center gap-1 rounded-md px-2 text-[11.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
+const quiet = cn(buttonVariants({ variant: "ghost", size: "xs" }), "px-2");
 
 export function AgentForm({ initial, onSave, onDone }: { initial?: Pick<Agent, "name" | "role" | "owns">; onSave: (name: string, role: string, owns: string) => boolean; onDone: () => void }) {
   const [name, setName] = useState(initial?.name ?? "");
@@ -23,12 +28,12 @@ export function AgentForm({ initial, onSave, onDone }: { initial?: Pick<Agent, "
   const save = () => name.trim() && onSave(name, role, owns) && onDone();
   return (
     <form className="grid gap-2 border-b border-border py-2.5 pl-1" onSubmit={(e) => (e.preventDefault(), save())}>
-      <input autoFocus className={`${field} font-sans`} maxLength={MAX_NAME} value={name} placeholder="Name, like Back or SEO" aria-label="Agent name" onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onDone()} />
-      <textarea className={`${field} h-20 resize-none py-2 font-sans leading-relaxed`} maxLength={MAX_ROLE} value={role} placeholder="What it does and how it works" aria-label="Agent role" onChange={(e) => setRole(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onDone()} />
+      <input autoFocus className={field} maxLength={MAX_NAME} value={name} placeholder="Name, like Back or SEO" aria-label="Agent name" onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onDone()} />
+      <textarea className={cn(fieldVariants({ size: "area" }), "h-20 resize-none py-2 text-[12px]")} maxLength={MAX_ROLE} value={role} placeholder="What it does and how it works" aria-label="Agent role" onChange={(e) => setRole(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onDone()} />
       <input className={field} maxLength={MAX_OWNS} value={owns} placeholder="Folders it owns, like server, api (optional)" aria-label="Folders the agent owns" onChange={(e) => setOwns(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onDone()} />
       <div className="flex items-center justify-end gap-1">
-        <button type="button" className="h-7 rounded-md px-2.5 text-[12px] text-muted-foreground hover:text-foreground" onClick={onDone}>Cancel</button>
-        <button type="submit" disabled={!name.trim()} className={pill}>Save</button>
+        <button type="button" className={buttonVariants({ variant: "ghost", size: "sm" })} onClick={onDone}>Cancel</button>
+        <button type="submit" disabled={!name.trim()} className={saveButton}>Save</button>
       </div>
     </form>
   );

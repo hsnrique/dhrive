@@ -2,9 +2,9 @@ import { useState, type ReactNode } from "react";
 import { Check, Pencil } from "lucide-react";
 
 import type { RunMessage } from "@/lib/thread";
-import { cn } from "@/lib/utils";
 import { useApp } from "@/store/app";
 import { approvePlan } from "@/store/runs";
+import { buttonVariants } from "@/components/ui/button";
 
 // A finished plan waits here for the owner: approve it as it is, edit it first, or reply below to
 // have it changed. Nothing in the project is touched until they approve.
@@ -14,7 +14,7 @@ function Choice({ primary, disabled, onClick, children }: { primary?: boolean; d
     <button
       type="button"
       disabled={disabled}
-      className={cn("flex h-7 items-center gap-1.5 rounded-md px-3 text-[12px] transition-colors disabled:opacity-40", primary ? "bg-primary font-medium text-primary-foreground hover:opacity-90" : "border border-border hover:bg-hover")}
+      className={buttonVariants({ variant: primary ? "primary" : "outline", size: "sm" })}
       onClick={onClick}
     >
       {children}
@@ -36,7 +36,7 @@ export function PlanReview({ conversationId, message }: { conversationId: string
           value={text}
           aria-label="The plan"
           spellCheck={false}
-          className="max-h-[50vh] min-h-48 w-full resize-y rounded-xl border border-border bg-black/40 p-3 font-mono text-[12.5px] leading-relaxed outline-none [font-variant-ligatures:none] focus:border-ring"
+          className="max-h-[50vh] min-h-48 w-full resize-y rounded-xl border border-border bg-black/30 p-3 font-mono text-[12.5px] leading-relaxed outline-none [font-variant-ligatures:none] focus:border-ring"
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && text.trim()) {

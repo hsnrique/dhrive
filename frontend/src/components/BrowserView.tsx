@@ -7,6 +7,7 @@ import { previewHide, previewPlace, previewReload, previewShow } from "@/lib/api
 import { localUrl, portUrl } from "@/lib/preview";
 import { cn } from "@/lib/utils";
 import { previewOf, usePreview } from "@/store/preview";
+import { buttonVariants } from "@/components/ui/button";
 
 // The project's own dev server, beside the conversation. It finds the server the project is running
 // and reloads by itself when a code step ends, so the change is seen where it was asked for.
@@ -92,7 +93,7 @@ function Ports({ folder, ports, url }: { folder: string; ports: number[]; url: s
   ));
 }
 
-const tool = "flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40";
+const tool = buttonVariants({ variant: "ghost", size: "icon-xs" });
 
 export function BrowserView({ folder }: { folder: string }) {
   const { url, ports, version } = usePreview((s) => previewOf(s, folder));

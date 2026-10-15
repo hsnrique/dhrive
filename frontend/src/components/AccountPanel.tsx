@@ -8,14 +8,15 @@ import { cn } from "@/lib/utils";
 import { useAccount } from "@/store/account";
 import { useApp } from "@/store/app";
 import { standDown } from "@/store/stand-down";
+import { buttonVariants } from "@/components/ui/button";
 
 // The account, all of it in one place: who's signed in on this Mac, the plan and where it stands,
 // subscribing or managing billing on dhrive.app, and signing out (which asks once, since it stops
 // every company's work on this Mac until signing back in).
 
-const pill = "flex h-8 items-center gap-1.5 rounded-md px-4 text-[12.5px] transition-colors disabled:opacity-40";
-const quiet = cn(pill, "border border-border hover:bg-hover");
-const loud = cn(pill, "bg-primary font-medium text-primary-foreground hover:opacity-90");
+const quiet = cn(buttonVariants({ variant: "outline", size: "md" }), "px-4");
+const loud = cn(buttonVariants({ variant: "primary", size: "md" }), "px-4");
+const soft = cn(buttonVariants({ variant: "soft", size: "md" }), "px-4");
 
 const open = (url: string) => void openUrl(url).catch(() => undefined);
 
@@ -79,7 +80,7 @@ function SignOut() {
   return (
     <div className="flex items-center gap-2">
       <span className={cn("text-[12px]", error ? "text-failure" : "text-muted-foreground")} role={error ? "alert" : undefined}>{error ?? "Companies stop working here."}</span>
-      <button type="button" disabled={leaving} className={cn(pill, "bg-selected font-medium hover:bg-pressed disabled:opacity-40")} onClick={leave}>{leaving ? "Signing out…" : "Sign out"}</button>
+      <button type="button" disabled={leaving} className={soft} onClick={leave}>{leaving ? "Signing out…" : "Sign out"}</button>
       <button type="button" className="text-[12px] text-muted-foreground hover:text-foreground" onClick={() => setAsking(false)}>Cancel</button>
     </div>
   );

@@ -7,6 +7,7 @@ import type { Choice } from "@/lib/flow";
 import { cliLabel, effortLabel } from "@/lib/names";
 import { cn } from "@/lib/utils";
 import { useApp, useModelName } from "@/store/app";
+import { fieldVariants } from "@/components/ui/field";
 import { EngineMark } from "./EngineMark";
 import { CliTabs, EffortMeter, ModelList } from "./PickerParts";
 
@@ -128,7 +129,7 @@ export function ChoicePicker({ choice, onChoose, label, engines, align = "left",
               <ModelList choice={choice} models={models} onPick={setModel} onGetModels={getModels} />
               <input
                 aria-label="Any model id"
-                className="mx-1.5 mb-1 mt-2 h-8 w-[calc(100%-12px)] rounded-lg border border-border bg-black/30 px-2.5 font-mono text-xs outline-none placeholder:font-sans placeholder:text-muted-foreground focus:border-ring"
+                className={cn(fieldVariants({ size: "md" }), "mx-1.5 mb-1 mt-2 w-[calc(100%-12px)] font-mono text-xs placeholder:font-sans")}
                 placeholder="Or type any model id"
                 spellCheck={false}
                 value={choice.model}

@@ -67,7 +67,7 @@ function Editor({ initial, save }: { initial: string; save: (text: string) => Pr
         placeholder={EXAMPLE}
         spellCheck={false}
         aria-label="Instructions"
-        className="h-[min(50vh,420px)] w-full resize-none rounded-xl border border-border bg-black/40 p-3 font-mono text-[12.5px] leading-relaxed outline-none transition-colors [font-variant-ligatures:none] placeholder:text-muted-foreground/60 focus:border-ring"
+        className="h-[min(50vh,420px)] w-full resize-none rounded-xl border border-border bg-black/30 p-3 font-mono text-[12.5px] leading-relaxed outline-none transition-colors [font-variant-ligatures:none] placeholder:text-muted-foreground/60 focus:border-ring"
         onChange={(e) => {
           setText(e.target.value);
           change(e.target.value);

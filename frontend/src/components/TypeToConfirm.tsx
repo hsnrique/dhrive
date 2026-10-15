@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 
 import { confirmed } from "@/lib/confirm";
 import { cn } from "@/lib/utils";
+import { fieldVariants } from "@/components/ui/field";
+import { buttonVariants } from "@/components/ui/button";
 
 // The ask before anything that can't be taken back (a company, a domain): what goes, said once,
 // and the thing's name typed to go ahead. Escape or Cancel leaves it all as it was.
@@ -51,16 +53,16 @@ export function TypeToConfirm({ title, detail, word, action, doing, onConfirm, o
             spellCheck={false}
             autoCapitalize="off"
             autoComplete="off"
-            className="h-9 rounded-lg border border-border bg-black/30 px-3 font-mono text-[13px] text-foreground outline-none focus:border-ring"
+            className={cn(fieldVariants({ size: "lg" }), "font-mono")}
             onChange={(e) => setTyped(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && void go()}
           />
         </label>
         <div className="flex justify-end gap-2">
-          <button type="button" disabled={busy} className="h-8 rounded-md px-4 text-[12.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40" onClick={onClose}>
+          <button type="button" disabled={busy} className={cn(buttonVariants({ variant: "ghost", size: "md" }), "px-4")} onClick={onClose}>
             Cancel
           </button>
-          <button type="button" disabled={!ready} className={cn("h-8 rounded-md px-4 text-[12.5px] font-medium transition-colors", ready ? "bg-failure text-background hover:opacity-90" : "bg-white/[0.06] text-muted-foreground")} onClick={() => void go()}>
+          <button type="button" disabled={!ready} className={cn(buttonVariants({ variant: "destroy", size: "md" }), "px-4")} onClick={() => void go()}>
             {busy ? doing : action}
           </button>
         </div>

@@ -7,6 +7,7 @@ import { useApp } from "@/store/app";
 import { useDraft, useMaestro } from "@/store/maestro";
 import { usePaneStatus } from "@/store/pane-status";
 import { columnsFor, MAX_PANES, useTerminals, type Pane, type TerminalSession } from "@/store/terminals";
+import { buttonVariants } from "@/components/ui/button";
 import { InlineEdit } from "../InlineEdit";
 import { ChoicePicker } from "../ModelPicker";
 import { Maestro } from "./Maestro";
@@ -18,8 +19,8 @@ import { TogetherBar, TogetherButton } from "./Together";
 
 const withScreen = (clis: Cli[]) => clis.filter((cli) => cli.installed && cli.engine !== "ollama");
 
-const headerButton = "flex h-7 items-center gap-1.5 rounded-md px-2 text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground disabled:opacity-40";
-const tool = "flex h-6 w-6 flex-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground";
+const headerButton = cn(buttonVariants({ variant: "ghost", size: "sm" }), "px-2");
+const tool = buttonVariants({ variant: "ghost", size: "icon-xs" });
 
 // A marker only when there's something to know: working, the owner's turn, or ended.
 function StatusMarker({ pane }: { pane: string }) {

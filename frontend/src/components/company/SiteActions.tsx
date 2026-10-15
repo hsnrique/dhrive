@@ -3,14 +3,16 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { ArrowUpRight, Check, CircleAlert, Globe, Hammer } from "lucide-react";
 
 import { hostOf } from "@/lib/domains";
+import { cn } from "@/lib/utils";
 import { useAddress } from "@/store/favorite";
 import { usePublish, usePublishedOf } from "@/store/publish";
+import { buttonVariants } from "@/components/ui/button";
 
 // The website's way to the web, in the toolbar: Build checks it on this Mac first, so whatever would
 // break the publish shows up (and goes to the chat, ready to fix) before going live; Publish builds
 // again and puts it up; the live address (the owner's favorite, store/favorite.ts) opens in the browser.
 
-const pill = "flex h-7 flex-none items-center gap-1.5 rounded-md border border-border px-2.5 text-[12px] @[60rem]:px-3 transition-colors hover:bg-hover disabled:opacity-50";
+const pill = cn(buttonVariants({ variant: "outline", size: "sm" }), "px-2.5 @[60rem]:px-3");
 const SHOW_BUILT_MS = 4_000;
 // The toolbar is a container (CompanyView): below this its labels give way to their icons.
 const label = "hidden @[60rem]:inline";
