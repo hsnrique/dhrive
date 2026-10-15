@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Check, Dices, Square } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useKeptText } from "@/lib/drafts";
 import { useApp } from "@/store/app";
 import { companyAgent, useCompany } from "@/store/company";
 import { STOPPED, useFounding, type Phase } from "@/store/founding";
@@ -97,12 +98,13 @@ function AgentPicker() {
 }
 
 function Ask() {
-  const [idea, setIdea] = useState("");
+  const [idea, setIdea] = useKeptText("founding");
   // Off unless the owner wants each task to wait for them; it stays the company's Ask first after.
   const [ask, setAsk] = useState(false);
   const start = useFounding((s) => s.start);
   const blocked = useRunsBlocked();
-  const go = () => idea.trim() && !blocked && void start(idea, ask);
+  // The sentence goes with the founding: a failed one keeps it for Try again, a new one starts blank.
+  const go = () => idea.trim() && !blocked && (setIdea(""), void start(idea, ask));
   return (
     <div className="grid gap-6">
       <div className="grid gap-4">

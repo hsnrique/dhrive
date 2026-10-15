@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 
 import { AREAS, type Area } from "@/lib/day";
 import { cn } from "@/lib/utils";
+import { useKeptText } from "@/lib/drafts";
 import { useDay } from "@/store/day";
 import { AREA_LOOK } from "./TaskRow";
 
@@ -10,7 +11,7 @@ import { AREA_LOOK } from "./TaskRow";
 // the owner asking is the OK. Enter adds it; Shift+Enter starts a new line.
 
 export function TaskComposer({ projectId, disabled }: { projectId: string; disabled: boolean }) {
-  const [said, setSaid] = useState("");
+  const [said, setSaid] = useKeptText(`task:${projectId}`);
   const [area, setArea] = useState<Area>("code");
   const submit = () => {
     if (useDay.getState().add(projectId, said, area)) setSaid("");

@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 import type { Project } from "@/lib/api";
+import { useKeptText } from "@/lib/drafts";
 import { companyAgent, useAgentOf } from "@/store/company";
 import { useChat, useTalkOf } from "@/store/chat";
 import { useLogOf } from "@/store/log";
@@ -26,7 +27,7 @@ function Thinking({ runId }: { runId: string }) {
 }
 
 function Composer({ project, busy }: { project: Project; busy: boolean }) {
-  const [said, setSaid] = useState("");
+  const [said, setSaid] = useKeptText(`chat:${project.id}`);
   useAgentOf(project.id);
   const can = Boolean(companyAgent(project.id));
   const { ask, stop } = useChat.getState();
