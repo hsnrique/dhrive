@@ -20,3 +20,12 @@ export function upNext(tasks: Task[], asking: (runId: string) => boolean): Task[
   const rank = (t: Task) => (t.status === "running" ? (t.runId && asking(t.runId) ? 0 : 1) : 2);
   return tasks.filter((t) => t.status === "running" || t.status === "planned").sort((a, b) => rank(a) - rank(b));
 }
+
+// What failed or was stopped: it waits on the owner too, to try again or let go.
+export const unfinished = (tasks: Task[]) => tasks.filter((t) => t.status === "failed" || t.status === "stopped");
+
+// A task tried again goes ahead of what's waiting, not behind it: the owner asked for it just now.
+export function aheadOfQueue(tasks: Task[], task: Task): Task[] {
+  const at = tasks.findIndex((t) => t.status === "planned");
+  return at < 0 ? [...tasks, task] : [...tasks.slice(0, at), task, ...tasks.slice(at)];
+}

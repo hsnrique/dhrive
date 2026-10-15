@@ -135,6 +135,7 @@ describe("where the company stands", () => {
   it("says what's happening in a line", () => {
     expect(standing([task("done"), task("running"), task("planned")], true)).toEqual({ live: true, text: "Working on its first delivery · 1 of 3 done" });
     expect(standing([task("done"), task("done")], true).text).toBe("First delivery done");
+    expect(standing([task("failed"), task("planned")], false).text, "what failed stays on the line").toBe("1 task up next · 1 failed");
     expect(standing([task("done"), task("running"), task("planned")], false).text).toBe("Working · 1 up next");
     expect(standing([task("running"), task("running"), task("running"), task("planned")], false).text, "an army says how many work at once").toBe("3 working · 1 up next");
     expect(standing([task("done"), task("stopped"), task("planned")], false).text).toBe("1 task up next");

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { needsOwner, upNext } from "./attention";
+import { aheadOfQueue, needsOwner, unfinished, upNext } from "./attention";
 import type { Task } from "./day";
 
 const task = (id: string, status: Task["status"], runId: string | null = null): Task => ({ id, title: id, area: "code", engine: "claude-code", model: "", prompt: id, status, runId, result: "" });
@@ -24,5 +24,12 @@ describe("what waits on the owner", () => {
   it("puts what asks first, then what runs, then what waits, so the cap never hides it", () => {
     const tasks = [task("p1", "planned"), task("p2", "planned"), task("p3", "planned"), task("p4", "planned"), task("run", "running", "r1"), task("asks", "running", "r2"), task("done", "done")];
     expect(upNext(tasks, asking(["r2"])).map((t) => t.id)).toEqual(["asks", "run", "p1", "p2", "p3", "p4"]);
+  });
+
+  it("keeps what failed or was stopped apart, and a retry ahead of what waits", () => {
+    const tasks = [task("ok", "done"), task("bad", "failed"), task("halted", "stopped"), task("p1", "planned"), task("p2", "planned")];
+    expect(unfinished(tasks).map((t) => t.id)).toEqual(["bad", "halted"]);
+    expect(aheadOfQueue(tasks.filter((t) => t.id !== "bad"), task("bad", "planned")).map((t) => t.id)).toEqual(["ok", "halted", "bad", "p1", "p2"]);
+    expect(aheadOfQueue([task("ok", "done")], task("bad", "planned")).map((t) => t.id), "with nothing waiting, it simply goes last").toEqual(["ok", "bad"]);
   });
 });

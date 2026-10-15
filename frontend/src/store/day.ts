@@ -8,6 +8,7 @@ import { alreadyNote, ownTask, parseDay, ready, savedTasks, trimmed, type Area, 
 import { documentPrompt, missing, writtenOf } from "@/lib/documents";
 import type { Choice } from "@/lib/flow";
 import { readSaved } from "@/lib/storage";
+import { aheadOfQueue } from "@/lib/attention";
 import { useApp } from "./app";
 import { useArmy } from "./army";
 import { companyAgent, useCompany } from "./company";
@@ -287,7 +288,7 @@ export const useDay = create<DayState>((set, get) => {
     retry: (projectId, id) => {
       const task = day(projectId).tasks.find((t) => t.id === id && (t.status === "failed" || t.status === "stopped"));
       if (!task) return;
-      patch(projectId, (d) => ({ tasks: [...d.tasks.filter((t) => t.id !== id), { ...task, status: "planned", result: "" }] }));
+      patch(projectId, (d) => ({ tasks: aheadOfQueue(d.tasks.filter((t) => t.id !== id), { ...task, status: "planned", result: "" }) }));
       void get().run(projectId);
     },
   };

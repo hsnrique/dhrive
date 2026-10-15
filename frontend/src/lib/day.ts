@@ -169,8 +169,14 @@ export function taskPrompt(task: Task, company: string, agent?: Agent, lately = 
 
 const count = (n: number, what: string) => `${n} ${what}${n === 1 ? "" : "s"}`;
 
-// Where the company stands, in a line for the top of its page.
+// Where the company stands, in a line for the top of its page, with what failed on the end of it.
 export function standing(tasks: Task[], first: boolean): { live: boolean; text: string } {
+  const now = doing(tasks, first);
+  const failed = tasks.filter((t) => t.status === "failed").length;
+  return failed ? { ...now, text: `${now.text} · ${failed} failed` } : now;
+}
+
+function doing(tasks: Task[], first: boolean): { live: boolean; text: string } {
   const live = tasks.some((t) => t.status === "running");
   const queued = tasks.filter((t) => t.status === "planned").length;
   const suggested = tasks.filter((t) => t.status === "suggested").length;
