@@ -53,10 +53,11 @@
   --code-keyword: #8fb8ff;
   --code-string: #a8d8a0;
   --code-number: #e6b673;
-  --code-comment: rgba(242, 242, 242, 0.42);
+  --code-comment: rgba(242, 242, 242, 0.52);
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.14);
-  --ring: rgba(255, 255, 255, 0.32);
+  /* A focused field's line: 0.5 is the least that reads at 3:1 against every surface. */
+  --ring: rgba(255, 255, 255, 0.5);
   --radius: 4px;
 }
 
@@ -169,8 +170,10 @@
     outline: 2px solid rgba(242, 242, 242, 0.55);
     outline-offset: 2px;
   }
+  /* A text field shows focus with its own line (--ring) or its composer's, never the page's
+     outline around the caret; a checkbox keeps the outline, it has nothing else. */
   textarea:focus-visible,
-  input:focus-visible {
+  input:not([type="checkbox"], [type="radio"], [type="range"]):focus-visible {
     outline: none;
   }
   ::-webkit-scrollbar {

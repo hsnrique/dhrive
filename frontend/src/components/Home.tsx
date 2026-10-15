@@ -29,7 +29,7 @@ export function Home() {
             <button type="button" className="mt-8 flex items-center gap-2 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground" onClick={() => void openFolder()}>
               <FolderOpen className="h-3.5 w-3.5" strokeWidth={1.75} />
               Or open a project you already have
-              <kbd className="font-sans text-[11px] text-muted-foreground/80">⌘O</kbd>
+              <kbd className="font-sans text-[11px] text-muted-foreground">⌘O</kbd>
             </button>
             )}
           </>

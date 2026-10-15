@@ -16,7 +16,7 @@ export function TaskComposer({ projectId, disabled }: { projectId: string; disab
     if (useDay.getState().add(projectId, said, area)) setSaid("");
   };
   return (
-    <li className="grid gap-2 rounded-xl border border-dashed border-border px-3 py-1.5 transition-colors focus-within:border-white/25">
+    <li className="grid gap-2 rounded-xl border border-dashed border-border px-3 py-1.5 transition-colors focus-within:border-ring">
       <div className="flex items-start gap-2.5">
         <Plus className="mt-[5px] h-[18px] w-[18px] flex-none p-0.5 text-muted-foreground" />
         <textarea

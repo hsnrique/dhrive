@@ -36,7 +36,7 @@ function Composer({ project, busy }: { project: Project; busy: boolean }) {
     setSaid("");
   };
   return (
-    <div className="flex items-end gap-2 rounded-2xl border border-border bg-card px-3 py-2 transition-colors focus-within:border-white/25">
+    <div className="flex items-end gap-2 rounded-2xl border border-border bg-card px-3 py-2 transition-colors focus-within:border-ring">
       <textarea
         value={said}
         rows={Math.min(5, said.split("\n").length)}

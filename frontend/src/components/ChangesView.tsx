@@ -20,7 +20,7 @@ const STATUS_MARK: Record<FileChange["status"], string> = { added: "A", modified
 const LINE_CLASS: Record<DiffLine["kind"], string> = {
   add: "text-diff-add bg-diff-add/[0.07]",
   remove: "text-diff-remove bg-diff-remove/[0.07]",
-  hunk: "text-muted-foreground/70",
+  hunk: "text-muted-foreground",
   same: "text-foreground/70",
 };
 

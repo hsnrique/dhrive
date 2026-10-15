@@ -173,7 +173,7 @@ function ProjectGroup({ project, collapsed, onToggle }: { project: Project; coll
             ),
           )}
           {items.length > VISIBLE && (
-            <button type="button" className="rounded-md py-1 pl-[35px] text-left text-[11.5px] text-muted-foreground/80 transition-colors hover:text-foreground" onClick={() => setExpanded((value) => !value)}>
+            <button type="button" className="rounded-md py-1 pl-[35px] text-left text-[11.5px] text-muted-foreground transition-colors hover:text-foreground" onClick={() => setExpanded((value) => !value)}>
               {shown.length < items.length ? `Show ${items.length - shown.length} more` : "Show less"}
             </button>
           )}

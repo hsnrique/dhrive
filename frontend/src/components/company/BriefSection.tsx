@@ -47,7 +47,7 @@ export function BriefSection({ heading, hint, example, value, drafting, onChange
           spellCheck
           className={cn(
             "-mx-3 w-[calc(100%+1.5rem)] resize-none overflow-hidden rounded-xl border border-transparent bg-transparent px-3 py-2 text-[14.5px] leading-[1.65] outline-none transition-colors",
-            "placeholder:text-muted-foreground hover:bg-hover focus:border-border focus:bg-black/30",
+            "placeholder:text-muted-foreground hover:bg-hover focus:border-ring focus:bg-black/30",
           )}
           onChange={(e) => onChange(e.target.value)}
         />

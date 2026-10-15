@@ -98,7 +98,7 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
         ) : !open && summary && (
           <div className="flex min-w-0 items-baseline gap-2">
             <p className={cn("min-w-0 flex-1 truncate text-[12px]", task.status === "failed" ? "text-failure" : "text-muted-foreground")}>{summary}</p>
-            {task.spent && <span className="flex-none font-mono text-[11px] text-muted-foreground/70" title={spendDetail(task.spent)}>{spendLine(task.spent)}</span>}
+            {task.spent && <span className="flex-none font-mono text-[11px] text-muted-foreground" title={spendDetail(task.spent)}>{spendLine(task.spent)}</span>}
           </div>
         )}
         {open && (editable ? (

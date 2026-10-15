@@ -27,7 +27,7 @@ export function Switch({ on, label, title, onChange }: SwitchProps) {
 function SwitchTrack({ on }: { on: boolean }) {
   return (
     <span className={cn("relative block h-4 w-7 flex-none rounded-full transition-colors duration-200", on ? "bg-foreground/85" : "bg-white/15")}>
-      <span className={cn("absolute left-0 top-0.5 h-3 w-3 rounded-full bg-background shadow-[0_1px_2px_rgba(0,0,0,0.4)] transition-transform duration-200", on ? "translate-x-3.5" : "translate-x-0.5")} />
+      <span className={cn("absolute left-0 top-0.5 h-3 w-3 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.4)] transition duration-200", on ? "translate-x-3.5 bg-background" : "translate-x-0.5 bg-foreground/60")} />
     </span>
   );
 }

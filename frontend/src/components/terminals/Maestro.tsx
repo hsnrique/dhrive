@@ -52,7 +52,7 @@ function PartCard({ session, part, clis, onOpen }: { session: string; part: Part
   return (
     <div className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-border bg-terminal p-2.5">
       <div className="flex items-center gap-1">
-        <input aria-label="Title" value={part.title} className="min-w-0 flex-1 bg-transparent text-[12.5px] font-medium outline-none" onChange={(e) => edit(session, part.id, { title: e.target.value })} />
+        <input aria-label="Title" value={part.title} className="-mx-1 min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1 text-[12.5px] font-medium outline-none transition-colors hover:border-border focus:border-ring" onChange={(e) => edit(session, part.id, { title: e.target.value })} />
         <button type="button" aria-label="Read and edit" title="Read and edit" className={iconButton} onClick={onOpen}>
           <Maximize2 className="h-3 w-3" />
         </button>
@@ -75,7 +75,7 @@ function PartDialog({ session, part, clis, onClose }: { session: string; part: P
   return (
     <Dialog label={part.title} onClose={onClose} className="flex max-h-full max-w-[760px] flex-col gap-3 p-4">
       <div className="flex items-center gap-2">
-        <input aria-label="Title" value={part.title} className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold tracking-tight outline-none" onChange={(e) => edit(session, part.id, { title: e.target.value })} />
+        <input aria-label="Title" value={part.title} className="-mx-1 min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1 text-[15px] font-semibold tracking-tight outline-none transition-colors hover:border-border focus:border-ring" onChange={(e) => edit(session, part.id, { title: e.target.value })} />
         <button type="button" aria-label="Close" className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={onClose}>
           <X className="h-4 w-4" />
         </button>
@@ -123,7 +123,7 @@ function Brief({ session, clis }: { session: string; clis: Cli[] }) {
     el.style.height = `${Math.min(el.scrollHeight, MAX_HEIGHT)}px`;
   }, [brief]);
   return (
-    <div className="rounded-2xl border border-border bg-card p-2">
+    <div className="rounded-2xl border border-border bg-card p-2 transition-colors focus-within:border-ring">
       <textarea
         ref={area}
         autoFocus
