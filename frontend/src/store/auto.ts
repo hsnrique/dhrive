@@ -27,6 +27,7 @@ export const OFF: Auto = { until: null, ended: null };
 const NOTHING = "Nothing worth doing right now";
 
 const STUCK = "Its next tasks can't start";
+const FINISHING = "what's running finishes first";
 
 // What a round can still move: tasks running, and planned ones that can start now or once what they
 // wait for is done. One stuck behind a failed or stopped task isn't open; counting it gave a round
@@ -51,6 +52,7 @@ interface AutoState {
   byProject: Record<string, Auto>;
   start: (projectId: string, hours: number) => void;
   stop: (projectId: string) => void;
+  finish: (projectId: string) => void;
 }
 
 export const useAuto = create<AutoState>((set, get) => {
@@ -116,6 +118,12 @@ export const useAuto = create<AutoState>((set, get) => {
       end(projectId, null);
       useDay.getState().stopPlan(projectId);
       useDay.getState().stop(projectId);
+    },
+    // The gentler stop: nothing new starts, and what's running lands as it would have.
+    finish: (projectId) => {
+      end(projectId, FINISHING);
+      useDay.getState().stopPlan(projectId);
+      useDay.getState().hold(projectId);
     },
   };
 });

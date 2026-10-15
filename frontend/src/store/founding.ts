@@ -29,10 +29,14 @@ interface FoundingState {
   projectId: string | null;
   error: string | null;
   start: (idea: string, ask: boolean) => Promise<void>;
+  // The company exists but its first delivery wasn't planned (it failed or was stopped): plan it again there.
+  replan: () => Promise<void>;
   stop: () => void;
   reset: () => void;
 }
 
+// Said as it is, not as an error: the owner asked for it.
+export const STOPPED = "Stopped.";
 const IDLE = { phase: "idle" as Phase, idea: "", ask: false, name: "", runId: null, projectId: null, error: null };
 
 export const useFounding = create<FoundingState>((set, get) => {
@@ -61,6 +65,20 @@ export const useFounding = create<FoundingState>((set, get) => {
     return project;
   };
 
+  // Its first delivery planned, then the company opened; also what planning again runs, in the
+  // company that exists already.
+  const deliver = async (mine: number, projectId: string, ask: boolean) => {
+    set({ phase: "planning", runId: null, error: null });
+    await useCompany.getState().load(projectId);
+    if (mine !== attempt) return;
+    useDay.getState().setAsk(projectId, ask);
+    await useDay.getState().plan(projectId, FIRST_DELIVERY);
+    if (mine !== attempt) return;
+    set({ ...IDLE });
+    useCompany.getState().open(projectId);
+  };
+  const failed = (mine: number, error: unknown) => mine === attempt && set({ phase: "failed", runId: null, error: error instanceof Error ? error.message : String(error) });
+
   return {
     ...IDLE,
     start: async (idea, ask) => {
@@ -71,22 +89,25 @@ export const useFounding = create<FoundingState>((set, get) => {
         const project = await name(mine, idea);
         // Each await is a moment the owner may have pressed Stop; past one, nothing more starts.
         if (mine !== attempt) return;
-        set({ phase: "planning", runId: null });
-        await useCompany.getState().load(project.id);
-        if (mine !== attempt) return;
-        useDay.getState().setAsk(project.id, ask);
-        await useDay.getState().plan(project.id, FIRST_DELIVERY);
-        if (mine !== attempt) return;
-        set({ ...IDLE });
-        useCompany.getState().open(project.id);
+        await deliver(mine, project.id, ask);
       } catch (error) {
-        if (mine === attempt) set({ phase: "failed", runId: null, error: error instanceof Error ? error.message : String(error) });
+        failed(mine, error);
+      }
+    },
+    replan: async () => {
+      const { phase, projectId, ask } = get();
+      if (phase !== "failed" || !projectId) return;
+      const mine = ++attempt;
+      try {
+        await deliver(mine, projectId, ask);
+      } catch (error) {
+        failed(mine, error);
       }
     },
     stop: () => {
       const { runId, projectId } = get();
       attempt++;
-      set({ phase: "failed", runId: null, error: "Stopped." });
+      set({ phase: "failed", runId: null, error: STOPPED });
       if (runId) void stopRun(runId);
       if (projectId) useDay.getState().stopPlan(projectId);
     },

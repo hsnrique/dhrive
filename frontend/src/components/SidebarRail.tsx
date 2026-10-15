@@ -57,10 +57,10 @@ function CompanyChip({ project }: { project: Project }) {
   const active = page === "company" ? companyId === project.id : page === null && conversationProject === project.id;
   const { working, needsYou } = useCompanyPulse(project.id);
   return (
-    <Tip label={needsYou ? `${project.name} · needs your OK` : working ? `${project.name} · working` : project.name}>
+    <Tip label={needsYou ? `${project.name} · ${needsYou}` : working ? `${project.name} · working` : project.name}>
       <button
         type="button"
-        aria-label={needsYou ? `${project.name}, needs your OK` : working ? `${project.name}, working` : project.name}
+        aria-label={needsYou ? `${project.name}, ${needsYou}` : working ? `${project.name}, working` : project.name}
         aria-current={active ? "page" : undefined}
         className={cn("relative flex h-10 w-10 items-center justify-center rounded-xl text-[12.5px] font-medium transition-colors", active ? "bg-foreground text-background" : "bg-white/[0.06] text-foreground/80 hover:bg-pressed hover:text-foreground")}
         onClick={() => useCompany.getState().open(project.id)}

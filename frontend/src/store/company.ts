@@ -170,3 +170,9 @@ export const companyAgent = (projectId?: string): Choice | null => {
 export const useAgentOf = (projectId: string) => useCompany((s) => s.agents[projectId] ?? s.choice);
 
 export const useCompanyOf = (projectId: string) => useCompany((s) => s.byProject[projectId] ?? IDLE);
+
+// A folder the owner picked, opened as its company: where every project starts.
+export async function openFolderAsCompany() {
+  const id = await useConversations.getState().openFolder();
+  if (id) useCompany.getState().open(id);
+}

@@ -117,6 +117,27 @@ describe("founding a company", () => {
     expect(useFounding.getState().phase).toBe("failed");
   });
 
+  it("a company stopped before its first delivery plans it again where it is, not as a second company", async () => {
+    void useFounding.getState().start("", false);
+    await settle();
+    reply(FOUNDED);
+    await settle();
+    await settle();
+    expect(last().request.step).toBe("day");
+    useFounding.getState().stop();
+    await settle();
+    expect(useFounding.getState()).toMatchObject({ phase: "failed", projectId: "p9" });
+    void useFounding.getState().replan();
+    await settle();
+    expect(foundCompany, "no second folder").toHaveBeenCalledTimes(1);
+    expect(last().request).toMatchObject({ step: "day", folder: "/home/dhrive/lapse" });
+    reply('[{"title": "Waitlist", "area": "marketing", "cli": "claude", "prompt": "Draft the waitlist post"}]');
+    await settle();
+    expect(useFounding.getState().phase).toBe("idle");
+    expect(useCompany.getState().openId).toBe("p9");
+    useFounding.getState().reset();
+  });
+
   it("a stop ends the step in flight and goes no further", async () => {
     void useFounding.getState().start("", false);
     await settle();

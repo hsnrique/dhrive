@@ -8,6 +8,7 @@ import { useDraft, useMaestro } from "@/store/maestro";
 import { usePaneStatus } from "@/store/pane-status";
 import { columnsFor, MAX_PANES, useTerminals, type Pane, type TerminalSession } from "@/store/terminals";
 import { buttonVariants } from "@/components/ui/button";
+import { InlineConfirm } from "@/components/ui/inline-confirm";
 import { InlineEdit } from "../InlineEdit";
 import { ChoicePicker } from "../ModelPicker";
 import { Maestro } from "./Maestro";
@@ -52,19 +53,37 @@ function CopySwitch({ projectId, pane, branch }: { projectId: string; pane: Pane
   );
 }
 
+function EndingWork({ what, onYes, onNo }: { what: "close" | "restart"; onYes: () => void; onNo: () => void }) {
+  return (
+    <div className="flex h-9 flex-none items-center border-b border-border px-2">
+      <InlineConfirm question={what === "close" ? "Close it? Its CLI stops mid-work." : "Start it again? Its CLI stops mid-work."} action={what === "close" ? "Close" : "Restart"} onYes={onYes} onNo={onNo} className="min-w-0 flex-1" />
+    </div>
+  );
+}
+
+// Closing or restarting a pane whose CLI is at work (or waiting on the owner) ends that work, so it
+// asks first; an idle or ended one goes at once.
 function PaneHeader({ pane, projectId, clis, branch }: { pane: Pane; projectId: string; clis: Cli[]; branch: string | null }) {
   const { change, restart, remove } = useTerminals.getState();
   const title = usePaneStatus((s) => s.byPane[pane.id]?.title ?? "");
+  const busy = usePaneStatus((s) => ["working", "needs-you"].includes(s.byPane[pane.id]?.state ?? "idle"));
+  const [asking, setAsking] = useState<"close" | "restart" | null>(null);
+  const close = () => {
+    remove(pane.id);
+    void dropCopy(projectId, pane);
+  };
+  const ending = { close, restart: () => (setAsking(null), restart(pane.id)) };
+  if (asking) return <EndingWork what={asking} onYes={ending[asking]} onNo={() => setAsking(null)} />;
   return (
     <div className="flex h-9 flex-none items-center gap-1.5 border-b border-border px-1.5">
       <ChoicePicker choice={{ engine: pane.engine, model: pane.model }} onChoose={({ engine, model }) => change(pane.id, { engine, model })} label="Pane CLI" engines={clis.map((cli) => cli.engine)} down />
       <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground" title={title}>{title}</span>
       <StatusMarker pane={pane.id} />
       <CopySwitch projectId={projectId} pane={pane} branch={branch} />
-      <button type="button" title="Start it again" aria-label="Restart" className={tool} onClick={() => restart(pane.id)}>
+      <button type="button" title="Start it again" aria-label="Restart" className={tool} onClick={() => (busy ? setAsking("restart") : restart(pane.id))}>
         <RotateCw className="h-3.5 w-3.5" />
       </button>
-      <button type="button" title="Close this pane" aria-label="Close" className={tool} onClick={() => { remove(pane.id); void dropCopy(projectId, pane); }}>
+      <button type="button" title="Close this pane" aria-label="Close" className={tool} onClick={() => (busy ? setAsking("close") : close())}>
         <X className="h-3.5 w-3.5" />
       </button>
     </div>

@@ -106,10 +106,10 @@ function ProjectFiles({ folder, onOpen }: { folder: string; onOpen: () => void }
   );
 }
 
-function InstructionsDialog({ open, folder, onClose }: { open: Open; folder: string; onClose: () => void }) {
+function InstructionsDialog({ open, folder, onClose }: { open?: Open; folder: string; onClose: () => void }) {
   const [scope, setScope] = useState<Scope>("every");
   const everyProject = useInstructions((s) => s.everyProject);
-  const here = useApp((s) => (open.conversationId ? (s.threads[open.conversationId]?.instructions ?? "") : readDraft(instructionsKeyOf(open))));
+  const here = useApp((s) => (!open ? "" : open.conversationId ? (s.threads[open.conversationId]?.instructions ?? "") : readDraft(instructionsKeyOf(open))));
   const hint = SCOPES.find((s) => s.id === scope)!.hint;
   return (
     <Dialog label="Instructions" onClose={onClose} className="grid max-w-[640px] gap-3 p-4">
@@ -121,16 +121,16 @@ function InstructionsDialog({ open, folder, onClose }: { open: Open; folder: str
         </button>
       </div>
       <div className="flex items-center gap-3">
-        <div role="tablist" className="flex rounded-lg border border-border p-0.5">
+        {open && <div role="tablist" className="flex rounded-lg border border-border p-0.5">
           {SCOPES.map((s) => (
             <button key={s.id} type="button" role="tab" aria-selected={scope === s.id} className={cn("rounded-md px-2.5 py-1 text-[12px] text-muted-foreground transition-colors hover:text-foreground", scope === s.id && "bg-selected text-foreground")} onClick={() => setScope(s.id)}>
               {s.label}
             </button>
           ))}
-        </div>
+        </div>}
         <p className="min-w-0 truncate text-[11.5px] text-muted-foreground">{hint}</p>
       </div>
-      {scope === "every" ? (
+      {scope === "every" || !open ? (
         everyProject === null ? <p className="py-10 text-center text-[12px] text-muted-foreground">Loading…</p> : <Editor key="every" initial={everyProject} save={useInstructions.getState().save} />
       ) : (
         <Editor key={`here:${open.conversationId ?? instructionsKeyOf(open)}`} initial={here} save={saveHere(open)} />
@@ -140,11 +140,12 @@ function InstructionsDialog({ open, folder, onClose }: { open: Open; folder: str
   );
 }
 
-// The header button: brighter when there are instructions this conversation's agents will get.
-export function InstructionsButton({ open, folder }: { open: Open; folder: string }) {
+// The header button: brighter when there are instructions this conversation's agents will get. On
+// a company's page there's no conversation: it opens what every agent follows.
+export function InstructionsButton({ open, folder }: { open?: Open; folder: string }) {
   const [shown, setShown] = useState(false);
   const everyProject = useInstructions((s) => Boolean(s.everyProject?.trim()));
-  const here = useApp((s) => Boolean(open.conversationId && s.threads[open.conversationId]?.instructions?.trim()));
+  const here = useApp((s) => Boolean(open?.conversationId && s.threads[open.conversationId]?.instructions?.trim()));
   useEffect(() => void useInstructions.getState().load(), []);
   return (
     <>

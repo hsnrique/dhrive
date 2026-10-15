@@ -1,5 +1,5 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { ArrowUpRight, Check, Globe, Hammer, Infinity as Loop, RotateCcw, X, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, Check, CloudUpload, Globe, Hammer, Infinity as Loop, RotateCcw, type LucideIcon, X } from "lucide-react";
 
 import { FIX_TITLE, fixPrompt } from "@/lib/build";
 import type { Entry } from "@/lib/log";
@@ -16,10 +16,11 @@ import { Markdown } from "../Markdown";
 // with what can be done about it: a failed task tried again, a published site opened, a failed build
 // handed to the agent to fix and built again once it has.
 
-const EVENTS: Record<"done" | "failed" | "published" | "auto" | "build", { Icon: LucideIcon; label: string }> = {
+const EVENTS: Record<"done" | "failed" | "published" | "saved" | "auto" | "build", { Icon: LucideIcon; label: string }> = {
   done: { Icon: Check, label: "Done" },
   failed: { Icon: X, label: "Failed" },
   published: { Icon: Globe, label: "Published" },
+  saved: { Icon: CloudUpload, label: "Saved" },
   auto: { Icon: Loop, label: "Auto mode" },
   build: { Icon: Hammer, label: "Build failed" },
 };

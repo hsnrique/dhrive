@@ -63,7 +63,8 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
   const more = editable ? task.prompt !== task.title : Boolean(task.result);
   const toggle = () => more && setOpen((v) => !v);
   const running = task.status === "running" && task.runId;
-  // A card with a second line shows its actions over it; one with nothing more to say keeps them there.
+  // A card with a second line shows its actions over it; one with nothing more to say keeps them
+  // there, and so does one that didn't finish: trying again is what it's there for.
   const line = running || (task.note && task.status === "planned") || waits.length > 0 || (!open && summary);
   // The card's own buttons act without folding or unfolding it.
   const own = (e: React.MouseEvent) => e.stopPropagation();
@@ -113,7 +114,7 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
           <div className="min-w-0 [&_p]:text-[12.5px]"><Markdown source={task.result} /></div>
         ))}
         {(editable || again) && (
-          <div className={open || !line ? "flex flex-wrap items-center gap-1.5" : revealed("bg-card")} onClick={own}>
+          <div className={open || !line || again ? "flex flex-wrap items-center gap-1.5" : revealed("bg-card")} onClick={own}>
             {editable && <ChoicePicker choice={{ engine: task.engine, model: task.model, effort: task.effort }} onChoose={(choice) => edit(projectId, task.id, choice)} label={`CLI for ${task.title}`} engines={engines} align="right" down tunable />}
             {editable && (
               <button type="button" className={action} onClick={() => drop(projectId, task.id)}>
@@ -125,6 +126,12 @@ export function TaskRow({ projectId, task, engines, tasks = [] }: { projectId: s
               <button type="button" className={action} onClick={() => retry(projectId, task.id)}>
                 <RotateCcw className="h-3 w-3" />
                 Try again
+              </button>
+            )}
+            {again && (
+              <button type="button" className={action} onClick={() => drop(projectId, task.id)}>
+                <X className="h-3 w-3" />
+                Drop
               </button>
             )}
           </div>
