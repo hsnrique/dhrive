@@ -163,7 +163,7 @@ pub async fn run_checks(app: tauri::AppHandle, project: String, run_id: String, 
     }
     let env = crate::env::of_project(&project);
     let reporter = crate::events::make_reporter(&app, run_id.clone());
-    crate::cancel::begin(&run_id);
+    crate::cancel::start(&run_id)?;
     tauri::async_runtime::spawn_blocking(move || run(&folder, &env, &run_id, &reporter)).await.map_err(|e| e.to_string())?
 }
 

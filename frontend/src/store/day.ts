@@ -162,7 +162,8 @@ export const useDay = create<DayState>((set, get) => {
     for (;;) {
       while (running.size < PARALLEL && !halted.has(projectId)) {
         const next = await nextToStart(projectId, { day, patchTask, setHeld });
-        if (!next) break;
+        // Reading the plans takes a moment; a stop pressed meanwhile starts nothing.
+        if (!next || halted.has(projectId)) break;
         // Marked before it starts, so the next pick never takes it again.
         patchTask(projectId, next.id, { status: "running" });
         const run: Promise<void> = runTask(projectId, next, true).finally(() => running.delete(run));

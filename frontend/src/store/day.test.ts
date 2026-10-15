@@ -150,6 +150,25 @@ describe("a company's day", () => {
     expect(day().tasks.map((t) => t.status), "standing down stops every one of them").toEqual(["stopped", "stopped", "done", "stopped"]);
   });
 
+  it("a stop while an army's copies are being made holds: no task comes back to running, no CLI starts", async () => {
+    const { armyPrepare, runStep } = await import("@/lib/api");
+    const made: (() => void)[] = [];
+    vi.mocked(armyPrepare).mockImplementation((_project: string, task: string) => new Promise((done) => made.push(() => done(`/planilha/.dhrive/${task}`))));
+    useArmy.setState({ byProject: { [P]: [newAgent("Back", "", { engine: "claude-code", model: "opus" })!] } });
+    useDay.setState({ byProject: { [P]: { ...EMPTY_DAY } } });
+    void useDay.getState().plan(P);
+    reply(JSON.stringify(["One", "Two"].map((title) => ({ title, area: "code", prompt: `Do ${title}` }))));
+    await settle();
+    await settle();
+    vi.mocked(runStep).mockClear();
+    useDay.getState().stop(P);
+    made.forEach((done) => done());
+    await windDown();
+    expect(day().tasks.map((t) => t.status)).toEqual(["stopped", "stopped"]);
+    expect(runStep, "the copies were made after the stop, and nothing ran in them").not.toHaveBeenCalled();
+    vi.mocked(armyPrepare).mockImplementation(async (_project: string, task: string) => `/planilha/.dhrive/${task}`);
+  });
+
   it("the General's order holds: a task waiting for another starts only once that one has landed", async () => {
     useArmy.setState({ byProject: { [P]: [newAgent("Back", "", { engine: "claude-code", model: "opus" })!] } });
     useDay.setState({ byProject: { [P]: { ...EMPTY_DAY } } });

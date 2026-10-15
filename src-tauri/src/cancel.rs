@@ -36,6 +36,16 @@ pub fn begin(run_id: &str) {
     }
 }
 
+// For a run with an id of its own (every step and every check gets a fresh one): a stop that came
+// before it started, while dhrive was still checking the account or the model, holds, and the run
+// never starts. `begin` stays for keys that are reused on purpose, like a model's pull.
+pub fn start(run_id: &str) -> Result<(), String> {
+    if is_cancelled(run_id) {
+        return Err("Stopped.".into());
+    }
+    Ok(())
+}
+
 pub fn is_cancelled(run_id: &str) -> bool {
     cancelled().lock().map(|set| set.contains(run_id)).unwrap_or(false)
 }
@@ -58,4 +68,18 @@ pub fn stop(run_id: &str) {
 #[tauri::command]
 pub fn stop_run(run_id: String) {
     stop(&run_id);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_stop_before_a_run_starts_holds_it() {
+        stop("early-stop");
+        assert_eq!(start("early-stop"), Err("Stopped.".into()));
+        assert_eq!(start("never-stopped"), Ok(()));
+        begin("early-stop");
+        assert_eq!(start("early-stop"), Ok(()), "a reused key is cleared on purpose by begin");
+    }
 }

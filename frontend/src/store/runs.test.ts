@@ -219,6 +219,38 @@ describe("carrying out requests", () => {
     expect(vi.mocked(runStep).mock.lastCall![0]).toMatchObject({ step: "chat", resume: "s-1" });
   });
 
+  it("a stop while it waits for a compaction holds: the run never starts, and stays stopped", async () => {
+    const { runStep } = await import("@/lib/api");
+    const { useContextUsage } = await import("./context");
+    reset("chat");
+    useApp.setState({ threads: { ...useApp.getState().threads, pa: { ...emptyThread(), sessions: { "claude-code": "s-1" } } } });
+    void useContextUsage.getState().compact({ engine: "claude-code", session: "s-1", folder: "/a" });
+    vi.mocked(runStep).mockClear();
+    void send("pa", "what changed?");
+    await flush();
+    stop("pa");
+    compacted.shift()!({ used: 9000, max: 200_000, parts: [], autoCompactAt: null });
+    await flush();
+    await flush();
+    expect(runStep, "stopped before it started").not.toHaveBeenCalled();
+    expect(stagesOf("pa").map((s) => s.status)).toEqual(["stopped"]);
+  });
+
+  it("a result that lands after a stop doesn't turn the stage back to done", async () => {
+    reset("chat");
+    void send("pa", "what changed?");
+    await flush();
+    const [runId, call] = [...pending].pop()!;
+    // The CLI finished in the same instant the owner pressed Stop: its answer still arrives.
+    const { stopRun } = await import("@/lib/api");
+    vi.mocked(stopRun).mockImplementationOnce(async () => undefined);
+    stop("pa");
+    pending.delete(runId);
+    call.resolve({ output: "too late", usage: null, sessionId: null, needsAnswers: false, blocked: [] });
+    await flush();
+    expect(stagesOf("pa").map((s) => [s.status, s.output])).toEqual([["stopped", ""]]);
+  });
+
   it("a request sent while another runs waits its turn, and can be taken back", async () => {
     const { runStep } = await import("@/lib/api");
     reset("chat");

@@ -24,6 +24,9 @@ interface Deps {
 }
 
 const projectOf = (projectId: string) => useApp.getState().projects.find((p) => p.id === projectId);
+
+// Thrown when a step would start for a run the owner stopped (or retried) during the await before it.
+class Stopped extends Error {}
 const armyOf = (projectId: string) => useArmy.getState().byProject[projectId] ?? [];
 
 export function taskRunner({ day, patchTask }: Deps) {
@@ -36,12 +39,19 @@ export function taskRunner({ day, patchTask }: Deps) {
   // retry, which change the task's, end it; `ours` says whether this run is still the task's.
   const begin = (projectId: string, task: Task, folder: string) => {
     let runId = "";
+    const now = () => day(projectId).tasks.find((t) => t.id === task.id);
+    const ours = () => now()?.runId === runId;
+    // Every step starts here, so this is where a stop pressed during any await (an army's copy being
+    // made, its changes being read, a sync) takes hold: a stopped task never starts its next step and
+    // never comes back to "running". Before its first step it must still be up next, or picked.
     const fresh = () => {
+      const current = now();
+      const live = runId ? current?.runId === runId : current?.status === "planned" || current?.status === "running";
+      if (!live) throw new Stopped("Stopped.");
       runId = crypto.randomUUID();
       patchTask(projectId, task.id, { status: "running", runId });
       return runId;
     };
-    const ours = () => day(projectId).tasks.find((t) => t.id === task.id)?.runId === runId;
     // Every run's tokens go on the task, by what it was doing, even when the run was stopped meanwhile:
     // they were spent all the same.
     const spend = (on: SpentOn, result: StepResult) => {
@@ -154,7 +164,7 @@ export function taskRunner({ day, patchTask }: Deps) {
     try {
       await (army ? asArmy(run, prompt) : alone(run, prompt));
     } catch (error) {
-      if (!run.ours()) return;
+      if (error instanceof Stopped || !run.ours()) return;
       if (army) await armyDiscard(projectId, task.id, task.title).catch(() => undefined);
       finish(projectId, task, "failed", String(error));
     }

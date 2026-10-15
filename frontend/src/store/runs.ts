@@ -26,6 +26,12 @@ function stageOf(conversationId: string, messageId: string, step: Step) {
   return message?.[step] ?? null;
 }
 
+// Whether the stage still runs as this run: not stopped, not retried under another id meanwhile.
+function stillOurs(conversationId: string, messageId: string, step: Step, runId: string) {
+  const now = stageOf(conversationId, messageId, step);
+  return now?.status === "running" && now.runId === runId;
+}
+
 async function runStage(conversationId: string, message: RunMessage, step: Step): Promise<StepResult | null> {
   const { threads, setThread } = useApp.getState();
   const folder = folderOf(conversationId);
@@ -45,9 +51,14 @@ async function runStage(conversationId: string, message: RunMessage, step: Step)
     }
     // A compaction the owner started on this session ends first; both at once would fight over it.
     if (resume) await compactionOf(stage.engine, resume);
+    // Stopped while it waited for the compaction: it never starts.
+    if (!stillOurs(conversationId, message.id, step, runId)) return null;
     const wire = message.chat ? "chat" : step;
     const instructions = threads[conversationId]?.instructions;
     const result = await runStep({ runId, folder, step: wire, engine: stage.engine, model: stage.model, effort: stage.effort, task: message.task, plan, resume, attachments: message.attachments, instructions });
+    // A result that lands after the owner stopped the stage (or retried it) is dropped: "stopped"
+    // never turns into "done", and nothing carries on from it.
+    if (!stillOurs(conversationId, message.id, step, runId)) return null;
     setThread(conversationId, (t) =>
       withSession(updateStage(t, message.id, step, { status: "done", output: result.output, usage: result.usage, blocked: result.blocked?.length ? result.blocked : undefined, endedAt: Date.now() }), stage.engine, result.sessionId),
     );
