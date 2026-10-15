@@ -76,7 +76,7 @@ export function AllowedRules({ project }: { project: Project }) {
   };
   return (
     <div className="relative">
-      <button type="button" title="What Claude may do here without asking" className="flex h-7 items-center gap-1 rounded-md px-2 text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={() => setOpen((v) => !v)}>
+      <button type="button" title="What Claude may do here without asking" aria-label={`${rules.length} always allowed`} aria-expanded={open} className="flex h-7 items-center gap-1 rounded-md px-2 text-[12px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={() => setOpen((v) => !v)}>
         <ShieldCheck className="h-3.5 w-3.5" />
         {rules.length}
       </button>

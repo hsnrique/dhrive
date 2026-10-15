@@ -16,7 +16,7 @@ const nameOf = (tab: Tab, projectName: string) => (tab.path === BROWSER ? "Brows
 
 function Tool({ title, onClick, children, on }: { title: string; onClick: () => void; children: React.ReactNode; on?: boolean }) {
   return (
-    <button type="button" title={title} aria-label={title} className={cn("flex h-6 items-center gap-1 rounded-md px-1.5 text-[11.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground", on && "bg-selected text-foreground")} onClick={onClick}>
+    <button type="button" title={title} aria-label={typeof children === "string" ? undefined : title} aria-pressed={on} className={cn("flex h-6 items-center gap-1 rounded-md px-1.5 text-[11.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground", on && "bg-selected text-foreground")} onClick={onClick}>
       {children}
     </button>
   );

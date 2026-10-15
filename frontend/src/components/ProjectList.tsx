@@ -16,7 +16,7 @@ import { standDown } from "@/store/stand-down";
 import { useTerminals, type TerminalSession } from "@/store/terminals";
 import { EngineMark } from "./EngineMark";
 import { NameInput } from "./InlineEdit";
-import { Confirm, HoverAction, rowClass } from "./SidebarRow";
+import { Confirm, HoverAction, RowPulse, rowClass } from "./SidebarRow";
 import { TerminalsRow } from "./TerminalsRow";
 import { TypeToConfirm } from "./TypeToConfirm";
 import { CompanyRow } from "./company/CompanyRow";
@@ -46,10 +46,10 @@ function ConversationRow({ conversation, active }: { conversation: Conversation;
   if (editing) return <NameInput value={conversation.title} label="Conversation name" onSave={(title) => rename(conversation.id, title)} onDone={() => setEditing(false)} className="ml-[10px] w-[calc(100%-10px)] text-[12.5px]" />;
   return (
     <div className="group relative">
-      <button type="button" title={`${conversation.title}\nDouble-click to rename`} className={cn(rowClass(active), !running && "group-hover:pr-8")} onClick={() => void show(conversation.id)} onDoubleClick={() => setEditing(true)}>
+      <button type="button" title={`${conversation.title}\nDouble-click to rename`} aria-current={active ? "page" : undefined} className={cn(rowClass(active), !running && "group-hover:pr-8")} onClick={() => void show(conversation.id)} onDoubleClick={() => setEditing(true)}>
         {chatMark}
         <span className="min-w-0 flex-1 truncate">{conversation.title}</span>
-        {needsYou ? <span className="h-1.5 w-1.5 flex-none rounded-full bg-attention" title={needsYou} /> : running && <span className="node-live h-1.5 w-1.5 flex-none rounded-full bg-foreground" title="Running" />}
+        <RowPulse needsYou={needsYou} working={running && "Running"} />
       </button>
       {!running && (
         <div className="absolute right-1 top-1/2 -translate-y-1/2">
@@ -74,6 +74,7 @@ function PastRow({ projectId, session, active }: { projectId: string; session: P
       <button
         type="button"
         title={`${session.title}\nFrom ${sessionSource(session)} · ${ago(session.updatedAt, now)} · ${session.messages} messages`}
+        aria-current={active ? "page" : undefined}
         className={cn(rowClass(active), "group-hover:pr-8")}
         onClick={() => startNew(projectId, session)}
       >
@@ -94,7 +95,7 @@ function NewRows({ projectId, drafting, empty }: { projectId: string; drafting: 
   const startNew = useConversations((s) => s.startNew);
   return (
     <>
-      <button type="button" className={rowClass(drafting)} onClick={() => startNew(projectId)}>
+      <button type="button" aria-current={drafting ? "page" : undefined} className={rowClass(drafting)} onClick={() => startNew(projectId)}>
         {chatMark}
         <span className="flex-1 truncate">New conversation</span>
       </button>

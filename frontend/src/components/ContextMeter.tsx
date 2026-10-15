@@ -76,7 +76,7 @@ function Meter({ conversationId, session, folder }: { conversationId: string; se
   const percent = percentOf(seen.value.used, seen.value.max);
   return (
     <div className="relative">
-      <button type="button" title={`${label} session: ${percent}% of its context used`} className="flex h-7 items-center gap-1.5 rounded-md px-1.5 text-[11.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={() => setOpen((v) => !v)}>
+      <button type="button" title={`${label} session: ${percent}% of its context used`} aria-label={`${percent}% of ${label}'s context used`} aria-expanded={open} className="flex h-7 items-center gap-1.5 rounded-md px-1.5 text-[11.5px] text-muted-foreground transition-colors hover:bg-hover hover:text-foreground" onClick={() => setOpen((v) => !v)}>
         <EngineMark engine={session.engine} className="h-3 w-3" />
         <Ring percent={percent} level={fullness(percent)} />
         <span className={cn("font-mono tabular-nums", seen.compacting && "motion-safe:animate-pulse")}>{percent}%</span>
