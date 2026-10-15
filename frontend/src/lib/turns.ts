@@ -14,5 +14,14 @@ export function turns() {
       return before.then(() => release);
     },
     busy: (key: string) => tails.has(key),
+    // The turn at once when nobody holds the key, so a free folder adds no wait at all; null otherwise.
+    takeNow(key: string): (() => void) | null {
+      if (tails.has(key)) return null;
+      let release!: () => void;
+      const tail = new Promise<void>((resolve) => (release = resolve));
+      tails.set(key, tail);
+      void tail.then(() => tails.get(key) === tail && tails.delete(key));
+      return release;
+    },
   };
 }

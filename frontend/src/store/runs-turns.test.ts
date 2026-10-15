@@ -53,7 +53,7 @@ describe("code steps in the same project", () => {
     void send("b1", "add search");
     await flush();
     expect(steps()).toEqual(["/a code", "/b code"]);
-    expect(useApp.getState().live[codeOf("a2").runId!]?.phase).toMatch(/Waiting for another conversation/);
+    expect(useApp.getState().live[codeOf("a2").runId!]?.phase).toMatch(/Waiting for other work in this project/);
     useApp.setState({ mode: "chat", choices: { plan: { engine: "claude-code", model: "" }, code: { engine: "codex", model: "" } } });
     void send("a3", "why is checkout slow?");
     await flush();

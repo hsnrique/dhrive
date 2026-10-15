@@ -5,6 +5,7 @@ import { commitMessage } from "@/lib/commit";
 import { entry } from "@/lib/log";
 import { useApp } from "./app";
 import { companyAgent } from "./company";
+import { inFolder } from "./editing";
 import { useLog } from "./log";
 
 // Each company's code on GitHub, through the owner's gh. Signing in is gh's own browser flow: its
@@ -39,6 +40,12 @@ interface GitHubStore {
   onCode: (code: string) => void;
 }
 
+// A commit takes the folder like any writer, so it never catches a code step halfway.
+const committed = <T,>(projectId: string, save: () => Promise<T>) => {
+  const folder = useApp.getState().projects.find((p) => p.id === projectId)?.folder;
+  return folder ? inFolder(folder, save) : save();
+};
+
 export const useGitHub = create<GitHubStore>((set, get) => {
   const of = (projectId: string) => get().byProject[projectId] ?? UNKNOWN;
   const patch = (projectId: string, change: Partial<GitHub>) => set({ byProject: { ...get().byProject, [projectId]: { ...of(projectId), ...change } } });
@@ -71,7 +78,7 @@ export const useGitHub = create<GitHubStore>((set, get) => {
       const first = !of(projectId).state?.repo;
       patch(projectId, { saving: true, error: null });
       try {
-        const repo = await saveToGithub(projectId, message);
+        const repo = await committed(projectId, () => saveToGithub(projectId, message));
         useLog.getState().add(projectId, entry("published", first ? `the code is on GitHub, private` : "the latest work is saved on GitHub", { url: repo }));
         patch(projectId, { saving: false });
       } catch (error) {
@@ -104,7 +111,7 @@ export const useGitHub = create<GitHubStore>((set, get) => {
       if (!state?.account || !state.repo || saving) return;
       patch(projectId, { saving: true, error: null });
       try {
-        await saveToGithub(projectId);
+        await committed(projectId, () => saveToGithub(projectId));
         patch(projectId, { saving: false, backedUpAt: Date.now() });
       } catch (error) {
         patch(projectId, { saving: false, error: String(error) });

@@ -310,6 +310,22 @@ describe("a company's day", () => {
     await windDown();
   });
 
+  it("a task in the company's folder waits while another writer holds it, such as a conversation's code step", async () => {
+    const { editing } = await import("./editing");
+    const release = await editing.take("/planilha");
+    void useDay.getState().plan(P);
+    reply(PLAN);
+    await settle();
+    useDay.getState().accept(P, day().tasks[0].id);
+    await settle();
+    expect([...pending.values()].filter((p) => p.request.step === "code"), "the folder is taken").toHaveLength(0);
+    release();
+    await settle();
+    expect(last().request).toMatchObject({ step: "code", folder: "/planilha" });
+    reply("Wrote the ads");
+    await windDown();
+  });
+
   it("runs as soon as it's planned, which is how a new day starts", async () => {
     useDay.setState({ byProject: {} });
     expect(day().ask).toBe(false);

@@ -2,11 +2,11 @@ import { allowInProject, answerApproval, notify, runStep, stopRun, undoChanges, 
 import { stagesFor } from "@/lib/flow";
 import { reportsDetails } from "@/lib/names";
 import { outcome } from "@/lib/outcome";
-import { turns } from "@/lib/turns";
 import { activeRun, approved, newRequest, nextUp, queuedIds, sessionFor, toReview, updateStage, withoutRequest, withSession, type RunMessage } from "@/lib/thread";
 import { useApp } from "./app";
 import { compactionOf, useContextUsage } from "./context";
 import { folderOf, useConversations } from "./conversations";
+import { editing, inFolder } from "./editing";
 import { useFiles } from "./files";
 import { usePreview } from "./preview";
 
@@ -17,8 +17,7 @@ import { usePreview } from "./preview";
 // what the tree looks like after it against before, which would mix the two.
 
 const newId = () => crypto.randomUUID();
-const editing = turns();
-const WAITING = "Waiting for another conversation to finish editing this project";
+const WAITING = "Waiting for other work in this project to finish";
 
 
 function stageOf(conversationId: string, messageId: string, step: Step) {
@@ -210,7 +209,7 @@ export async function undoRun(conversationId: string, messageId: string) {
   const folder = folderOf(conversationId);
   if (!thread || !changes || !folder || activeRun(thread)) return;
   try {
-    const undone = await undoChanges(folder, changes);
+    const undone = await inFolder(folder, () => undoChanges(folder, changes));
     setThread(conversationId, (t) => updateStage(t, messageId, "code", { undone }));
     void useFiles.getState().load(folder);
   } catch (error) {

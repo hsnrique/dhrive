@@ -7,6 +7,7 @@ import { entry } from "@/lib/log";
 import { outside, parseReview, reviewFixPrompt, reviewPrompt, territoryPrompt } from "@/lib/review";
 import { useApp } from "./app";
 import { useArmy } from "./army";
+import { inFolder } from "./editing";
 import { companyAgent } from "./company";
 import type { Day } from "./day";
 import { useGitHub } from "./github";
@@ -24,6 +25,9 @@ interface Deps {
 }
 
 const projectOf = (projectId: string) => useApp.getState().projects.find((p) => p.id === projectId);
+
+// The company's own folder (an army task's copy lives inside it).
+const copyOwner = (projectId: string) => projectOf(projectId)?.folder ?? projectId;
 
 // Thrown when a step would start for a run the owner stopped (or retried) during the await before it.
 class Stopped extends Error {}
@@ -132,7 +136,8 @@ export function taskRunner({ day, patchTask }: Deps) {
       const report = await runChecks(run.projectId, run.fresh(), run.task.id);
       if (!run.ours()) return;
       if (!passed(report)) return void (await fail(run, failure(report)));
-      await armyLand(run.projectId, run.task.id, run.task.title);
+      // Merging back writes the company's folder, so it takes the folder like any writer.
+      await inFolder(copyOwner(run.projectId), () => armyLand(run.projectId, run.task.id, run.task.title));
       finish(run.projectId, run.task, "done", result.output);
       await useGitHub.getState().backup(run.projectId);
     });
@@ -149,9 +154,10 @@ export function taskRunner({ day, patchTask }: Deps) {
     if (reviewed) await land(run, copy, reviewed);
   };
 
-  // A task on its own: in the company's folder, done once its checks pass.
+  // A task on its own: in the company's folder, done once its checks pass. It holds the folder from
+  // its first edit to its last check, so a conversation's code step never runs in the middle of it.
   const alone = async (run: Run, prompt: string) => {
-    const done = await run.checked(await run.code("task", prompt, null));
+    const done = await inFolder(copyOwner(run.projectId), async () => run.checked(await run.code("task", prompt, null)));
     if (done) finish(run.projectId, run.task, passed(done.report) ? "done" : "failed", passed(done.report) ? done.result.output : failure(done.report));
   };
 
